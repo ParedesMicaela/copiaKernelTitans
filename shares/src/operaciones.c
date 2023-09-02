@@ -1,4 +1,4 @@
-#include <operaciones.h>
+#include "operaciones.h"
 
 // NO TOCAR FUNCIONES TP0
 
@@ -24,7 +24,7 @@ void enviar_mensaje(char *mensaje, int socket_cliente) //TP0
 {
     t_paquete *paquete = malloc(sizeof(t_paquete));
 
-    paquete->codigo_operacion = MENSAJE;
+    //paquete->codigo_operacion = MENSAJE;
     paquete->buffer = malloc(sizeof(t_buffer));
     paquete->buffer->stream_size = strlen(mensaje) + 1;
     paquete->buffer->stream = malloc(paquete->buffer->stream_size);
