@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Make",
+            "type": "shell",
+            "command": "make",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "fileSystem Normal",
+            "type": "shell",
+            "command": "./exec"
+        },
+        {
+            "label": "fileSystem Valgrind",
+            "type": "shell",
+            "command": "./vexec"
+        },
+        {
+            "label": "fileSystem Helgrind",
+            "type": "shell",
+            "command": "./hexec"
+        }
+    ]
+}
