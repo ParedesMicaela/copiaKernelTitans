@@ -10,12 +10,11 @@
 #include <commons/log.h>
 #include "operaciones.h"
 
-
-// FUNCIONES
-
-int crear_conexion( char* , char* );
-void liberar_conexion(int socket_cliente);
-int iniciar_servidor(char* , char* );
-int esperar_cliente(int  );
+int esperar_cliente(t_log* logger, const char* nombre, int socket_servidor);
+int iniciar_servidor(t_log* logger, const char* nombre, char* ip, char* puerto);
+int crear_conexion(t_log* logger, const char* nombre_server, char* ip, char* puerto);
+void liberar_conexion(int* socket_cliente);
 
 #endif
+
+

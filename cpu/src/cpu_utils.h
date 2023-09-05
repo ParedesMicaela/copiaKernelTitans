@@ -15,24 +15,31 @@
 #include <math.h>
 #include <pthread.h>
 
+//Variables
 t_config* config;
-t_handshake* configuracion_segmento;
 t_log* cpu_logger ;
 int socket_memoria;
+extern t_handshake* configuracion_segmento;
 
 //======================= Estructuras =======================
 typedef struct  // archivo de configuracion cpu
 {
    char* ip_cpu;
-   int retardo_instruccion;
    char* ip_memoria;
    char* puerto_memoria;
-   char* puerto_escucha;
-   char* puerto_escucha_kernel;
-   int tamanio_maximo_segmento;
+   char* puerto_escucha_dispatch;
+   char* puerto_escucha_interrupt;
 } arch_config;
 
 arch_config config_valores_cpu;
+
+typedef struct
+{
+    int pid;
+    int program_counter;
+    int prioridad;
+    char** registros;
+}t_contexto_ejecucion;
 
 typedef struct{
 	uint64_t low;
@@ -42,6 +49,7 @@ typedef struct{
 //======================= Funciones =======================
 void cargar_configuracion(char* path);
 void*conexion_inicial_memoria();
-void atender_cliente(int socket_cpu, int socket_cliente);
+void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria);
+void atender_interrupt(void* cliente);
 void finalizar_cpu();
 #endif

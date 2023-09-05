@@ -28,11 +28,23 @@ typedef struct
     int size;
 } t_buffer;
 
+
+typedef enum
+{
+	PAQUETE,
+	HANDSHAKE,
+	PCB,
+	FINALIZACION,
+	DESALOJO
+} op_code;
+
 typedef struct
 {
-    //op_code codigo_operacion;
+    op_code codigo_operacion;
     t_buffer *buffer;
 }t_paquete;
+
+
 
 typedef struct{
 	uint32_t nro_segmento;
@@ -47,8 +59,20 @@ typedef struct{
 // OPERACION //
 int recibir_operacion(int);
 
-// SACAR DE PAQUETE //
-
+// PAQUETES //
+t_paquete* crear_paquete(op_code codigo);
+void agregar_caracter_a_paquete(t_paquete* paquete,char caracter);
+void agregar_entero_a_paquete(t_paquete* paquete,int numero);
+void agregar_cadena_a_paquete(t_paquete* paquete, char* palabra);
+void agregar_array_cadenas_a_paquete(t_paquete* paquete, char** palabras);
+void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
+void* serializar_paquete(t_paquete* paquete, int bytes);
+t_paquete* recibir_paquete(int conexion);
+char* sacar_cadena_de_paquete(void** stream);
+int sacar_entero_de_paquete(void** stream);
+char** sacar_array_cadenas_de_paquete(void** stream);
+void enviar_paquete(t_paquete* paquete, int socket_cliente);
+void eliminar_paquete(t_paquete* paquete);
 
 // MENSAJE //
 void enviar_mensaje(char*, int);
@@ -60,15 +84,6 @@ void recibir_mensaje(int ,t_log*);
 
 
 // BUFFER //
-
-
-// PAQUETES //
-t_list* recibir_paquete_como_lista(int);
-
-
-// MEMORIA //
-
-
 
 
 #endif
