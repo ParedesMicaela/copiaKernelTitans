@@ -6,17 +6,18 @@
 #include <string.h>
 #include <signal.h>
 #include <stdint.h>
+#include <CUnit/CUnit.h>
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
-#include "shared/include/socket.h"
-#include "shared/include/logconfig.h"
-#include "shared/include/operaciones.h"
+#include "socket.h"
+#include "logconfig.h"
+#include "operaciones.h"
 #include <math.h>
 #include <pthread.h>
 
 //Variables
-t_config* config;
+extern t_config* config;
 t_log* cpu_logger ;
 int socket_memoria;
 extern t_handshake* configuracion_segmento;

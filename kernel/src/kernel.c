@@ -11,9 +11,9 @@ arch_config config_valores_kernel;
 
 int main(void)
 {
-	kernel_logger = log_create("/home/utnso/tp-2023-2c-KernelTitans/kernel/kernel.log", "kernel.log", 1, LOG_LEVEL_INFO);
+	kernel_logger = log_create("/home/utnso/tp-2023-2c-KernelTitans/kernel/cfg/kernel.log", "kernel.log", 1, LOG_LEVEL_INFO);
 
-	cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/kernel/Default/kernel.config");
+	cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/kernel/cfg/kernel.config");
 
 	log_info(kernel_logger, "Archivo de configuracion cargado \n");
 

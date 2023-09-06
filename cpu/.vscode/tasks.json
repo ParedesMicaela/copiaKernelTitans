@@ -10,17 +10,17 @@
             ]
         },
         {
-            "label": "Cpu Normal",
+            "label": "cpu Normal",
             "type": "shell",
             "command": "./exec"
         },
         {
-            "label": "Cpu Valgrind",
+            "label": "cpu Valgrind",
             "type": "shell",
             "command": "./vexec"
         },
         {
-            "label": "Cpu Helgrind",
+            "label": "cpu Helgrind",
             "type": "shell",
             "command": "./hexec"
         }

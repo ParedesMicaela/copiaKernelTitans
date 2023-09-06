@@ -74,11 +74,18 @@ char** sacar_array_cadenas_de_paquete(void** stream);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 
+//SERIALIZACION
+void* serializar_paquete(t_paquete* paquete, int bytes);
+
 // MENSAJE //
 void enviar_mensaje(char*, int);
 void recibir_mensaje(int ,t_log*);
 
-// HANDSHAKE //
+// BUFFER //
+void* recibir_buffer(int*, int);
+void crear_buffer(t_paquete*);
+void agregar_a_buffer(t_buffer*, void*, int);
+t_buffer* inicializar_buffer_con_parametros(uint32_t, void*);
 
 //CONEXION //
 

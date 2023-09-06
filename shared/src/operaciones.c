@@ -47,20 +47,6 @@ t_paquete* recibir_paquete(int conexion)
 	}
 }
 
-void* serializar_paquete(t_paquete* paquete, int bytes)
-{
-	void * magic = malloc(bytes);
-	int desplazamiento = 0;
-
-	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
-	desplazamiento+= sizeof(int);
-	memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
-	desplazamiento+= sizeof(int);
-	memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
-	desplazamiento+= paquete->buffer->size;
-
-	return magic;
-}
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
 	int bytes = paquete->buffer->size + 2*sizeof(int);
@@ -150,6 +136,54 @@ void eliminar_paquete(t_paquete* paquete)
 	free(paquete);
 }
 
+//================================================== SERIALIZACION =====================================================================
+void* serializar_paquete(t_paquete* paquete, int bytes)
+{
+	void * magic = malloc(bytes);
+	int desplazamiento = 0;
+
+	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
+	desplazamiento+= sizeof(int);
+	memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
+	desplazamiento+= sizeof(int);
+	memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
+	desplazamiento+= paquete->buffer->size;
+
+	return magic;
+}
+
+//================================================== BUFFER =====================================================================
+void* recibir_buffer(int* size, int socket_cliente) {
+     void * buffer;
+
+     recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
+     buffer = malloc(*size);
+     recv(socket_cliente, buffer, *size, MSG_WAITALL);
+
+     return buffer;
+ }
+
+void crear_buffer(t_paquete *paquete)
+{
+    paquete->buffer = malloc(sizeof(t_buffer));
+    paquete->buffer->stream_size = 0;
+    paquete->buffer->stream = NULL;
+}
+
+void agregar_a_buffer(t_buffer *buffer, void *src, int size) {
+	buffer->stream = realloc(buffer->stream, buffer->stream_size + size);
+	memcpy(buffer->stream + buffer->stream_size, src, size);
+	buffer->stream_size+=size;
+}
+
+t_buffer *inicializar_buffer_con_parametros(uint32_t size, void *stream) {
+	t_buffer *buffer = (t_buffer *)malloc(sizeof(t_buffer));
+	buffer->stream_size = size;
+	buffer->stream = stream;
+	return buffer;
+}
+
+
 //================================================== MENSAJES =====================================================================
 
 void enviar_mensaje(char *mensaje, int socket_cliente) //TP0
@@ -164,7 +198,7 @@ void enviar_mensaje(char *mensaje, int socket_cliente) //TP0
 
     int bytes = paquete->buffer->stream_size + 2 * sizeof(int);
 
-    void *a_enviar = serializar_paquete_con_bytes(paquete,bytes);
+    void *a_enviar = serializar_paquete(paquete,bytes);
 
     send(socket_cliente, a_enviar, bytes, 0);
 

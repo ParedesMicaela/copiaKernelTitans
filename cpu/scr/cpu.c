@@ -2,21 +2,15 @@
 
 pthread_t hilo_interrupt;
 
-//cuando toco una tecla finaliza
-void sighandler(int s) {
-	finalizar_cpu();
-	exit(0);
-}
-
-int main()
+int main(void)
 {
 	signal(SIGINT, sighandler);
 
 	//creamos el logger
-	cpu_logger = log_create("/home/utnso/tp-2023-2c-KernelTitans/cpu/cpu.log", "cpu.log", 1, LOG_LEVEL_INFO);
+	cpu_logger = log_create("/home/utnso/tp-2023-2c-KernelTitans/cpu/cfg/cpu.log", "cpu.log", 1, LOG_LEVEL_INFO);
 
 	//cargamos la config
-	cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/cpu/Default/cpu.config");
+	cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/cpu/cfg/cpu.config");
 	log_info(cpu_logger, "Archivo de configuracion cargado \n");
 
 	//creamos conexion con memoria

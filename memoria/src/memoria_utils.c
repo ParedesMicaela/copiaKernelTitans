@@ -1,27 +1,29 @@
-#include <memoria.h>
+#include "memoria.h"
+
+/*void* mutex_espacio_memoria_usuario;
 
 // INCIALIZAR ESPACIO DE MEMORIA PARA PROCESOS //
 void inicializar_memoria(){
     espacio_memoria_usuario=malloc(config_valores_memoria.tam_memoria);
     pthread_mutex_init(&mutex_espacio_memoria_usuario,NULL);
-}
+}*/
 
 // ATENDER CLIENTES//
 int atender_clientes_memoria(int socket_servidor){
 
 	int socket_cliente = esperar_cliente(socket_servidor); // se conecta primero cpu
-	manejo_conexiones(&socket_cliente);
+	manejo_conexiones(socket_cliente);
 	return 0;
 }
 
 void manejo_conexiones(int socket_cliente){
 	while(1){
-	int codigo_operacion = recibir_operacion_nuevo(socket_cliente);
+	int codigo_operacion = recibir_operacion(socket_cliente);
 	switch(codigo_operacion){
 	case HANDSHAKE: //conexion con cualquiera que le manda solo handshake
 		log_info(memoria_logger,"Me llego el handshake :)\n");
-		usleep(config_valores_memoria.retardo_memoria * 1000); //lo retardamos un poquito
-		t_paquete* handshake=preparar_paquete_para_handshake();
+		usleep(config_valores_memoria.retardo_respuesta * 1000); //lo retardamos un poquito
+		t_paquete* handshake=crear_paquete(HANDSHAKE);
 		enviar_paquete(handshake,socket_cliente);
 		log_info(memoria_logger,"Hanshake enviado :)\n");
 		eliminar_paquete(handshake);
@@ -42,15 +44,37 @@ void cargar_configuracion(char* path){
       }
 
 	config_valores_memoria.ip_memoria=config_get_string_value(config,"IP_MEMORIA");
-	config_valores_memoria.puerto_escucha_dispatch=config_get_string_value(config,"PUERTO_ESCUCHA_DISPATCH");
-    config_valores_memoria.puerto_escucha_interrupt=config_get_string_value(config,"PUERTO_ESCUCHA_INTERRUPT");
+	config_valores_memoria.puerto_escucha=config_get_string_value(config,"PUERTO_ESCUCHA");
+	config_valores_memoria.ip_filesystem=config_get_string_value(config,"IP_FILESYSTEM");
+	config_valores_memoria.puerto_filesystem=config_get_string_value(config,"PUERTO_FILESYSTEM");
+	config_valores_memoria.tam_memoria=config_get_int_value(config,"TAM_MEMORIA");
+	config_valores_memoria.tam_pagina=config_get_int_value(config,"TAM_PAGINA");
+	config_valores_memoria.path_instrucciones=config_get_string_value(config,"PATH_INSTRUCCIONES");
+	config_valores_memoria.retardo_respuesta=config_get_int_value(config,"RETARDO_RESPUESTA");
+	config_valores_memoria.algoritmo_reemplazo=config_get_string_value(config,"ALGORITMO_REEMPLAZO");
+
 }
 
 
 // ACCESORIOS //
 t_paquete* preparar_paquete_para_handshake(){
-	t_paquete* paquete=crear_paquete();
-	agregar_a_paquete(paquete,&config_valores_memoria.tam_segmento_0,sizeof(int));
-	agregar_a_paquete(paquete,&config_valores_memoria.cant_segmentos,sizeof(int));
+	t_paquete* paquete=crear_paquete(HANDSHAKE);
+	agregar_a_paquete(paquete,&config_valores_memoria.tam_memoria,sizeof(int));
+	agregar_a_paquete(paquete,&config_valores_memoria.tam_pagina,sizeof(int));
 	return paquete;
 }
+/*
+case HANDSHAKE:
+	int handshake = sacar_entero_de_paquete(&stream);
+
+	t_paquete* paquete = crear_paquete(HANDSHAKE);
+		agregar_entero_a_paquete(paquete, config_valores_memoria.tam_memoria);
+		agregar_entero_a_paquete(paquete, config_valores_memoria.tam_pagina);
+		enviar_paquete(paquete, conexion);
+        log_info(memoria_logger,"Se envio entradas por tablas: %d, y tamaño de pagina %d bytes al CPU", config_get_int_value(config_memoria, "ENTRADAS_POR_TABLA"), config_get_int_value(config_memoria, "TAM_PAGINA"));
+	break;
+	default:
+		log_info(logger_global,"Algo salio mal recibiendo datos, se finaliza la memoria");
+		exit(1);	
+
+*/
