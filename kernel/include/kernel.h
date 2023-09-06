@@ -14,6 +14,13 @@
 #include <libshares/operaciones.h>
 
 // VARIABLES DE INICIALIZACIÓN //
+extern t_log* kernel_logger;
+extern t_config* config;
+extern int server_fd;
+extern int socket_cpu_dispatch;
+extern int socket_cpu_interrupt;
+extern int socket_memoria;
+extern int socket_filesystem;
 
 // VARIABLES DE PLANIFICACION //
 
@@ -24,7 +31,25 @@
 
 
 // CONFIGURACIÓN //
+typedef struct  // archivo de configuracion kernel
+ {
+    char* ip_memoria;
+    char* puerto_memoria;
+    char* ip_filesystem;
+    char* puerto_filesystem;
+    char* ip_cpu;
+    char* puerto_cpu_dispatch;
+    char* puerto_cpu_interrupt;
+	char* ip_kernel;
+    char* puerto_escucha;
+    char* algoritmo_planificacion;
+    int quantum;
+    int grado_multiprogramacion_ini;
+    char** recursos;
+	char** instancias_recursos; 
+} arch_config;
 
+extern arch_config config_valores_kernel;
 
 // FUNCIONES INICIALIZACIÓN //
 

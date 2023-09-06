@@ -20,7 +20,7 @@ int main()
 	log_info(cpu_logger, "Archivo de configuracion cargado \n");
 
 	//creamos conexion con memoria
-	int socket_cliente_memoria = crear_conexion(cpu_logger,"MEMORIA",config_valores_cpu->ip_memoria, config_valores_cpu->puerto_memoria);
+	int socket_cliente_memoria = crear_conexion(config_valores_cpu.ip_memoria, config_valores_cpu.puerto_memoria);
 	realizar_handshake(socket_cliente_memoria);
 
 	//creamos un hilo para la conexion a memoria para memoria que pueda atender a varios clientes al mismo tiempo y sea mas rapido
@@ -51,14 +51,14 @@ int main()
 
     //creamos la conexion con el kernel
 	///kernel se conecta por dispatch e interrupt
-	int socket_servidor_dispatch = iniciar_servidor(cpu_logger, "CPU",config_valores_cpu->ip_cpu,config_valores_cpu->puerto_escucha_dispatch);
-    int socket_servidor_interrupt = iniciar_servidor(cpu_logger, "CPU",config_valores_cpu->ip_cpu,config_valores_cpu->puerto_escucha_interrupt);
+	int socket_servidor_dispatch = iniciar_servidor(config_valores_cpu.cpu,config_valores_cpu.puerto_escucha_dispatch);
+    int socket_servidor_interrupt = iniciar_servidor(config_valores_cpu.cpu,config_valores_cpu.puerto_escucha_interrupt);
     log_info(cpu_logger, "Servidores iniciados en CPU \n");
 
 
 	//esperamos los 2 clientes de kernel
-    int socket_cliente_dispatch = esperar_cliente(cpu_logger, "CPU", socket_servidor_dispatch);
-    int socket_cliente_interrupt = esperar_cliente(cpu_logger, "CPU", socket_servidor_interrupt);
+    int socket_cliente_dispatch = esperar_cliente(socket_servidor_dispatch);
+    int socket_cliente_interrupt = esperar_cliente(socket_servidor_interrupt);
 	printf("Se conectaron los clientes de dispatch e interrupt\n");
 
 	//creamos el hilo para atender las interrupciones

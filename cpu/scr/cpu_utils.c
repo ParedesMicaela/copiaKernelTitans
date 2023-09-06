@@ -8,7 +8,7 @@ int interrupcion;
 
 //================================================== Configuracion =====================================================================
 void cargar_configuracion(char* path){
-    config = config_create(path); //Leo el archivo de configuracion
+    config = config_create(path); 
 
     if (config == NULL) {
         perror("Archivo de configuracion de cpu no encontrado \n");
