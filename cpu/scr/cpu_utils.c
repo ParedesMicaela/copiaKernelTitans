@@ -4,9 +4,9 @@
 pthread_mutex_t mutex_interrupcion;
 int interrupcion;
 
-//======================= Funciones Globales ==============
-
 //================================================== Configuracion =====================================================================
+
+//funcion para levantar el archivo de configuracion de cfg y ponerlo en nuestro stuct de cpu
 void cargar_configuracion(char* path){
     config = config_create(path); 
 
@@ -25,33 +25,36 @@ void cargar_configuracion(char* path){
 }
 
 //================================================== Handshake memoria =====================================================================
-void* conexion_inicial_memoria(void* arg){
+void realizar_handshake(int socket_cliente_memoria)
+{
+    enviar_handshake(socket_cliente_memoria);
 
-	//hacemos toda la cosa para pedir el handshake
-	pedir_handshake(socket_memoria);
-	log_info(cpu_logger, "Pedido de handshake enviado a memoria\n");
-	int codigo_memoria;
+    recibir_handshake(socket_cliente_memoria);
 
-	while(1){
-		codigo_memoria=recibir_operacion_nuevo(socket_memoria);
-		switch(codigo_memoria){
-			case PAQUETE:
-				log_info(cpu_logger,"Recibi configuracion por handshake \n");
-				configuracion_segmento=recibir_handshake(socket_memoria);
-				return NULL;
-			break;
-			case -1:
-				log_error(cpu_logger, "Fallo la comunicacion. Abortando \n");
-				 //free(configuracion_segmento);
-				return (void*)(EXIT_FAILURE);
-			break;
-			default:
-				 log_warning(cpu_logger, "Operacion desconocida \n");
-				 //free(configuracion_segmento);
-			break;
-		}
-	}
-	 return (void*)(EXIT_SUCCESS);
+    log_info(cpu_logger, "tamanio de pagina %d para realizar handshake", tam_pagina);
+}
+
+static void enviar_handshake(int socket_cliente_memoria)
+{
+    t_paquete* paquete = crear_paquete(HANDSHAKE);
+    agregar_entero_a_paquete(paquete, 1);
+    enviar_paquete(paquete, socket_cliente_memoria);
+}
+
+static void recibir_handshake(int socket_cliente_memoria)
+{
+    t_paquete* paquete = recibir_paquete(socket_cliente_memoria);
+    void* stream = paquete->buffer->stream;
+
+    if(paquete->codigo_operacion == HANDSHAKE)
+    {
+        tam_pagina = sacar_entero_de_paquete(&stream);
+    }
+    else{
+        perror("No me enviaste el tam_pagina \n");
+        abort();
+    }
+
 }
 
 //================================================== Dispatch =====================================================================
@@ -115,3 +118,33 @@ void atender_interrupt(void* cliente)
         }
 }
 
+/*
+void* conexion_inicial_memoria(void* arg){
+
+	//hacemos toda la cosa para pedir el handshake
+	pedir_handshake(socket_memoria);
+	log_info(cpu_logger, "Pedido de handshake enviado a memoria\n");
+	int codigo_memoria;
+
+	while(1){
+		codigo_memoria=recibir_operacion_nuevo(socket_memoria);
+		switch(codigo_memoria){
+			case PAQUETE:
+				log_info(cpu_logger,"Recibi configuracion por handshake \n");
+				configuracion_segmento=recibir_handshake(socket_memoria);
+				return NULL;
+			break;
+			case -1:
+				log_error(cpu_logger, "Fallo la comunicacion. Abortando \n");
+				 //free(configuracion_segmento);
+				return (void*)(EXIT_FAILURE);
+			break;
+			default:
+				 log_warning(cpu_logger, "Operacion desconocida \n");
+				 //free(configuracion_segmento);
+			break;
+		}
+	}
+	 return (void*)(EXIT_SUCCESS);
+}
+/*

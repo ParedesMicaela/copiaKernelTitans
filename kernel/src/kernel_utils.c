@@ -1,4 +1,4 @@
-#include <kernel.h>
+#include "kernel.h"
 //..................................CONFIGURACIONES.......................................................................
 
 void cargar_configuracion(char* path) {

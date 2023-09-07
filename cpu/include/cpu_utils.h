@@ -52,4 +52,5 @@ void*conexion_inicial_memoria();
 void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria);
 void atender_interrupt(void* cliente);
 void finalizar_cpu();
+
 #endif

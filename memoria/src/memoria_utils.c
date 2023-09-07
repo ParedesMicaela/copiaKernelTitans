@@ -8,11 +8,39 @@ void inicializar_memoria(){
     pthread_mutex_init(&mutex_espacio_memoria_usuario,NULL);
 }*/
 
+// CONFIGURACION //
+void cargar_configuracion(char* path){
+	
+	config = config_create(path); 
+
+	      if (config == NULL) {
+	          perror("Archivo de configuracion de filesystem no encontrado \n");
+	          abort();
+	      }
+	config_valores_memoria.ip_memoria=config_get_string_value(config,"IP_MEMORIA");
+	config_valores_memoria.puerto_escucha=config_get_string_value(config,"PUERTO_ESCUCHA");
+	config_valores_memoria.ip_filesystem=config_get_string_value(config,"IP_FILESYSTEM");
+	config_valores_memoria.puerto_filesystem=config_get_string_value(config,"PUERTO_FILESYSTEM");
+	config_valores_memoria.tam_memoria=config_get_int_value(config,"TAM_MEMORIA");
+	config_valores_memoria.tam_pagina=config_get_int_value(config,"TAM_PAGINA");
+	config_valores_memoria.path_instrucciones=config_get_string_value(config,"PATH_INSTRUCCIONES");
+	config_valores_memoria.retardo_respuesta=config_get_int_value(config,"RETARDO_RESPUESTA");
+	config_valores_memoria.algoritmo_reemplazo=config_get_string_value(config,"ALGORITMO_REEMPLAZO");
+}
 // ATENDER CLIENTES//
 int atender_clientes_memoria(int socket_servidor){
 
 	int socket_cliente = esperar_cliente(socket_servidor); // se conecta primero cpu
-	manejo_conexiones(socket_cliente);
+
+	if(socket_cliente != -1){
+		log_info(memoria_logger, "Se conecto un cliente \n");
+		pthread_t hilo_cliente;
+		pthread_create(&hilo_cliente, NULL, (void*) manejo_conexiones, &socket_cliente);
+		pthread_detach(hilo_cliente);
+		return 1;
+	}else {
+		log_error(memoria_logger, "Error al escuchar clientes... Finalizando servidor \n"); // log para fallo de comunicaciones
+	}
 	return 0;
 }
 
@@ -23,7 +51,7 @@ void manejo_conexiones(int socket_cliente){
 	case HANDSHAKE: //conexion con cualquiera que le manda solo handshake
 		log_info(memoria_logger,"Me llego el handshake :)\n");
 		usleep(config_valores_memoria.retardo_respuesta * 1000); //lo retardamos un poquito
-		t_paquete* handshake=crear_paquete(HANDSHAKE);
+		t_paquete* handshake=preparar_paquete_para_handshake(HANDSHAKE);
 		enviar_paquete(handshake,socket_cliente);
 		log_info(memoria_logger,"Hanshake enviado :)\n");
 		eliminar_paquete(handshake);
@@ -34,47 +62,10 @@ void manejo_conexiones(int socket_cliente){
 }
 }
 
-void cargar_configuracion(char* path){
-
-	 config = config_create(path); 
-
-      if (config == NULL) {
-          perror("Archivo de configuracion de kernel no encontrado \n");
-          abort();
-      }
-
-	config_valores_memoria.ip_memoria=config_get_string_value(config,"IP_MEMORIA");
-	config_valores_memoria.puerto_escucha=config_get_string_value(config,"PUERTO_ESCUCHA");
-	config_valores_memoria.ip_filesystem=config_get_string_value(config,"IP_FILESYSTEM");
-	config_valores_memoria.puerto_filesystem=config_get_string_value(config,"PUERTO_FILESYSTEM");
-	config_valores_memoria.tam_memoria=config_get_int_value(config,"TAM_MEMORIA");
-	config_valores_memoria.tam_pagina=config_get_int_value(config,"TAM_PAGINA");
-	config_valores_memoria.path_instrucciones=config_get_string_value(config,"PATH_INSTRUCCIONES");
-	config_valores_memoria.retardo_respuesta=config_get_int_value(config,"RETARDO_RESPUESTA");
-	config_valores_memoria.algoritmo_reemplazo=config_get_string_value(config,"ALGORITMO_REEMPLAZO");
-
-}
-
-
-// ACCESORIOS //
+// HANDSHAKE A CPU //
 t_paquete* preparar_paquete_para_handshake(){
 	t_paquete* paquete=crear_paquete(HANDSHAKE);
-	agregar_a_paquete(paquete,&config_valores_memoria.tam_memoria,sizeof(int));
-	agregar_a_paquete(paquete,&config_valores_memoria.tam_pagina,sizeof(int));
+	agregar_entero_a_paquete(paquete,config_valores_memoria.tam_pagina);
 	return paquete;
 }
-/*
-case HANDSHAKE:
-	int handshake = sacar_entero_de_paquete(&stream);
 
-	t_paquete* paquete = crear_paquete(HANDSHAKE);
-		agregar_entero_a_paquete(paquete, config_valores_memoria.tam_memoria);
-		agregar_entero_a_paquete(paquete, config_valores_memoria.tam_pagina);
-		enviar_paquete(paquete, conexion);
-        log_info(memoria_logger,"Se envio entradas por tablas: %d, y tamaño de pagina %d bytes al CPU", config_get_int_value(config_memoria, "ENTRADAS_POR_TABLA"), config_get_int_value(config_memoria, "TAM_PAGINA"));
-	break;
-	default:
-		log_info(logger_global,"Algo salio mal recibiendo datos, se finaliza la memoria");
-		exit(1);	
-
-*/

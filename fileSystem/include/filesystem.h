@@ -8,9 +8,9 @@
 #include <commons/collections/list.h>
 #include <commons/bitarray.h>
 #include <pthread.h>
-#include <socket.h>
-#include <logconfig.h>
-#include <operaciones.h>
+#include "socket.h"
+#include "logconfig.h"
+#include "operaciones.h"
 
 extern t_config *config;
 extern t_log *filesystem_logger;
