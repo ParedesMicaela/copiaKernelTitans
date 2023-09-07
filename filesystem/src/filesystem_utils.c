@@ -24,16 +24,31 @@ void cargar_configuracion(char* path) {
       config_valores_filesystem.retardo_acceso_fat = config_get_int_value(config, "RETARDO_ACCESO_FAT");
 }
 
+// ATENDER CLIENTES //
 
-/// COMUNICACIÓN A MEMORIA: HANDSHAKE ///
+int atender_clientes_filesystem(void* conexion) {
+
+        int cliente_fd = *(int*)conexion;
+
+        int cod_op = recibir_operacion(cliente_fd);
+        switch (cod_op)
+            {
+            case -1:
+                log_error(filesystem_logger, "Fallo la comunicacion. Abortando \n");
+            default:
+                log_warning(filesystem_logger, "Operacion desconocida \n");
+                break;
+            }
+}
+
+/*
+/// COMUNICACIÓN A MEMORIA ///
 void* conexion_inicial_memoria(){
 
-	pedir_handshake(socket_memoria);
-	log_info(filesystem_logger, "Pedido de handshake enviado \n");
 	int codigo_memoria;
 
 	while(1){
-		codigo_memoria=recibir_operacion_nuevo(socket_memoria);
+		codigo_memoria=recibir_operacion(socket_memoria);
 		switch(codigo_memoria){
 			case PAQUETE:
 				log_info(filesystem_logger,"Recibi configuracion por handshake \n");
@@ -50,4 +65,4 @@ void* conexion_inicial_memoria(){
 	}
 	 return (void*)(EXIT_SUCCESS);
 }
-
+*/

@@ -1,5 +1,7 @@
 #include "kernel.h"
 
+//Variables Globale//
+
 t_log* kernel_logger;
 t_config* config;
 int server_fd;

@@ -27,7 +27,7 @@ void cargar_configuracion(char* path){
 	config_valores_memoria.retardo_respuesta=config_get_int_value(config,"RETARDO_RESPUESTA");
 	config_valores_memoria.algoritmo_reemplazo=config_get_string_value(config,"ALGORITMO_REEMPLAZO");
 }
-// ATENDER CLIENTES//
+// ATENDER CLIENTES CON HILOS//
 int atender_clientes_memoria(int socket_servidor){
 
 	int socket_cliente = esperar_cliente(socket_servidor); // se conecta primero cpu
@@ -56,6 +56,12 @@ void manejo_conexiones(int socket_cliente){
 		log_info(memoria_logger,"Hanshake enviado :)\n");
 		eliminar_paquete(handshake);
 		break;
+	case MANDAR_INSTRUCCIONES:
+		t_paquete instrucciones = preparar_paquete(instrucciones);
+		enviar_paquete(instrucciones, socket_cliente);
+		log_info(memoria_logger,"Instrucciones enviadas :)\n");
+		eliminar_paquete(handshake);
+		break;
 	default:
 		break;
 	}
@@ -69,3 +75,9 @@ t_paquete* preparar_paquete_para_handshake(){
 	return paquete;
 }
 
+// INSTRUCCIONES A CPU //
+t_paquete* preparar_paquete_para_instrucciones() {
+	t_paquete* paquete=crear_paquete(INSTRUCCIONES);
+	agregar_array_a_paquete(paquete,config_valores_memoria.instrucciones);
+	return paquete;
+}

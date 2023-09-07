@@ -1,4 +1,4 @@
-PROCESS_NAME=fileSystem
+PROCESS_NAME=filesystem
 IDIR =./include
 SHARED_IDIR = ../shared/include
 CC=gcc

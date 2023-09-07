@@ -10,17 +10,17 @@
             ]
         },
         {
-            "label": "fileSystem Normal",
+            "label": "filesystem Normal",
             "type": "shell",
             "command": "./exec"
         },
         {
-            "label": "fileSystem Valgrind",
+            "label": "filesystem Valgrind",
             "type": "shell",
             "command": "./vexec"
         },
         {
-            "label": "fileSystem Helgrind",
+            "label": "filesystem Helgrind",
             "type": "shell",
             "command": "./hexec"
         }

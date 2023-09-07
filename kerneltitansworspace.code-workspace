@@ -4,7 +4,7 @@
 			"path": "cpu"
 		},
 		{
-			"path": "fileSystem"
+			"path": "filesystem"
 		},
 		{
 			"path": "kernel"
