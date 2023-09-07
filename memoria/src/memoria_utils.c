@@ -1,5 +1,6 @@
 #include "memoria.h"
 
+static char* leer_archivo_instrucciones(char* path_instrucciones);
 /*void* mutex_espacio_memoria_usuario;
 
 // INCIALIZAR ESPACIO DE MEMORIA PARA PROCESOS //
@@ -48,19 +49,15 @@ void manejo_conexiones(int socket_cliente){
 	while(1){
 	int codigo_operacion = recibir_operacion(socket_cliente);
 	switch(codigo_operacion){
-	case HANDSHAKE: //conexion con cualquiera que le manda solo handshake
+	case HANDSHAKE: //HANDSHAKE con CPU
 		log_info(memoria_logger,"Me llego el handshake :)\n");
 		usleep(config_valores_memoria.retardo_respuesta * 1000); //lo retardamos un poquito
-		t_paquete* handshake=preparar_paquete_para_handshake(HANDSHAKE);
-		enviar_paquete(handshake,socket_cliente);
-		log_info(memoria_logger,"Hanshake enviado :)\n");
-		eliminar_paquete(handshake);
+		enviar_paquete_handshake(socket_cliente);
 		break;
 	case MANDAR_INSTRUCCIONES:
-		t_paquete instrucciones = preparar_paquete(instrucciones);
-		enviar_paquete(instrucciones, socket_cliente);
-		log_info(memoria_logger,"Instrucciones enviadas :)\n");
-		eliminar_paquete(handshake);
+		//leemos el archivo de pseudo codigo del path de la config
+		char* instrucciones = leer_archivo_instrucciones(config_valores_memoria.path_instrucciones);
+		enviar_paquete_instrucciones(socket_cliente, instrucciones);
 		break;
 	default:
 		break;
@@ -69,15 +66,49 @@ void manejo_conexiones(int socket_cliente){
 }
 
 // HANDSHAKE A CPU //
-t_paquete* preparar_paquete_para_handshake(){
-	t_paquete* paquete=crear_paquete(HANDSHAKE);
-	agregar_entero_a_paquete(paquete,config_valores_memoria.tam_pagina);
-	return paquete;
+void enviar_paquete_handshake(int socket_cliente) {
+
+	t_paquete* handshake=crear_paquete(HANDSHAKE);
+	agregar_entero_a_paquete(handshake,config_valores_memoria.tam_pagina);
+
+	enviar_paquete(handshake,socket_cliente);
+	log_info(memoria_logger,"Handshake enviado :)\n");
+	eliminar_paquete(handshake);
 }
 
 // INSTRUCCIONES A CPU //
-t_paquete* preparar_paquete_para_instrucciones() {
-	t_paquete* paquete=crear_paquete(INSTRUCCIONES);
-	agregar_array_a_paquete(paquete,config_valores_memoria.instrucciones);
-	return paquete;
+void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones)
+{
+    char** lista_instrucciones = string_split(instrucciones, "\n");
+
+    t_paquete* paquete = crear_paquete(INSTRUCCIONES); 
+
+    agregar_array_cadenas_a_paquete(paquete, lista_instrucciones);
+
+    enviar_paquete(paquete, socket_cpu);
+	log_info(memoria_logger,"Instrucciones enviadas :)\n");
+
+	eliminar_paquete(paquete);
+}
+
+static char* leer_archivo_instrucciones(char* path_instrucciones) {
+
+    FILE* instr_f = fopen(path_instrucciones, "r");
+    char* una_cadena    = string_new();
+    char* cadena_completa   = string_new();
+
+    if (instr_f == NULL) {
+        perror("no se pudo abrir el archivo de instrucciones");
+        exit(-1);
+    }
+
+    while (!feof(instr_f)) {
+        fgets(una_cadena, MAX_CHAR, instr_f);
+        string_append(&cadena_completa, una_cadena);
+    }
+    
+    free(una_cadena);
+    fclose(instr_f);
+
+    return cadena_completa;
 }

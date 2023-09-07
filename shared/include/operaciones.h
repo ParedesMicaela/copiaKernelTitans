@@ -20,7 +20,23 @@
 
 
 // ESTRUCTURAS //
+typedef enum
+{
+	PAQUETE,
+	HANDSHAKE,
+	MANDAR_INSTRUCCIONES,
+	INSTRUCCIONES,
+	PCB,
+	FINALIZACION,
+	DESALOJO
+} op_code;
 
+typedef enum {
+	SET,
+	SUM,
+	SUB,
+	INSTRUCCION_EXIT
+} codigo_instrucciones;
 typedef struct
 {
     uint32_t stream_size;
@@ -28,28 +44,11 @@ typedef struct
     int size;
 } t_buffer;
 
-
-typedef enum
-{
-	PAQUETE,
-	HANDSHAKE,
-	PCB,
-	FINALIZACION,
-	DESALOJO
-} op_code;
-
 typedef struct
 {
     op_code codigo_operacion;
     t_buffer *buffer;
 }t_paquete;
-
-
-
-typedef struct{
-	uint32_t nro_segmento;
-	uint32_t desplazamiento;
-} t_handshake;
 
 typedef struct{
 	char* puerto;

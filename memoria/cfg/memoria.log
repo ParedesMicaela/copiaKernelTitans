@@ -12,3 +12,25 @@
 
 [INFO] 00:17:43:179 memoria.log/(25520:25520): Memoria lista para recibir al modulo cliente 
 
+[INFO] 16:27:58:097 memoria.log/(8237:8237): Configuracion de memoria cargada correctamente
+
+[INFO] 16:27:58:098 memoria.log/(8237:8237): Inicializando memoria
+
+[INFO] 16:27:58:098 memoria.log/(8237:8237): Servidor creado
+
+[INFO] 16:27:58:099 memoria.log/(8237:8237): Memoria lista para recibir al modulo cliente 
+
+[INFO] 18:08:02:594 memoria.log/(10765:10765): Configuracion de memoria cargada correctamente
+
+[INFO] 18:08:02:594 memoria.log/(10765:10765): Inicializando memoria
+
+[INFO] 18:08:02:595 memoria.log/(10765:10765): Servidor creado
+
+[INFO] 18:08:02:595 memoria.log/(10765:10765): Memoria lista para recibir al modulo cliente 
+
+[INFO] 18:08:13:163 memoria.log/(10765:10765): Se conecto un cliente 
+
+[INFO] 18:09:29:422 memoria.log/(10765:10765): Se conecto un cliente 
+
+[INFO] 18:09:57:183 memoria.log/(10765:10765): Se conecto un cliente 
+

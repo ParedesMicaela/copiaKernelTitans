@@ -18,10 +18,12 @@
 
 //Variables
 extern t_config* config;
-t_log* cpu_logger ;
-int socket_memoria;
-extern t_handshake* configuracion_segmento;
-extern arch_config config_valores_cpu;
+extern t_log* cpu_logger ;
+extern int socket_cliente_memoria;
+extern int socket_servidor_dispatch;
+extern int socket_servidor_interrupt;
+extern int socket_cliente_dispatch;
+extern int socket_cliente_interrupt;
 
 //======================= Estructuras =======================
 typedef struct  // archivo de configuracion cpu
@@ -33,6 +35,7 @@ typedef struct  // archivo de configuracion cpu
    char* puerto_escucha_interrupt;
 } arch_config;
 
+extern arch_config config_valores_cpu;
 typedef struct
 {
     int pid;
@@ -41,16 +44,13 @@ typedef struct
     char** registros;
 }t_contexto_ejecucion;
 
-typedef struct{
-	uint64_t low;
-	uint64_t high;
-} uint128_t;
-
 //======================= Funciones =======================
-void cargar_configuracion(char* path);
+void cargar_configuracion(char*);
+void realizar_handshake(int);
+void ciclo_de_instruccion(int, int, t_contexto_ejecucion*);
 void*conexion_inicial_memoria();
-void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria);
-void atender_interrupt(void* cliente);
+void atender_dispatch(int, int );
+void atender_interrupt(void* );
 void finalizar_cpu();
 
 #endif

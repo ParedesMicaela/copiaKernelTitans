@@ -1,6 +1,11 @@
 #include "cpu_utils.h"
 
 pthread_t hilo_interrupt;
+int socket_cliente_memoria;
+int socket_servidor_dispatch;
+int socket_servidor_interrupt;
+int socket_cliente_dispatch;
+int socket_cliente_interrupt;
 
 int main(void)
 {
@@ -17,8 +22,8 @@ int main(void)
 
     //creamos la conexion con el kernel
 	///kernel se conecta por dispatch e interrupt
-	int socket_servidor_dispatch = iniciar_servidor(config_valores_cpu.cpu,config_valores_cpu.puerto_escucha_dispatch);
-    int socket_servidor_interrupt = iniciar_servidor(config_valores_cpu.cpu,config_valores_cpu.puerto_escucha_interrupt);
+	int socket_servidor_dispatch = iniciar_servidor(config_valores_cpu.ip_cpu,config_valores_cpu.puerto_escucha_dispatch);
+    int socket_servidor_interrupt = iniciar_servidor(config_valores_cpu.ip_cpu,config_valores_cpu.puerto_escucha_interrupt);
     log_info(cpu_logger, "Servidores iniciados en CPU \n");
 
 
@@ -40,33 +45,5 @@ int main(void)
 
     //liberamos la memoria dinamica
     log_warning(cpu_logger, "Apagandose cpu");
-    free(datos);
     return 0;
 }
-/*
-//creamos un hilo para la conexion a memoria para memoria que pueda atender a varios clientes al mismo tiempo y sea mas rapido
-	pthread_t conexion_memoria_i;
-
-	//vamos a reservar memoria dinamica para guardar los datos de la conexion
-	conexion_t* datos=malloc(sizeof(conexion_t));
-			if (datos == NULL) {
-				   perror("No se pudo asignar memoria \n");
-				   exit(EXIT_FAILURE);
-			}
-
-	datos->ip=config_valores_cpu->ip_memoria;
-	datos->puerto=config_valores_cpu->puerto_memoria;
-
-	//iniciamos hilo de conexion con memoria
-	pthread_create(&conexion_memoria_i,NULL,conexion_inicial_memoria,NULL);
-		void* thread_result;
-		pthread_join(conexion_memoria_i, &thread_result);
-
-		if (thread_result == (void*)(EXIT_SUCCESS)) {
-			log_info(cpu_logger, "Se a completado el Handshake correctamente\n");
-		} else {
-			log_error(cpu_logger, "Ha habido un error en el handshake \n");
-			exit(EXIT_FAILURE);
-		}
-		 log_info(cpu_logger, "CPU se ha conectado con memoria \n");
-*/

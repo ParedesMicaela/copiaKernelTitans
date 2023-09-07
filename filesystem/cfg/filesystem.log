@@ -14,3 +14,13 @@
 
 [INFO] 15:09:23:314 filesystem.log/(5609:5609): Filesystem listo para recibir al modulo cliente 
 
+[INFO] 18:09:29:421 filesystem.log/(10799:10799): Archivo de configuracion cargada 
+
+[INFO] 18:09:29:421 filesystem.log/(10799:10799): Filesystem listo para recibir al modulo cliente 
+
+[INFO] 18:09:57:183 filesystem.log/(10799:10799): Se conecto un cliente 
+
+[ERROR] 18:09:57:183 filesystem.log/(10799:10799): Fallo la comunicacion. Abortando 
+
+[WARNING] 18:09:57:183 filesystem.log/(10799:10799): Operacion desconocida 
+
