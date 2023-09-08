@@ -44,15 +44,17 @@ typedef struct  // archivo de configuracion kernel
     char* puerto_escucha;
     char* algoritmo_planificacion;
     int quantum;
-    int grado_multiprogramacion_ini;
     char** recursos;
+    int grado_multiprogramacion_ini;
 	char** instancias_recursos; 
-} arch_config;
+} arch_config_kernel;
 
-extern arch_config config_valores_kernel;
+extern arch_config_kernel config_valores_kernel;
 
 // FUNCIONES INICIALIZACIÓN //
-
+void cargar_configuracion(char* path);
+int atender_clientes_kernel(int );
+void manejar_conexion(int );
 
 // FUNCIONES PLANIFICACIÓN //
 

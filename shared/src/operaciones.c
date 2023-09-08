@@ -13,6 +13,11 @@ int recibir_operacion(int socket_cliente)
 	}
 }
 
+//de nuestro tp
+int enviar_datos(int socket_fd, void *source, uint32_t size) {
+	return send(socket_fd, source, size, 0);
+}
+
 //===================================================== PAQUETES =============================================================================
 
 t_paquete* crear_paquete(op_code codigo)
@@ -25,6 +30,7 @@ t_paquete* crear_paquete(op_code codigo)
 	return paquete;
 }
 
+/*sospecho que esta funcion esta mal
 t_paquete* recibir_paquete(int conexion)
 {
     t_paquete* paquete = malloc(sizeof(t_paquete));
@@ -43,9 +49,54 @@ t_paquete* recibir_paquete(int conexion)
     	paquete->buffer->stream = malloc(paquete->buffer->size);
     	recv(conexion, paquete->buffer->stream, paquete->buffer->size,MSG_WAITALL);
 
+		printf("recibir paquete recibio un menos 1\n");
+
 		return paquete;
 	}
 }
+
+t_paquete* recibir_paquete(int socket){ //TP0
+	int size;
+	void *stream;
+
+	op_code codigo=recibir_operacion(socket);
+	t_paquete* paquete=crear_paquete_con_codigo_de_operacion(codigo);
+
+	stream = recibir_stream(&size, socket);
+	memcpy(&paquete->buffer->stream_size, &size, sizeof(int));
+	paquete->buffer->stream = malloc(size);
+	memcpy(paquete->buffer->stream, stream, size);
+
+	free(stream);
+	return paquete;
+}
+
+void *recibir_stream(int *size, int socket_cliente)
+{
+    void *stream;
+
+    recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
+    stream = malloc(*size);
+    recv(socket_cliente, stream, *size, MSG_WAITALL);
+
+    return stream;
+}
+
+t_paquete *crear_paquete_con_codigo_de_operacion(uint8_t codigo){ // paquete con codigo de operacion solo paquete
+    t_paquete *paquete = malloc(sizeof(t_paquete));
+
+    paquete->codigo_operacion = codigo;
+    crear_buffer(paquete);
+    return paquete;
+  }
+
+  void crear_buffer(t_paquete *paquete)
+{
+    paquete->buffer = malloc(sizeof(t_buffer));
+    paquete->buffer->stream_size = 0;
+    paquete->buffer->stream = NULL;
+}
+*/
 
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
@@ -162,13 +213,6 @@ void* recibir_buffer(int* size, int socket_cliente) {
 
      return buffer;
  }
-
-void crear_buffer(t_paquete *paquete)
-{
-    paquete->buffer = malloc(sizeof(t_buffer));
-    paquete->buffer->stream_size = 0;
-    paquete->buffer->stream = NULL;
-}
 
 void agregar_a_buffer(t_buffer *buffer, void *src, int size) {
 	buffer->stream = realloc(buffer->stream, buffer->stream_size + size);

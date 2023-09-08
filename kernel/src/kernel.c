@@ -9,7 +9,7 @@ int socket_cpu_dispatch;
 int socket_cpu_interrupt;
 int socket_memoria;
 int socket_filesystem;
-arch_config config_valores_kernel;
+arch_config_kernel config_valores_kernel;
 
 int main(void)
 {

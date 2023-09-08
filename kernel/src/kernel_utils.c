@@ -28,14 +28,13 @@ void cargar_configuracion(char* path) {
 
 //---------------------------------------MANEJO CLIENTES - CONEXIONES -----------------------
 int atender_clientes_kernel(int socket_servidor){
-
-  	int socket_cliente = esperar_cliente(socket_servidor);
-    // TODO
-    log_info(kernel_logger, "llegue acá pete");
-  	return 0;
+  int socket_cliente = esperar_cliente(socket_servidor);
+  // TODO
+  log_info(kernel_logger, "llegue acá pete");
+  return 0;
 }
 
 void manejar_conexion(int socket_cliente) {
-    //TODO
-    return 0;
+  //TODO
+  //return 0;
 }

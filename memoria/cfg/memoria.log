@@ -1,36 +1,206 @@
-[INFO] 21:29:15:171 memoria.log/(21578:21578): Configuracion de memoria cargada correctamente
+[INFO] 22:25:58:314 memoria.log/(3564:3564): Configuracion de memoria cargada correctamente
 
-[INFO] 21:29:15:172 memoria.log/(21578:21578): Inicializando memoria
+[INFO] 22:25:58:314 memoria.log/(3564:3564): Inicializando memoria
 
-[INFO] 21:29:15:172 memoria.log/(21578:21578): Servidor creado
+[INFO] 22:25:58:314 memoria.log/(3564:3564): Servidor creado
 
-[INFO] 21:29:15:172 memoria.log/(21578:21578): Memoria lista para recibir al modulo cliente 
+[INFO] 22:25:58:315 memoria.log/(3564:3564): Memoria lista para recibir al modulo cliente 
 
-[INFO] 00:17:43:178 memoria.log/(25520:25520): Configuracion de memoria cargada correctamente
+[INFO] 22:26:00:267 memoria.log/(3564:3564): Se conecto un cliente 
 
-[INFO] 00:17:43:179 memoria.log/(25520:25520): Servidor creado
+[INFO] 22:26:00:268 memoria.log/(3564:3574): codop 1
+[INFO] 22:26:00:268 memoria.log/(3564:3574): Me llego el handshake :)
 
-[INFO] 00:17:43:179 memoria.log/(25520:25520): Memoria lista para recibir al modulo cliente 
+[INFO] 22:26:01:269 memoria.log/(3564:3574): Handshake enviado :)
 
-[INFO] 16:27:58:097 memoria.log/(8237:8237): Configuracion de memoria cargada correctamente
+[INFO] 22:26:01:269 memoria.log/(3564:3574): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 22:26:32:802 memoria.log/(3601:3601): Configuracion de memoria cargada correctamente
 
-[INFO] 16:27:58:098 memoria.log/(8237:8237): Inicializando memoria
+[INFO] 22:26:32:802 memoria.log/(3601:3601): Inicializando memoria
 
-[INFO] 16:27:58:098 memoria.log/(8237:8237): Servidor creado
+[INFO] 22:26:41:963 memoria.log/(3613:3613): Configuracion de memoria cargada correctamente
 
-[INFO] 16:27:58:099 memoria.log/(8237:8237): Memoria lista para recibir al modulo cliente 
+[INFO] 22:26:41:964 memoria.log/(3613:3613): Inicializando memoria
 
-[INFO] 18:08:02:594 memoria.log/(10765:10765): Configuracion de memoria cargada correctamente
+[INFO] 22:26:54:344 memoria.log/(3629:3629): Configuracion de memoria cargada correctamente
 
-[INFO] 18:08:02:594 memoria.log/(10765:10765): Inicializando memoria
+[INFO] 22:26:54:344 memoria.log/(3629:3629): Inicializando memoria
 
-[INFO] 18:08:02:595 memoria.log/(10765:10765): Servidor creado
+[INFO] 22:27:24:278 memoria.log/(3638:3638): Configuracion de memoria cargada correctamente
 
-[INFO] 18:08:02:595 memoria.log/(10765:10765): Memoria lista para recibir al modulo cliente 
+[INFO] 22:27:24:278 memoria.log/(3638:3638): Inicializando memoria
 
-[INFO] 18:08:13:163 memoria.log/(10765:10765): Se conecto un cliente 
+[INFO] 22:27:24:278 memoria.log/(3638:3638): Servidor creado
 
-[INFO] 18:09:29:422 memoria.log/(10765:10765): Se conecto un cliente 
+[INFO] 22:27:24:279 memoria.log/(3638:3638): Memoria lista para recibir al modulo cliente 
 
-[INFO] 18:09:57:183 memoria.log/(10765:10765): Se conecto un cliente 
+[INFO] 22:27:28:861 memoria.log/(3638:3638): Se conecto un cliente 
 
+[INFO] 22:27:28:862 memoria.log/(3638:3642): codop 1
+[INFO] 22:27:28:862 memoria.log/(3638:3642): Me llego el handshake :)
+
+[INFO] 22:27:29:866 memoria.log/(3638:3642): Handshake enviado :)
+
+[INFO] 22:27:29:868 memoria.log/(3638:3642): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 22:33:21:146 memoria.log/(3717:3717): Configuracion de memoria cargada correctamente
+
+[INFO] 22:33:21:147 memoria.log/(3717:3717): Inicializando memoria
+
+[INFO] 22:33:21:149 memoria.log/(3717:3717): Servidor creado
+
+[INFO] 22:33:21:149 memoria.log/(3717:3717): Memoria lista para recibir al modulo cliente 
+
+[INFO] 22:33:25:955 memoria.log/(3717:3717): Se conecto un cliente 
+
+[INFO] 22:33:25:955 memoria.log/(3717:3727): codop 1
+[INFO] 22:33:25:956 memoria.log/(3717:3727): Me llego el handshake :)
+
+[INFO] 22:33:26:957 memoria.log/(3717:3727): Handshake enviado :)
+
+[INFO] 22:33:26:957 memoria.log/(3717:3727): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 22:33:39:382 memoria.log/(3731:3731): Configuracion de memoria cargada correctamente
+
+[INFO] 22:33:39:383 memoria.log/(3731:3731): Inicializando memoria
+
+[INFO] 22:35:43:277 memoria.log/(3843:3843): Configuracion de memoria cargada correctamente
+
+[INFO] 22:35:43:277 memoria.log/(3843:3843): Inicializando memoria
+
+[INFO] 22:35:43:277 memoria.log/(3843:3843): Servidor creado
+
+[INFO] 22:35:43:277 memoria.log/(3843:3843): Memoria lista para recibir al modulo cliente 
+
+[INFO] 22:35:46:927 memoria.log/(3843:3843): Se conecto un cliente 
+
+[INFO] 22:35:46:927 memoria.log/(3843:3847): codop 1
+[INFO] 22:35:46:927 memoria.log/(3843:3847): Me llego el handshake :)
+
+[INFO] 22:35:47:933 memoria.log/(3843:3847): Handshake enviado :)
+
+[INFO] 22:35:47:933 memoria.log/(3843:3847): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 22:38:42:240 memoria.log/(3926:3926): Configuracion de memoria cargada correctamente
+
+[INFO] 22:38:42:241 memoria.log/(3926:3926): Inicializando memoria
+
+[INFO] 22:38:42:241 memoria.log/(3926:3926): Servidor creado
+
+[INFO] 22:38:42:241 memoria.log/(3926:3926): Memoria lista para recibir al modulo cliente 
+
+[INFO] 22:38:45:930 memoria.log/(3926:3926): Se conecto un cliente 
+
+[INFO] 22:38:45:930 memoria.log/(3926:3942): codop 1
+[INFO] 22:38:45:930 memoria.log/(3926:3942): Me llego el handshake :)
+
+[INFO] 22:38:45:930 memoria.log/(3926:3942): Handshake enviado :)
+
+[INFO] 22:38:45:930 memoria.log/(3926:3942): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 22:42:12:010 memoria.log/(4109:4109): Configuracion de memoria cargada correctamente
+
+[INFO] 22:42:12:010 memoria.log/(4109:4109): Inicializando memoria
+
+[INFO] 22:42:12:010 memoria.log/(4109:4109): Servidor creado
+
+[INFO] 22:42:12:010 memoria.log/(4109:4109): Memoria lista para recibir al modulo cliente 
+
+[INFO] 22:42:19:784 memoria.log/(4109:4109): Se conecto un cliente 
+
+[INFO] 22:42:19:784 memoria.log/(4109:4119): Me llego el handshake :)
+
+[INFO] 22:42:20:792 memoria.log/(4109:4119): Handshake enviado :)
+
+[INFO] 22:42:20:792 memoria.log/(4109:4119): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 22:44:31:542 memoria.log/(4254:4254): Configuracion de memoria cargada correctamente
+
+[INFO] 22:44:31:542 memoria.log/(4254:4254): Inicializando memoria
+
+[INFO] 22:44:31:542 memoria.log/(4254:4254): Servidor creado
+
+[INFO] 22:44:31:543 memoria.log/(4254:4254): Memoria lista para recibir al modulo cliente 
+
+[INFO] 22:44:34:302 memoria.log/(4254:4254): Se conecto un cliente 
+
+[INFO] 22:44:34:302 memoria.log/(4254:4270): Me llego el handshake :)
+
+[INFO] 22:44:35:304 memoria.log/(4254:4270): Handshake enviado :)
+
+[INFO] 22:44:35:305 memoria.log/(4254:4270): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 22:45:23:823 memoria.log/(4297:4297): Configuracion de memoria cargada correctamente
+
+[INFO] 22:45:23:824 memoria.log/(4297:4297): Inicializando memoria
+
+[INFO] 22:45:35:529 memoria.log/(4301:4301): Configuracion de memoria cargada correctamente
+
+[INFO] 22:45:35:529 memoria.log/(4301:4301): Inicializando memoria
+
+[INFO] 22:46:40:557 memoria.log/(4340:4340): Configuracion de memoria cargada correctamente
+
+[INFO] 22:46:40:557 memoria.log/(4340:4340): Inicializando memoria
+
+[INFO] 22:46:40:558 memoria.log/(4340:4340): Servidor creado
+
+[INFO] 22:46:40:558 memoria.log/(4340:4340): Memoria lista para recibir al modulo cliente 
+
+[INFO] 22:46:42:579 memoria.log/(4340:4340): Se conecto un cliente 
+
+[INFO] 22:46:42:580 memoria.log/(4340:4356): Me llego el handshake :)
+
+[INFO] 22:46:43:582 memoria.log/(4340:4356): Handshake enviado :)
+
+[INFO] 22:46:43:582 memoria.log/(4340:4356): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 22:47:46:028 memoria.log/(4395:4395): Configuracion de memoria cargada correctamente
+
+[INFO] 22:47:46:028 memoria.log/(4395:4395): Inicializando memoria
+
+[INFO] 22:47:58:734 memoria.log/(4402:4402): Configuracion de memoria cargada correctamente
+
+[INFO] 22:47:58:735 memoria.log/(4402:4402): Inicializando memoria
+
+[INFO] 22:47:58:736 memoria.log/(4402:4402): Servidor creado
+
+[INFO] 22:47:58:737 memoria.log/(4402:4402): Memoria lista para recibir al modulo cliente 
+
+[INFO] 22:48:03:508 memoria.log/(4402:4402): Se conecto un cliente 
+
+[INFO] 22:48:03:508 memoria.log/(4402:4409): Me llego el handshake :)
+
+[INFO] 22:48:04:509 memoria.log/(4402:4409): Handshake enviado :)
+
+[INFO] 22:48:04:509 memoria.log/(4402:4409): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 22:56:35:639 memoria.log/(4518:4518): Configuracion de memoria cargada correctamente
+
+[INFO] 22:56:35:639 memoria.log/(4518:4518): Inicializando memoria
+
+[INFO] 22:56:35:639 memoria.log/(4518:4518): Servidor creado
+
+[INFO] 22:56:35:639 memoria.log/(4518:4518): Memoria lista para recibir al modulo cliente 
+
+[INFO] 22:56:42:248 memoria.log/(4518:4518): Se conecto un cliente 
+
+[INFO] 22:56:42:248 memoria.log/(4518:4524): Me llego el handshake :)
+
+[INFO] 22:56:43:249 memoria.log/(4518:4524): Handshake enviado :)
+
+[INFO] 22:56:43:250 memoria.log/(4518:4524): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 22:59:20:928 memoria.log/(4688:4688): Configuracion de memoria cargada correctamente
+
+[INFO] 22:59:20:928 memoria.log/(4688:4688): Inicializando memoria
+
+[INFO] 22:59:20:928 memoria.log/(4688:4688): Servidor creado
+
+[INFO] 22:59:20:928 memoria.log/(4688:4688): Memoria lista para recibir al modulo cliente 
+
+[INFO] 23:00:10:085 memoria.log/(4716:4716): Configuracion de memoria cargada correctamente
+
+[INFO] 23:00:10:085 memoria.log/(4716:4716): Inicializando memoria
+
+[INFO] 23:00:10:085 memoria.log/(4716:4716): Servidor creado
+
+[INFO] 23:00:10:085 memoria.log/(4716:4716): Memoria lista para recibir al modulo cliente 
+
+[INFO] 23:00:14:435 memoria.log/(4716:4716): Se conecto un cliente 
+
+[INFO] 23:00:14:436 memoria.log/(4716:4723): Me llego el handshake :)
+
+[INFO] 23:00:15:437 memoria.log/(4716:4723): Handshake enviado :)
+
+[INFO] 23:00:15:437 memoria.log/(4716:4723): Se envio el tamaño de pagina 16 bytes al CPU

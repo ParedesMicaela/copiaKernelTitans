@@ -39,6 +39,6 @@ extern arch_config config_valores_filesystem;
 
 void cargar_configuracion(char*);
 void*conexion_inicial_memoria();
-int atender_clientes_filesystem(int, int);
+void atender_clientes_filesystem(void* ); //lo cambie a un void, era int(int, int)
 
 #endif

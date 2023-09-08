@@ -23,7 +23,6 @@ int main(void)
     // LEVANTAR ARCHIVOS //
 
     /// CREA LA CONEXION CON KERNEL Y MEMORIA ///
-
     int server_fd = iniciar_servidor(config_valores_filesystem.ip_filesystem,config_valores_filesystem.puerto_escucha);
     log_info(filesystem_logger, "Filesystem listo para recibir al modulo cliente \n");
 

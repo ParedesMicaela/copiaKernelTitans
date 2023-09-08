@@ -45,10 +45,14 @@ int atender_clientes_memoria(int socket_servidor){
 	return 0;
 }
 
-void manejo_conexiones(int socket_cliente){
+void manejo_conexiones(void* socket_cliente)
+{
+	int conexion = *(int*)socket_cliente;
 	while(1){
-	int codigo_operacion = recibir_operacion(socket_cliente);
-	switch(codigo_operacion){
+
+	t_paquete* paquete = recibir_paquete(conexion);
+	void* stream = paquete->buffer->stream;
+	switch(paquete->codigo_operacion){
 	case HANDSHAKE: //HANDSHAKE con CPU
 		log_info(memoria_logger,"Me llego el handshake :)\n");
 		usleep(config_valores_memoria.retardo_respuesta * 1000); //lo retardamos un poquito
@@ -69,11 +73,13 @@ void manejo_conexiones(int socket_cliente){
 void enviar_paquete_handshake(int socket_cliente) {
 
 	t_paquete* handshake=crear_paquete(HANDSHAKE);
-	agregar_entero_a_paquete(handshake,config_valores_memoria.tam_pagina);
+	agregar_entero_a_paquete(handshake,config_get_int_value(config, "TAM_PAGINA"));
 
 	enviar_paquete(handshake,socket_cliente);
 	log_info(memoria_logger,"Handshake enviado :)\n");
-	eliminar_paquete(handshake);
+	log_info(memoria_logger,"Se envio el tamaño de pagina %d bytes al CPU",config_get_int_value(config, "TAM_PAGINA"));
+
+	//eliminar_paquete(handshake);
 }
 
 // INSTRUCCIONES A CPU //

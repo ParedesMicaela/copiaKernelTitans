@@ -58,23 +58,30 @@ typedef struct{
 // OPERACION //
 int recibir_operacion(int);
 
+int enviar_datos(int , void *, uint32_t );
+
+t_paquete *crear_paquete_con_codigo_de_operacion(uint8_t codigo);
+void crear_buffer(t_paquete *paquete);
+void *recibir_stream(int *size, int socket_cliente);
+
+
 // PAQUETES //
-t_paquete* crear_paquete(op_code codigo);
-void agregar_caracter_a_paquete(t_paquete* paquete,char caracter);
-void agregar_entero_a_paquete(t_paquete* paquete,int numero);
-void agregar_cadena_a_paquete(t_paquete* paquete, char* palabra);
-void agregar_array_cadenas_a_paquete(t_paquete* paquete, char** palabras);
-void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
-void* serializar_paquete(t_paquete* paquete, int bytes);
-t_paquete* recibir_paquete(int conexion);
-char* sacar_cadena_de_paquete(void** stream);
-int sacar_entero_de_paquete(void** stream);
-char** sacar_array_cadenas_de_paquete(void** stream);
-void enviar_paquete(t_paquete* paquete, int socket_cliente);
-void eliminar_paquete(t_paquete* paquete);
+t_paquete* crear_paquete(op_code );
+void agregar_caracter_a_paquete(t_paquete* ,char );
+void agregar_entero_a_paquete(t_paquete* ,int );
+void agregar_cadena_a_paquete(t_paquete* , char* );
+void agregar_array_cadenas_a_paquete(t_paquete* , char** );
+void agregar_a_paquete(t_paquete* , void* , int );
+void* serializar_paquete(t_paquete* , int );
+t_paquete* recibir_paquete(int );
+char* sacar_cadena_de_paquete(void** );
+int sacar_entero_de_paquete(void** );
+char** sacar_array_cadenas_de_paquete(void** );
+void enviar_paquete(t_paquete* , int );
+void eliminar_paquete(t_paquete* );
 
 //SERIALIZACION
-void* serializar_paquete(t_paquete* paquete, int bytes);
+void* serializar_paquete(t_paquete* , int );
 
 // MENSAJE //
 void enviar_mensaje(char*, int);

@@ -26,19 +26,19 @@ void cargar_configuracion(char* path) {
 
 // ATENDER CLIENTES //
 
-int atender_clientes_filesystem(void* conexion) {
+void atender_clientes_filesystem(void* conexion) {
+    int cliente_fd = *(int*)conexion;
 
-        int cliente_fd = *(int*)conexion;
-
-        int cod_op = recibir_operacion(cliente_fd);
-        switch (cod_op)
-            {
-            case -1:
-                log_error(filesystem_logger, "Fallo la comunicacion. Abortando \n");
-            default:
-                log_warning(filesystem_logger, "Operacion desconocida \n");
-                break;
-            }
+    int cod_op = recibir_operacion(cliente_fd);
+    log_info(filesystem_logger,"codigo op: %d", cod_op);
+    switch (cod_op)
+        {
+        case -1:
+            log_error(filesystem_logger, "Fallo la comunicacion. Abortando \n");
+        default:
+            log_warning(filesystem_logger, "Operacion desconocida \n");
+        break;
+        }
 }
 
 /*
