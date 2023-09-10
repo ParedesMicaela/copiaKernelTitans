@@ -11,7 +11,7 @@ uint32_t AX;
 uint32_t BX;
 uint32_t CX;
 uint32_t DX;
-char **instrucciones;
+char **instruccion;
 
 //======================= Funciones Internas ==============================================================================
 static void enviar_handshake(int socket_cliente_memoria);
@@ -24,6 +24,9 @@ static int buscar_registro(char *registro);
 static int tipo_inst(char *instruccion);
 static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo);
 static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo);
+static void pedir_instruccion(int socket_cliente_memoria,int posicion);
+static void recibir_instruccion(int socket_cliente_memoria);
+
 
 //================================================== Configuracion =====================================================================
 
@@ -52,7 +55,6 @@ void realizar_handshake(int socket_cliente_memoria)
 {
     enviar_handshake(socket_cliente_memoria);
     log_info(cpu_logger, "Handshake enviado a memoria \n");
-    usleep(1000); //lo retardamos un poquito
     recibir_handshake(socket_cliente_memoria);
 }
 
@@ -65,36 +67,43 @@ static void enviar_handshake(int socket_cliente_memoria)
 
 static void recibir_handshake(int socket_cliente_memoria)
 {
-    log_info(cpu_logger, " llegue recibir handshake\n");
     t_paquete* paquete = recibir_paquete(socket_cliente_memoria);
     void* stream = paquete->buffer->stream;
-    log_info(cpu_logger, "abriendo paquete\n");
     if (paquete->codigo_operacion == HANDSHAKE)
     {
         tam_pagina = sacar_entero_de_paquete(&stream);
-        log_info(cpu_logger, "tamanio de pagina %d para realizar handshake", tam_pagina);
+        log_info(cpu_logger, "Tamanio de pagina %d para realizar handshake :)", tam_pagina);
     }
     else
     {
-        perror("No me enviaste el tam_pagina \n");
+        perror("No me enviaste el tam_pagina :( \n");
         abort();
     }
 }
 
-static void recibir_instrucciones(int socket_cliente_memoria)
+//================================================== Instrucciones =====================================================================
+
+static void recibir_instruccion(int socket_cliente_memoria)
 {
     t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
     void *stream = paquete->buffer->stream;
 
     if (paquete->codigo_operacion == INSTRUCCIONES)
     {
-        instrucciones = sacar_array_cadenas_de_paquete(&stream);
+        instruccion = sacar_array_cadenas_de_paquete(&stream);
     }
     else
     {
         perror("No me enviaste las instrucciones\n");
         abort();
     }
+}
+
+static void pedir_instruccion(int socket_cliente_memoria,int posicion)
+{
+    t_paquete *paquete = crear_paquete(MANDAR_INSTRUCCIONES);
+    agregar_entero_a_paquete(paquete,posicion);
+    enviar_paquete(paquete, socket_cliente_memoria);
 }
 
 //================================================== Dispatch =====================================================================
@@ -122,7 +131,7 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         // una vez que recibimos el pcb inicializamos los registros de uso general de la cpu
         iniciar_registros(contexto_ejecucion->registros);
 
-        // iniciamos el procedimiento para procesar cualquier instruccion que nos manden
+        // iniciamos el procedimiento para procesar cualquier instruccion
         ciclo_de_instruccion(socket_cliente_dispatch, socket_cliente_memoria, contexto_ejecucion);
     }
     else
@@ -139,24 +148,22 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
 // le pasamos el socket del kernel y el socket de la memoria, porque son los modulos con los que voy a tener que relacionarme
 void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memoria, t_contexto_ejecucion *contexto_ejecucion)
 {
+    bool seguir_ejecutando = true;
+    int cant_instruccioness = string_array_size(instruccion); 
 
-    // las instrucciones me las manda la memoria, y las guardo en la var global de arriba
-    recibir_instrucciones(socket_cliente_memoria);
-    bool bandera = true;
-    int cant_instruccioness = string_array_size(instrucciones); // return instr
-
-    while (bandera && contexto_ejecucion->program_counter < cant_instruccioness)
+    while (seguir_ejecutando)
     {
 
         // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
         log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
 
         //=============================================== FETCH =================================================================
-        // la primera etapa del ciclo consiste en buscar la próxima instrucción a ejecutar, que lo tiene el program counter
-        int inst_a_ejecutar = contexto_ejecucion->program_counter;
+        
+        //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
+        pedir_instruccion(socket_cliente_memoria, contexto_ejecucion->program_counter);
 
-        // dentro de la lista de instrucciones, la instruccion que nos importa es la que apunta el prog_count
-        char *instruccion = instrucciones[inst_a_ejecutar];
+        //una vez que la recibo de memoria, la guardo en la var global de arriba
+        recibir_instruccion(socket_cliente_memoria);
 
         //=============================================== DECODE =================================================================
         // vemos si la instruccion requiere de una traducción de dirección lógica a dirección física
@@ -203,7 +210,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit");
             // eliminar_todas_las_entradas(contexto_ejecucion->pid);
-            bandera = false;
+            seguir_ejecutando = false;
             break;
         }
     }
