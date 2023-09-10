@@ -30,7 +30,6 @@ void cargar_configuracion(char* path) {
 int atender_clientes_kernel(int socket_servidor){
   int socket_cliente = esperar_cliente(socket_servidor);
   // TODO
-  log_info(kernel_logger, "llegue acá pete");
   return 0;
 }
 
