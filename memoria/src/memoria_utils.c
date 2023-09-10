@@ -47,21 +47,24 @@ int atender_clientes_memoria(int socket_servidor){
 
 void manejo_conexiones(void* socket_cliente)
 {
-	int conexion = *(int*)socket_cliente;
+	int cliente = *(int*)socket_cliente;
 	while(1){
 
-	t_paquete* paquete = recibir_paquete(conexion);
+	t_paquete* paquete = recibir_paquete(cliente);
 	void* stream = paquete->buffer->stream;
 	switch(paquete->codigo_operacion){
 	case HANDSHAKE: //HANDSHAKE con CPU
 		log_info(memoria_logger,"Me llego el handshake :)\n");
 		usleep(config_valores_memoria.retardo_respuesta * 1000); //lo retardamos un poquito
-		enviar_paquete_handshake(socket_cliente);
+		enviar_paquete_handshake(cliente);
 		break;
 	case MANDAR_INSTRUCCIONES:
-		//leemos el archivo de pseudo codigo del path de la config
-		char* instrucciones = leer_archivo_instrucciones(config_valores_memoria.path_instrucciones);
-		enviar_paquete_instrucciones(socket_cliente, instrucciones);
+		//leemos el archivo de pseudo codigo del path de la config  y lo metemos en una cadena TODO JUNTO
+		char* instrucciones_leidas = leer_archivo_instrucciones(config_valores_memoria.path_instrucciones);
+
+		//necesito sacar del paquete la posicion de program_counter
+		int posicion_pedida = sacar_entero_de_paquete(&stream);
+		enviar_paquete_instrucciones(cliente, instrucciones_leidas,posicion_pedida);
 		break;
 	default:
 		break;
@@ -69,7 +72,7 @@ void manejo_conexiones(void* socket_cliente)
 }
 }
 
-// HANDSHAKE A CPU //
+//================================================= Handshake =====================================================================
 void enviar_paquete_handshake(int socket_cliente) {
 
 	t_paquete* handshake=crear_paquete(HANDSHAKE);
@@ -79,17 +82,21 @@ void enviar_paquete_handshake(int socket_cliente) {
 	log_info(memoria_logger,"Handshake enviado :)\n");
 	log_info(memoria_logger,"Se envio el tamaño de pagina %d bytes al CPU",config_get_int_value(config, "TAM_PAGINA"));
 
-	//eliminar_paquete(handshake);
+	eliminar_paquete(handshake);
 }
 
-// INSTRUCCIONES A CPU //
-void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones)
+//============================================ Instrucciones a CPU =====================================================================
+void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones, int inst_a_ejecutar)
 {
-    char** lista_instrucciones = string_split(instrucciones, "\n");
+	//armamos una lista de instrucciones con la cadena de instrucciones que lei, pero ahora las separo
+	char** lista_instrucciones = string_split(instrucciones, "\n");
+
+	//a la cpu le mandamos SOLO la instruccion que me marca el prog_count
+    char *instruccion = lista_instrucciones[inst_a_ejecutar];
 
     t_paquete* paquete = crear_paquete(INSTRUCCIONES); 
 
-    agregar_array_cadenas_a_paquete(paquete, lista_instrucciones);
+    agregar_cadena_a_paquete(paquete, instruccion); 
 
     enviar_paquete(paquete, socket_cpu);
 	log_info(memoria_logger,"Instrucciones enviadas :)\n");
