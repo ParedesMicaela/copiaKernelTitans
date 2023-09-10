@@ -53,7 +53,4 @@ void atender_dispatch(int, int );
 void atender_interrupt(void* );
 void finalizar_cpu();
 
-
-void pedir_handshake(int );
-
 #endif
