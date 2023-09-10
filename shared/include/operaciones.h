@@ -37,11 +37,11 @@ typedef enum {
 	SUB,
 	INSTRUCCION_EXIT
 } codigo_instrucciones;
+
 typedef struct
 {
-    uint32_t stream_size;
-    void *stream;
-    int size;
+	int size;
+	void* stream;
 } t_buffer;
 
 typedef struct
