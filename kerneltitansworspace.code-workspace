@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "cpu"
+		},
+		{
+			"path": "filesystem"
+		},
+		{
+			"path": "kernel"
+		},
+		{
+			"path": "memoria"
+		},
+		{
+			"path": "shared"
+		}
+	]
+}

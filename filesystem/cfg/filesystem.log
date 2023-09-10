@@ -1,0 +1,17 @@
+[INFO] 00:05:52:167 filesystem.log/(7232:7232): Archivo de configuracion cargada 
+
+[INFO] 00:05:52:168 filesystem.log/(7232:7232): Filesystem listo para recibir al modulo cliente 
+
+[INFO] 00:06:02:090 filesystem.log/(7232:7232): Se conecto un cliente 
+
+[INFO] 00:06:02:107 filesystem.log/(7232:7238): codigo op: -1
+[ERROR] 00:06:02:107 filesystem.log/(7232:7238): Fallo la comunicacion. Abortando 
+
+[WARNING] 00:06:02:107 filesystem.log/(7232:7238): Operacion desconocida 
+
+[INFO] 01:04:56:758 filesystem.log/(8170:8170): Archivo de configuracion cargada 
+
+[INFO] 01:04:56:758 filesystem.log/(8170:8170): Filesystem listo para recibir al modulo cliente 
+
+[INFO] 01:05:38:432 filesystem.log/(8170:8170): Se conecto un cliente 
+

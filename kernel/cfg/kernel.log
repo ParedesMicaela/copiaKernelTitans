@@ -1,0 +1,20 @@
+[INFO] 00:06:02:088 kernel.log/(7236:7236): Archivo de configuracion cargado 
+
+[INFO] 00:06:02:089 kernel.log/(7236:7236): Kernel conectado con cpu 
+
+[INFO] 00:06:02:089 kernel.log/(7236:7236): Kernel conectado con memoria 
+
+[INFO] 00:06:02:090 kernel.log/(7236:7236): Kernel conectado con filesystem 
+
+[INFO] 01:05:38:426 kernel.log/(8182:8182): Archivo de configuracion cargado 
+
+[INFO] 01:05:38:431 kernel.log/(8182:8182): Kernel conectado con cpu 
+
+[INFO] 01:05:38:432 kernel.log/(8182:8182): Kernel conectado con memoria 
+
+[INFO] 01:05:38:432 kernel.log/(8182:8182): Kernel conectado con filesystem 
+
+[INFO] 01:05:38:432 kernel.log/(8182:8182): Servidor creado 
+
+[INFO] 01:05:38:432 kernel.log/(8182:8182): Kernel listo para recibir al modulo cliente 
+
