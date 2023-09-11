@@ -9,9 +9,9 @@
 #include <sys/time.h>
 #include <commons/collections/list.h>
 #include <commons/log.h>
-#include <libshares/socket.h>
-#include <libshares/logconfig.h>
-#include <libshares/operaciones.h>
+#include "socket.h"
+#include "logconfig.h"
+#include "operaciones.h"
 
 // VARIABLES DE INICIALIZACIÓN //
 extern t_log* kernel_logger;
