@@ -61,10 +61,10 @@ void manejar_conexion(int socket_cliente) {
 }
 
 void finalizar_kernel(){
-	 log_info(kernel_logger,"Finalizando el modulo Kernel");
-	 log_destroy(kernel_logger);
-	 liberar_conexion(server_fd);
-	 liberar_conexion(socket_memoria);
-	 liberar_conexion(socket_cpu_dispatch);
-   liberar_conexion(socket_cpu_interrupt);
+  log_info(kernel_logger,"Finalizando el modulo Kernel");
+  log_destroy(kernel_logger);
+  liberar_conexion(server_fd);
+  liberar_conexion(socket_memoria);
+  liberar_conexion(socket_cpu_dispatch);
+  liberar_conexion(socket_cpu_interrupt);
 }
