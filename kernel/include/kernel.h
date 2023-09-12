@@ -50,17 +50,20 @@ typedef struct
 extern arch_config_kernel config_valores_kernel;
 
 //============================================= Inicializacion =====================================================================
-void cargar_configuracion(char* path);
+void cargar_configuracion(char* );
 int atender_clientes_kernel(int );
 void manejar_conexion(int );
 void iniciar_proceso (char* , int , int );
 void inicializar_diccionarios();
 void inicializar_colas();
+void inicializar_planificador();
 
 //============================================= Planificador =================================================================================================================
 void planificador_largo_plazo();
 void planificador_corto_plazo();
 void enviar_path_a_memoria(char* );
+void mostrar_lista_pcb(t_list* );
+void meter_en_cola(t_pcb* , estado );
 
 ////========================================= Relacion con Memoria ===========================================================================================================
 void enviar_path_a_memoria(char* );

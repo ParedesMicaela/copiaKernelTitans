@@ -51,7 +51,7 @@ Listar procesos por estado // PROCESO_ESTADO
 //===============================================================================================================================
 
 //nos van a decir la prioridad, el archivo de pseudocodigo a ejecutar y el tamanio de memoria swap que va a ejecutar
-void iniciar_proceso (char* path, uint32_t tam_proceso_swap, int prioridad)
+void iniciar_proceso (char* path, int tam_proceso_swap, int prioridad)
 {
   //nos llega de la consola interactiva que tenemos que iniciar un proceso
   //inicializamos el proceso con su pcb respectivo

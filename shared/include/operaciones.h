@@ -77,7 +77,7 @@ typedef struct registros_cpu
 	uint32_t DX;
 } t_registros_cpu;
 
-typedef struct pcb
+typedef struct
 {
 	uint32_t pid;
 	uint32_t program_counter;
@@ -91,9 +91,7 @@ typedef struct pcb
 
 	//aca NO vamos a poner las cosas con las que se relaciona el proceso en memoria (tam paginas por ejemplo)
 	//vamos a ponerlo en memoria pero despues
-};
-
-typedef struct pcb t_pcb; //declaro el pcb
+}t_pcb; //declaro el pcb
 
 //======================================================= Operaciones ======================================================================================================
 int recibir_operacion(int);
