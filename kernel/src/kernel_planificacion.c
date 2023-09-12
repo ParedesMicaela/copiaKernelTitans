@@ -45,3 +45,70 @@ Al recibir el Contexto de Ejecución del proceso en ejecución
         --se seleccionará el siguiente proceso a ejecutar según indique el algoritmo. 
             ---Durante este período la CPU se quedará esperando el nuevo contexto (es de esta parte o de todo el corto plazo???)
 */
+
+#include "kernel.h"
+
+//=============================================== Variables Globales ========================================================
+t_dictionary* diccionario_colas;
+t_dictionary* diccionario_estados;
+
+t_list* cola_NEW;
+t_list* cola_READY;
+
+//creo que va a haber 2 colas de bloqueados, dice algo en el enunciado
+t_list* cola_BLOCKED;
+
+t_list* cola_EXEC;
+t_list* cola_EXIT;
+
+char**lista_instrucciones;
+
+//============================================================================================================================
+void planificador_largo_plazo()
+{
+    //hay que ver el grado de multipprogramacion, seguramente lleve un if porque si es menor que el original, no desalojamos
+}
+
+void planificador_corto_plazo()
+{
+
+}
+
+void enviar_path_a_memoria(char* path)
+{
+    t_paquete* paquete = crear_paquete(RECIBIR_PATH);
+
+    agregar_cadena_a_paquete(paquete,path);
+    enviar_paquete(paquete, socket_memoria);
+    
+    log_info(kernel_logger, "Mandando a memoria el PATH: %s", path);
+}
+
+//=================================================== Diccionarios y Colas ==================================================================
+void inicializar_diccionarios()
+{
+    diccionario_colas = dictionary_int_create();
+
+    dictionary_int_put(diccionario_colas, NEW, cola_NEW);
+    dictionary_int_put(diccionario_colas, READY, cola_READY);
+    dictionary_int_put(diccionario_colas, BLOCKED, cola_BLOCKED);
+    dictionary_int_put(diccionario_colas, EXEC, cola_EXEC);
+    dictionary_int_put(diccionario_colas, EXIT, cola_EXIT);
+
+    diccionario_estados = dictionary_int_create();
+
+    dictionary_int_put(diccionario_estados, NEW, "New");
+    dictionary_int_put(diccionario_estados, READY, "Ready");
+    dictionary_int_put(diccionario_estados, BLOCKED, "Blocked");
+    dictionary_int_put(diccionario_estados, EXEC, "Exec");
+    dictionary_int_put(diccionario_estados, EXIT, "Exit");
+}
+
+void inicializar_colas()
+{
+    cola_NEW = list_create();
+    cola_READY = list_create();
+    cola_BLOCKED = list_create();
+    cola_EXEC = list_create();
+    cola_EXIT = list_create();
+}
