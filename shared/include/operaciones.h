@@ -56,12 +56,24 @@ typedef struct{
 	char* ip;
 }conexion_t;
 
-typedef struct{
+typedef struct registros_cpu
+{
 	uint32_t AX;
 	uint32_t BX;
 	uint32_t CX;
 	uint32_t DX;
-} registros_cpu;
+} t_registros_cpu;
+
+typedef struct pcb
+{
+	uint32_t pid;
+	uint32_t program_counter;
+ 	t_registros_cpu registros_cpu;
+	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
+};
+
+
+typedef struct pcb t_pcb; //declaro el pcb
 // OPERACION //
 int recibir_operacion(int);
 
