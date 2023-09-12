@@ -38,5 +38,18 @@ La resolución del Page Fault:
     - Al recibir la respuesta del módulo memoria:
         --desbloquear el proceso
         --colocarlo en la cola de ready.
-
 */
+
+#include "kernel.h"
+
+//============================================================================================================================================================================
+
+void enviar_path_a_memoria(char* path)
+{
+    t_paquete* paquete = crear_paquete(RECIBIR_PATH);
+
+    agregar_cadena_a_paquete(paquete,path);
+    enviar_paquete(paquete, socket_memoria);
+    
+    log_info(kernel_logger, "Mandando a memoria el PATH: %s", path);
+}
