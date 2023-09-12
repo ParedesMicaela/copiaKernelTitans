@@ -7,13 +7,18 @@
 #include <semaphore.h>
 #include <pthread.h>
 #include <sys/time.h>
+#include <unistd.h>
+#include <readline/readline.h>
+#include <readline/history.h>  
 #include <commons/collections/list.h>
+#include <commons/collections/dictionary.h>
 #include <commons/log.h>
 #include "socket.h"
 #include "logconfig.h"
 #include "operaciones.h"
+#include "dictionary_int.h"
 
-// VARIABLES DE INICIALIZACIÓN //
+//================================================== Variables =====================================================================
 extern t_log* kernel_logger;
 extern t_config* config;
 extern int server_fd;
@@ -22,16 +27,9 @@ extern int socket_cpu_interrupt;
 extern int socket_memoria;
 extern int socket_filesystem;
 
-// VARIABLES DE PLANIFICACION //
+//==============================================================================================================================
 
-// VARIABLES COLAS //
-
-
-// VARIABLES DICCIONARIOS //
-
-
-// CONFIGURACIÓN //
-typedef struct  // archivo de configuracion kernel
+typedef struct 
  {
     char* ip_memoria;
     char* puerto_memoria;
@@ -51,18 +49,27 @@ typedef struct  // archivo de configuracion kernel
 
 extern arch_config_kernel config_valores_kernel;
 
-// FUNCIONES INICIALIZACIÓN //
+//============================================= Inicializacion =====================================================================
 void cargar_configuracion(char* path);
 int atender_clientes_kernel(int );
 void manejar_conexion(int );
+void iniciar_proceso (char* , int , int );
+void inicializar_diccionarios();
+void inicializar_colas();
 
-// FUNCIONES PLANIFICACIÓN //
+//============================================= Planificador =================================================================================================================
+void planificador_largo_plazo();
+void planificador_corto_plazo();
+void enviar_path_a_memoria(char* );
 
+////========================================= Relacion con Memoria ===========================================================================================================
+void enviar_path_a_memoria(char* );
 
-// MANEJO RECURSOS //
+//================================================== PCB =====================================================================================================================
+t_pcb* crear_pcb(int );
+void enviar_pcb_a_cpu(t_pcb* );
 
-
-//FUNCIONES DESTRUIR//
-
+//================================================ Destruir ==================================================================================================================
+void finalizar_kernel();
 
 #endif
