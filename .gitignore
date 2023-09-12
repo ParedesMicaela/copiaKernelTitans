@@ -50,3 +50,12 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+cpu/cfg/cpu.log
+kernel/cfg/kernel.log
+memoria/cfg/memoria.log
+filesystem/cfg/filesystem.log
+cpu/cpu
+cpu/cfg/cpu.log
+filesystem/cfg/filesystem.log
+kernel/cfg/kernel.log
+memoria/cfg/memoria.log

@@ -86,3 +86,19 @@
 
 [INFO] 23:00:14:437 cpu.log/(4722:4722):  llegue recibir handshake
 
+[INFO] 00:41:24:655 cpu.log/(11669:11669): Configuracion de CPU cargada
+[INFO] 00:41:24:655 cpu.log/(11669:11669): Archivo de configuracion cargado 
+
+[INFO] 00:41:24:656 cpu.log/(11669:11669): Conexion con memoria realizada 
+
+[INFO] 00:44:20:561 cpu.log/(11773:11773): Configuracion de CPU cargada
+[INFO] 00:44:20:561 cpu.log/(11773:11773): Archivo de configuracion cargado 
+
+[INFO] 00:44:20:561 cpu.log/(11773:11773): Conexion con memoria realizada 
+
+[INFO] 00:44:20:561 cpu.log/(11773:11773): Handshake enviado a memoria 
+
+[INFO] 00:44:20:562 cpu.log/(11773:11773):  llegue recibir handshake
+
+[INFO] 00:49:50:572 cpu.log/(11773:11773): abriendo paquete
+

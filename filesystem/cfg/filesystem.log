@@ -15,3 +15,7 @@
 
 [INFO] 01:05:38:432 filesystem.log/(8170:8170): Se conecto un cliente 
 
+[INFO] 00:46:36:347 filesystem.log/(11820:11820): Archivo de configuracion cargada 
+
+[INFO] 00:46:36:348 filesystem.log/(11820:11820): Filesystem listo para recibir al modulo cliente 
+

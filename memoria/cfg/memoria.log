@@ -204,3 +204,22 @@
 [INFO] 23:00:15:437 memoria.log/(4716:4723): Handshake enviado :)
 
 [INFO] 23:00:15:437 memoria.log/(4716:4723): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 00:44:12:811 memoria.log/(11767:11767): Configuracion de memoria cargada correctamente
+
+[INFO] 00:44:12:811 memoria.log/(11767:11767): Inicializando memoria
+
+[INFO] 00:44:12:812 memoria.log/(11767:11767): Servidor creado
+
+[INFO] 00:44:12:812 memoria.log/(11767:11767): Memoria lista para recibir al modulo cliente 
+
+[INFO] 00:44:20:561 memoria.log/(11767:11767): Se conecto un cliente 
+
+[INFO] 00:44:20:561 memoria.log/(11767:11774): Me llego el handshake :)
+
+[INFO] 00:44:21:562 memoria.log/(11767:11774): Handshake enviado :)
+
+[INFO] 00:44:21:562 memoria.log/(11767:11774): Se envio el tamaño de pagina 16 bytes al CPU
+[INFO] 00:44:30:456 memoria.log/(11767:11767): Se conecto un cliente 
+
+[INFO] 00:46:36:348 memoria.log/(11767:11767): Se conecto un cliente 
+
