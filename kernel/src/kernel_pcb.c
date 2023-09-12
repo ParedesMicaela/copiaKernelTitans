@@ -5,7 +5,7 @@ uint32_t indice_pid = 0;
 
 //============================================================================================================================================================================
 //cada vez que la consola interactiva nos dice de crear un pcb, nos va a pasar la prioridad, el pid lo podemos poner nosotros
-t_pcb *crear_pcb(int prioridad) 
+t_pcb *crear_pcb(int prioridad, uint32_t tam_swap) 
 {
     //esto lo ponemos aca para no tener que hacerlo en la funcion iniciar_proceso si total lo vamos a hacer siempre
     t_pcb *pcb = malloc(sizeof(*pcb)); //nota de Martín: este malloc después se libera en cpu cuando termina el proceso junto al pcb (posible memory leak?)
@@ -15,19 +15,31 @@ t_pcb *crear_pcb(int prioridad)
     indice_pid ++;
     pcb->pid = indice_pid;
     pcb->program_counter = 0;
-    pcb->prioridad=prioridad;
-    pcb->pid = pid;
-    
+    pcb->prioridad = prioridad;
+
+    //cuando lo creamos el estado siempre es new
+    pcb->estado_pcb = NEW;
     pcb->program_counter = 0;
     pcb->registros_cpu.AX = 0;
     pcb->registros_cpu.BX = 0;
     pcb->registros_cpu.CX = 0;
     pcb->registros_cpu.DX = 0;
     //pcb->tabla_archivos_abiertos = diccionario;
-    
+
+    meter_en_cola(pcb, NEW);
+
     log_info(kernel_logger, "Se crea el proceso %d en NEW", pcb->pid);
 
-    //se pueden agregar mas cosas segun necesitemos
+    /*cada vez que creamos un proceso le tenemos que avisar a memoria que debe crear la estructura
+    en memoria del proceso*/
+    t_paquete* paquete = crear_paquete(CREACION_ESTRUCTURAS_MEMORIA);
+
+    //a la memoria solamente le pasamos el pid y el tamanio que va a ocupar en swap, despues se encarga ella
+    agregar_entero_a_paquete(paquete,pcb-> pid);
+    agregar_entero_a_paquete(paquete,string_array_size(tam_swap));
+
+    enviar_paquete(paquete, socket_memoria);
+    log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso");
 
     return pcb;
 }

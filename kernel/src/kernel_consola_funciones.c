@@ -51,15 +51,16 @@ Listar procesos por estado // PROCESO_ESTADO
 //===============================================================================================================================
 
 //nos van a decir la prioridad, el archivo de pseudocodigo a ejecutar y el tamanio de memoria swap que va a ejecutar
-void iniciar_proceso (char* path, int tam_proceso_swap, int prioridad)
+void iniciar_proceso (char* path, uint32_t tam_proceso_swap, int prioridad)
 {
   //nos llega de la consola interactiva que tenemos que iniciar un proceso
   //inicializamos el proceso con su pcb respectivo
-  t_pcb* pcb = crear_pcb(prioridad);
+  t_pcb* pcb = crear_pcb(prioridad,tam_proceso_swap);
 
   //necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
   enviar_path_a_memoria(path);
 
+  //en caso de que el grado máximo de multiprogramación lo permita
   planificador_largo_plazo();
 
   while(1)
@@ -67,17 +68,8 @@ void iniciar_proceso (char* path, int tam_proceso_swap, int prioridad)
     planificador_corto_plazo();
   }
 
-
-
-  //hay que hacer los diccionarios de colas
-
-  /*aca vamos a ejecutar el corto plazo
-
-
-
-
-
-    */
+  //una que vez que ejecutamos, lo mandamos a exit
+  meter_en_cola(pcb, EXIT);
 
   //cuando el proceso finalice tenemos que liberar el espacio que le dimos en memoria    
   t_paquete* paquete_para_memoria = crear_paquete(FINALIZAR_EN_MEMORIA);
