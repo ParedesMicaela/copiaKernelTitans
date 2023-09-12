@@ -69,7 +69,7 @@ void meter_en_cola(t_pcb* , estado );
 void enviar_path_a_memoria(char* );
 
 //================================================== PCB =====================================================================================================================
-t_pcb* crear_pcb(int , uint32_t);
+t_pcb* crear_pcb(int, int); //como 2do parametro había un uint32_t que tiraba error ya que time_swap(en el .c) estaba como int
 void enviar_pcb_a_cpu(t_pcb* );
 
 //================================================ Destruir ==================================================================================================================

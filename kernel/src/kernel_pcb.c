@@ -25,7 +25,7 @@ t_pcb *crear_pcb(int prioridad, int tam_swap)
     pcb->registros_cpu.CX = 0;
     pcb->registros_cpu.DX = 0;
     //pcb->tabla_archivos_abiertos = diccionario;
-
+    pcb->archivosAbiertos = dictionary_create();
     meter_en_cola(pcb, NEW);
 
     log_info(kernel_logger, "Se crea el proceso %d en NEW", pcb->pid);
@@ -59,7 +59,8 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.CX);
     agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
     
-    //agregar diccionario a paquete
+
+    agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos);
 
     enviar_paquete(paquete, socket_cpu_dispatch);
     log_info(kernel_logger, "Se envio el PCB %d a la CPU", pcb_a_enviar->pid);
