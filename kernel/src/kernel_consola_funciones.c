@@ -45,3 +45,48 @@ Listar procesos por estado // PROCESO_ESTADO
         --el sistema debe permanecer estable sin reacción alguna.
 
 */
+
+#include "kernel.h"
+
+//===============================================================================================================================
+
+//nos van a decir la prioridad, el archivo de pseudocodigo a ejecutar y el tamanio de memoria swap que va a ejecutar
+void iniciar_proceso (char* path, int tam_proceso_swap, int prioridad)
+{
+  //nos llega de la consola interactiva que tenemos que iniciar un proceso
+  //inicializamos el proceso con su pcb respectivo
+  t_pcb* pcb = crear_pcb(prioridad);
+
+  //necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
+  enviar_path_a_memoria(path);
+
+  planificador_largo_plazo();
+
+  while(1)
+  {
+    planificador_corto_plazo();
+  }
+
+
+
+  //hay que hacer los diccionarios de colas
+
+  /*aca vamos a ejecutar el corto plazo
+
+
+
+
+
+    */
+
+  //cuando el proceso finalice tenemos que liberar el espacio que le dimos en memoria    
+  t_paquete* paquete_para_memoria = crear_paquete(FINALIZAR_EN_MEMORIA);
+
+  //solamente le pasamos el pid del proceso porque en memoria vamos a tener toda otra estructura con las cosas que ocupa el proceso
+  //entonces con solo el pid podriamos acceder a este
+  agregar_entero_a_paquete(paquete_para_memoria,pcb->pid);
+  enviar_paquete(paquete_para_memoria, socket_memoria);
+    
+  log_info(kernel_logger, "Se manda mensaje a memoria para liberar estructuras del proceso: %d", pcb->pid);
+
+  }
