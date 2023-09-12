@@ -1,7 +1,7 @@
 #include "kernel.h"
 
 
-t_pcb *crear_pcb(int pid) //el pid no debería ser uint32_t?
+t_pcb *crear_pcb(uint32_t pid) 
 {
     t_pcb *pcb = malloc(sizeof(*pcb)); //nota de Martín: este malloc después se libera en cpu cuando termina el proceso junto al pcb (posible memory leak?)
     

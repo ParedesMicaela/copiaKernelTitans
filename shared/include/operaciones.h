@@ -72,8 +72,8 @@ typedef struct pcb
 	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
 };
 
-
 typedef struct pcb t_pcb; //declaro el pcb
+
 // OPERACION //
 int recibir_operacion(int);
 
