@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h> // para los uint32_t de los registros de CPU
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netdb.h>
@@ -55,6 +56,12 @@ typedef struct{
 	char* ip;
 }conexion_t;
 
+typedef struct{
+	uint32_t AX;
+	uint32_t BX;
+	uint32_t CX;
+	uint32_t DX;
+} registros_cpu;
 // OPERACION //
 int recibir_operacion(int);
 
