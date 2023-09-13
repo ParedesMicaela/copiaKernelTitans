@@ -88,7 +88,7 @@ typedef struct
 	
 	t_dictionary *archivosAbiertos;
 	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
-
+	pthread_mutex_t *mutex;
 	//aca NO vamos a poner las cosas con las que se relaciona el proceso en memoria (tam paginas por ejemplo)
 	//vamos a ponerlo en memoria pero despues
 }t_pcb; //declaro el pcb

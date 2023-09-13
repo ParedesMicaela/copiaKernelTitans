@@ -63,6 +63,15 @@ t_list* cola_EXIT;
 
 char**lista_instrucciones;
 
+//semáforos en planificación (inserte emoji de calavera)
+static sem_t gradoMultiprogramacion;
+sem_t dispatchPermitido;
+//pthread_mutex_t mutexSocketMemoria; 
+//pthread_mutex_t mutexSocketFileSystem; los comento porque son terreno inexplorado por ahora
+sem_t semFRead;
+sem_t semFWrite;
+bool fRead;
+bool fWrite;
 //============================================================================================================================
 void inicializar_planificador()
 {

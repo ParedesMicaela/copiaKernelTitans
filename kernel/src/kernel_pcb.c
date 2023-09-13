@@ -26,6 +26,10 @@ t_pcb *crear_pcb(int prioridad, int tam_swap)
     pcb->registros_cpu.DX = 0;
     //pcb->tabla_archivos_abiertos = diccionario;
     pcb->archivosAbiertos = dictionary_create();
+    pthread_mutex_t *mutex = malloc(sizeof(*(pcb->mutex))); 
+    pthread_mutex_init (mutex, NULL);
+    pcb->mutex = mutex;  
+
     meter_en_cola(pcb, NEW);
 
     log_info(kernel_logger, "Se crea el proceso %d en NEW", pcb->pid);
