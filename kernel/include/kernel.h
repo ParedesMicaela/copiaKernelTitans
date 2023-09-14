@@ -49,8 +49,6 @@ typedef struct
 
 extern arch_config_kernel config_valores_kernel;
 
-
-
 //============================================= Inicializacion =====================================================================
 void cargar_configuracion(char* );
 int atender_clientes_kernel(int );
@@ -69,20 +67,23 @@ void meter_en_cola(t_pcb* , estado );
 t_pcb* obtener_siguiente_ready();
 void proceso_en_execute(t_pcb* );
 void proceso_en_ready();
+void proceso_en_exit(t_pcb* );
 t_pcb* obtener_siguiente_FIFO();
 algoritmo obtener_algoritmo();
 t_pcb* obtener_siguiente_PRIORIDADES();
-t_pcb* obtener_siguiente_ROUND_ROBIN();
+
 ////========================================= Relacion con Memoria ===========================================================================================================
 void enviar_path_a_memoria(char* );
+void enviar_pcb_a_memoria(t_pcb* , int , op_code );
+op_code esperar_respuesta_memoria(int );
 
 //================================================== PCB =====================================================================================================================
 t_pcb* crear_pcb(int, int); //como 2do parametro había un uint32_t que tiraba error ya que time_swap(en el .c) estaba como int
 void enviar_pcb_a_cpu(t_pcb* );
-void destruir_pcb(t_pcb* );
+char* recibir_contexto(t_pcb* );
 
-pthread_mutex_t* pcb_get_mutex(t_pcb* );
 //================================================ Destruir ==================================================================================================================
 void finalizar_kernel();
+void eliminar_pcb(t_pcb* );
 
 #endif
