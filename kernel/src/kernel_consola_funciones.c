@@ -68,17 +68,6 @@ void iniciar_proceso (char* path, int tam_proceso_swap, int prioridad)
     planificador_corto_plazo();
   }
 
-  //una que vez que ejecutamos, lo mandamos a exit
-  meter_en_cola(pcb, EXIT);
-
-  //cuando el proceso finalice tenemos que liberar el espacio que le dimos en memoria    
-  t_paquete* paquete_para_memoria = crear_paquete(FINALIZAR_EN_MEMORIA);
-
-  //solamente le pasamos el pid del proceso porque en memoria vamos a tener toda otra estructura con las cosas que ocupa el proceso
-  //entonces con solo el pid podriamos acceder a este
-  agregar_entero_a_paquete(paquete_para_memoria,pcb->pid);
-  enviar_paquete(paquete_para_memoria, socket_memoria);
-    
-  log_info(kernel_logger, "Se manda mensaje a memoria para liberar estructuras del proceso: %d", pcb->pid);
+  proceso_en_exit(pcb);
 
   }
