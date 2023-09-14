@@ -69,7 +69,7 @@ pthread_t thread_blocked;
 pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_exec;
 
-static sem_t gradoMultiprogramacion;
+/*static sem_t gradoMultiprogramacion;
 sem_t dispatchPermitido;
 //pthread_mutex_t mutexSocketMemoria; 
 //pthread_mutex_t mutexSocketFileSystem; los comento porque son terreno inexplorado por ahora
@@ -77,7 +77,7 @@ sem_t semFRead;
 sem_t semFWrite;
 bool fRead;
 bool fWrite;
-
+*/
 //============================================================================================================================
 void inicializar_planificador()
 {
@@ -95,6 +95,7 @@ void inicializar_planificador()
 void planificador_largo_plazo()
 {
     //hay que ver el grado de multipprogramacion, seguramente lleve un if porque si es menor que el original, no desalojamos
+    //intuyo acá implementamos hilos de new y exit jij, semáforos no creo porque no le veo el sentido(al crear/ finalizar un proceso para que querría un semáforo)
 }
 
 void planificador_corto_plazo()
@@ -172,6 +173,9 @@ t_pcb* obtener_siguiente_ready()
  		case FIFO:
  			proceso_seleccionado = obtener_siguiente_FIFO();
  			break;
+        case ROUND_ROBIN:
+            proceso_seleccionado = obtener_siguiente_ROUND_ROBIN();
+            break;
  		case PRIORIDADES:
  			proceso_seleccionado = obtener_siguiente_PRIORIDADES();
  			break;
@@ -194,6 +198,12 @@ algoritmo obtener_algoritmo(){
  		 switcher = FIFO;
  		log_info(kernel_logger, "El algoritmo de planificacion elegido es FIFO \n");
  	 }
+        //ROUND ROBIN
+     if (strcmp(algoritmo,"ROUND_ROBIN") == 0)
+     {
+         switcher = ROUND_ROBIN;
+        log_info(kernel_logger, "El algoritmo de planificacion elegido es ROUND_ROBIN \n");
+     }
  	    //PRIORIDADES
  	 if (strcmp(algoritmo,"PRIORIDADES") == 0)
  	 {
@@ -220,9 +230,14 @@ t_pcb* obtener_siguiente_FIFO()
 	return proceso_seleccionado;
 }
 
+t_pcb* obtener_siguiente_ROUND_ROBIN()
+{
+    //ver como implementar, tener en cuenta el quantum
+}
+
 t_pcb* obtener_siguiente_PRIORIDADES()
 {
-
+    //recordar que es un prioridades con desalojo
 }
 
 void proceso_en_execute(t_pcb* proceso_seleccionado)
@@ -232,6 +247,7 @@ void proceso_en_execute(t_pcb* proceso_seleccionado)
 
     }
 }
+
 
 //=================================================== Diccionarios y Colas ==================================================================
 void inicializar_diccionarios()

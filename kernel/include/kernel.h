@@ -49,6 +49,8 @@ typedef struct
 
 extern arch_config_kernel config_valores_kernel;
 
+
+
 //============================================= Inicializacion =====================================================================
 void cargar_configuracion(char* );
 int atender_clientes_kernel(int );
@@ -70,7 +72,7 @@ void proceso_en_ready();
 t_pcb* obtener_siguiente_FIFO();
 algoritmo obtener_algoritmo();
 t_pcb* obtener_siguiente_PRIORIDADES();
-
+t_pcb* obtener_siguiente_ROUND_ROBIN();
 ////========================================= Relacion con Memoria ===========================================================================================================
 void enviar_path_a_memoria(char* );
 
