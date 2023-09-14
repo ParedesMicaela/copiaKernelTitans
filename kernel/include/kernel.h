@@ -64,6 +64,12 @@ void planificador_corto_plazo();
 void enviar_path_a_memoria(char* );
 void mostrar_lista_pcb(t_list* );
 void meter_en_cola(t_pcb* , estado );
+t_pcb* obtener_siguiente_ready();
+void proceso_en_execute(t_pcb* );
+void proceso_en_ready();
+t_pcb* obtener_siguiente_FIFO();
+algoritmo obtener_algoritmo();
+t_pcb* obtener_siguiente_PRIORIDADES();
 
 ////========================================= Relacion con Memoria ===========================================================================================================
 void enviar_path_a_memoria(char* );

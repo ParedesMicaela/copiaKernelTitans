@@ -40,7 +40,7 @@ t_pcb *crear_pcb(int prioridad, int tam_swap)
 
     //a la memoria solamente le pasamos el pid y el tamanio que va a ocupar en swap, despues se encarga ella
     agregar_entero_a_paquete(paquete,pcb-> pid);
-    agregar_entero_a_paquete(paquete,string_array_size(tam_swap));
+    agregar_entero_a_paquete(paquete,tam_swap);
 
     enviar_paquete(paquete, socket_memoria);
     log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso");
@@ -64,7 +64,7 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
     
 
-    agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos);
+    agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
 
     enviar_paquete(paquete, socket_cpu_dispatch);
     log_info(kernel_logger, "Se envio el PCB %d a la CPU", pcb_a_enviar->pid);

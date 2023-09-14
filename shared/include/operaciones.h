@@ -44,6 +44,11 @@ typedef enum{
 	EXIT
 } estado;
 
+typedef enum{
+	FIFO,
+	PRIORIDADES
+} algoritmo;
+
 typedef enum {
 	SET,
 	SUM,
