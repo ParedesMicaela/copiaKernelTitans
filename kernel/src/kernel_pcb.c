@@ -8,7 +8,7 @@ uint32_t indice_pid = 0;
 t_pcb *crear_pcb(int prioridad, int tam_swap) 
 {
     //esto lo ponemos aca para no tener que hacerlo en la funcion iniciar_proceso si total lo vamos a hacer siempre
-    t_pcb *pcb = malloc(sizeof(*pcb)); //este malloc junto al pthread_mutex_t se les hace free en una futura función (destruir_pcb)
+    t_pcb *pcb = malloc(sizeof(*pcb)); 
 
     //el indice lo vamos a estar modificando cada vez que tengamos que crear un pcb entonces conviene ponerlo como variable global
     //cosa que todos sabemos cuanto vale y no repetimos pid
@@ -71,3 +71,50 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 
     return;
 }
+
+
+void destruir_pcb (t_pcb* pcb){
+    pthread_mutex_lock(pcb_get_mutex(pcb));
+
+//ir agregando las cosas que sean necesarias eliminar
+
+    t_dictionary *archivosAbiertos = pcb->archivosAbiertos;
+    if (archivosAbiertos != NULL){
+        dictionary_destroy(archivosAbiertos);
+    }
+
+    t_registros_cpu *registros_cpu = pcb->registros_cpu.AX;
+    if (registros_cpu->AX != NULL){
+        free(pcb->registros_cpu.AX);
+    }
+     t_registros_cpu *registros_cpu = pcb->registros_cpu.BX;
+    if (registros_cpu->BX != NULL){
+        free(pcb->registros_cpu.BX);
+    }
+     t_registros_cpu *registros_cpu = pcb->registros_cpu.CX;
+    if (registros_cpu->CX != NULL){
+        free(pcb->registros_cpu.CX);
+    }
+     t_registros_cpu *registros_cpu = pcb->registros_cpu.DX;
+    if (registros_cpu->DX != NULL){
+        free(pcb->registros_cpu.DX);
+    }
+    //eliminar solo el diccionario sirve o también hay que eliminar sus elementos?
+    //en tal caso tendría que ser un dictionary_destroy_and_destroy_elements
+    pthread_mutex_unlock(pcb_get_mutex(pcb));
+
+    pthread_mutex_destroy(pcb->mutex);
+    free(pcb->mutex); //libero el malloc de la linea 29
+
+    free(pcb); // libero el malloc de la linea 11
+
+}
+
+
+//get mutex pcb
+
+pthread_mutex_t* pcb_get_mutex(t_pcb* pcb)
+{
+    return pcb->mutex;
+}
+
