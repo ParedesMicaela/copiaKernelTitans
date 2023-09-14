@@ -40,12 +40,12 @@ typedef enum{
 	READY,
 	EXEC,
 	BLOCKED,
+	YIELD,
 	EXIT
 } estado;
 
 typedef enum{
 	FIFO,
-	ROUND_ROBIN,
 	PRIORIDADES
 } algoritmo;
 
@@ -101,6 +101,7 @@ typedef struct
 //======================================================= Operaciones ======================================================================================================
 int recibir_operacion(int);
 int enviar_datos(int , void *, uint32_t );
+int recibir_datos(int , void *, uint32_t );
 t_paquete *crear_paquete_con_codigo_de_operacion(uint8_t codigo);
 void crear_buffer(t_paquete *paquete);
 void *recibir_stream(int *size, int socket_cliente);
