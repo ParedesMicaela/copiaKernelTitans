@@ -65,11 +65,14 @@ pthread_t thread_blocked;
 
 //semáforos en planificación (inserte emoji de calavera)
 
-//estos los estoy usando en la parte de hilos para los procesos en ready y exec del corto plazo
+/*estos los estoy usando en la parte de hilos para los procesos en ready, exec  y exit del corto plazo
+para acceder a las listas y sacarles el tamanio o agregar/eliminar procesos*/
 pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_exec;
+pthread_mutex_t mutex_exit;
 
-/*static sem_t gradoMultiprogramacion;
+
+static sem_t gradoMultiprogramacion;
 sem_t dispatchPermitido;
 //pthread_mutex_t mutexSocketMemoria; 
 //pthread_mutex_t mutexSocketFileSystem; los comento porque son terreno inexplorado por ahora
@@ -77,8 +80,8 @@ sem_t semFRead;
 sem_t semFWrite;
 bool fRead;
 bool fWrite;
-*/
-//============================================================================================================================
+
+//====================================================== Planificadores ========================================================
 void inicializar_planificador()
 {
     //creamos todas las colas que vamos a usar
@@ -94,8 +97,7 @@ void inicializar_planificador()
 
 void planificador_largo_plazo()
 {
-    //hay que ver el grado de multipprogramacion, seguramente lleve un if porque si es menor que el original, no desalojamos
-    //intuyo acá implementamos hilos de new y exit jij, semáforos no creo porque no le veo el sentido(al crear/ finalizar un proceso para que querría un semáforo)
+    sem_wait (&gradoMultiprogramacion);
 }
 
 void planificador_corto_plazo()
@@ -135,6 +137,60 @@ void proceso_en_ready()
     }
 }
 
+void proceso_en_execute(t_pcb* proceso_seleccionado)
+{
+    while(1)
+    {
+		//le enviamos el pcb a la cpu para que ejecute y recibimos el pcb resultado de su ejecucion
+		enviar_pcb_a_cpu(proceso_seleccionado);
+		log_info(kernel_logger, "PCB enviado cpu para ejecucion");
+
+        /*despues la cpu nos va a devolver el contexto en caso de que haya finalizado el proceso
+        haya pedido un recurso (wait/signal), por desalojo o por page fault. Ahora para probar vamos
+        a hacer el caso en que lo haya devuelto por finalizacion, despues agregamos el resto*/
+        char* devuelto_por = recibir_contexto(proceso_seleccionado);
+
+        if(string_equals_ignore_case(devuelto_por, "exit")){
+            proceso_en_exit(proceso_seleccionado);
+		}
+
+        //y por ultimo, en cualquiera de los casos, vamos a sacar de exec al proceso que ya termino de ejecutar
+        pthread_mutex_lock(&mutex_exec);
+		proceso_seleccionado = list_remove((t_list*)dictionary_int_get(diccionario_colas, EXEC), 0);
+		pthread_mutex_unlock(&mutex_exec);
+
+    }
+}
+
+void proceso_en_exit(t_pcb* proceso){
+	while(1) {
+
+	//sacamos el proceso de la lista de exit
+  	pthread_mutex_lock(&mutex_exit);
+  	proceso = list_remove(dictionary_int_get(diccionario_colas, EXIT), 0);
+  	pthread_mutex_unlock(&mutex_exit);
+
+  	log_info(kernel_logger, "[EXIT]Sale de EXIT y Finaliza el  PCB de ID: %d\n", proceso->pid);
+
+    //le mandamos esto a memoria para que destruya las estructuras
+	enviar_pcb_a_memoria(proceso, socket_memoria, FINALIZAR_EN_MEMORIA);
+	log_info(kernel_logger, "Enviando a memoria liberar estructuras del proceso \n");
+	op_code codigo = esperar_respuesta_memoria(socket_memoria);
+
+	//si la respuesta que conseguimos de memoria es que se finalice la memoria, le avisamos a la consola que ya finaliza el proceso
+	log_info(kernel_logger, "Respuesta memoria de estructuras liberadas del proceso recibida \n");
+	if(codigo != FINALIZAR_EN_MEMORIA) {
+		log_error(kernel_logger, "No se pudo eliminar memoria de PID[%d]\n", proceso->pid);
+	}
+
+ 	eliminar_pcb(proceso);
+ 	free(proceso);
+ 	sem_post(&gradoMultiprogramacion);
+	}
+}
+
+//======================================================== Algoritmos ==================================================================
+
 /*esta funcion la voy a poner para que me haga todo el calculo de que proceso deberia ir primero dependiendo
 del algoritmo que estoy usando. Y la pongo aca porque es mas facil solamente poner una linea en la parte de 
 proceso_en_ready, que hacer todo este calculo alla arriba.*/
@@ -173,9 +229,6 @@ t_pcb* obtener_siguiente_ready()
  		case FIFO:
  			proceso_seleccionado = obtener_siguiente_FIFO();
  			break;
-        case ROUND_ROBIN:
-            proceso_seleccionado = obtener_siguiente_ROUND_ROBIN();
-            break;
  		case PRIORIDADES:
  			proceso_seleccionado = obtener_siguiente_PRIORIDADES();
  			break;
@@ -198,12 +251,6 @@ algoritmo obtener_algoritmo(){
  		 switcher = FIFO;
  		log_info(kernel_logger, "El algoritmo de planificacion elegido es FIFO \n");
  	 }
-        //ROUND ROBIN
-     if (strcmp(algoritmo,"ROUND_ROBIN") == 0)
-     {
-         switcher = ROUND_ROBIN;
-        log_info(kernel_logger, "El algoritmo de planificacion elegido es ROUND_ROBIN \n");
-     }
  	    //PRIORIDADES
  	 if (strcmp(algoritmo,"PRIORIDADES") == 0)
  	 {
@@ -230,24 +277,10 @@ t_pcb* obtener_siguiente_FIFO()
 	return proceso_seleccionado;
 }
 
-t_pcb* obtener_siguiente_ROUND_ROBIN()
-{
-    //ver como implementar, tener en cuenta el quantum
-}
-
 t_pcb* obtener_siguiente_PRIORIDADES()
 {
-    //recordar que es un prioridades con desalojo
+
 }
-
-void proceso_en_execute(t_pcb* proceso_seleccionado)
-{
-    while(1)
-    {
-
-    }
-}
-
 
 //=================================================== Diccionarios y Colas ==================================================================
 void inicializar_diccionarios()
