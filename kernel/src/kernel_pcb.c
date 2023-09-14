@@ -104,7 +104,32 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     return motivo_de_devolucion;
  }
 
+//eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)
 {
-
+    free(proceso->pid);
+	eliminar_registros_pcb(proceso->registros_cpu);
+	free(proceso->prioridad);   
+	free(proceso->estado_pcb);
+	eliminar_archivos_abiertos(proceso->archivosAbiertos);
+	eliminar_mutex(proceso->mutex);
 }
+
+void eliminar_registros_pcb (t_registros_cpu registros_cpu)
+{
+    free(registros_cpu.AX);
+    free(registros_cpu.AX);
+    free(registros_cpu.AX);
+    free(registros_cpu.AX);
+}
+
+void eliminar_archivos_abiertos(t_dictionary *archivosAbiertos)
+{
+    //esto hay que revisarlo porque no se si esta bien, pero a rezar que lo ultimo que se pierde es la esperanza
+    dictionary_destroy_and_destroy_elements(archivosAbiertos, dictionary_elements(archivosAbiertos));
+}
+
+void eliminar_mutex(pthread_mutex_t *mutex)
+{
+    pthread_mutex_destroy(mutex);
+}	
