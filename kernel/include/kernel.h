@@ -71,6 +71,7 @@ void proceso_en_exit(t_pcb* );
 t_pcb* obtener_siguiente_FIFO();
 algoritmo obtener_algoritmo();
 t_pcb* obtener_siguiente_PRIORIDADES();
+t_pcb* obtener_siguiente_RR();
 
 ////========================================= Relacion con Memoria ===========================================================================================================
 void enviar_path_a_memoria(char* );

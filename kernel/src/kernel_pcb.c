@@ -107,12 +107,14 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 //eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)
 {
-    free(proceso->pid);
+    //free(proceso->pid); ta tirando error al hacer el make, voy a ver que onda
 	eliminar_registros_pcb(proceso->registros_cpu);
 	free(proceso->prioridad);   
-	free(proceso->estado_pcb);
+	//free(proceso->estado_pcb); acá también tira error con el make también
 	eliminar_archivos_abiertos(proceso->archivosAbiertos);
 	eliminar_mutex(proceso->mutex);
+
+    free(proceso); //intuyo con que al hacerle free van a haber cosas del pcb que vuelan pero me hace ruido 
 }
 
 void eliminar_registros_pcb (t_registros_cpu registros_cpu)

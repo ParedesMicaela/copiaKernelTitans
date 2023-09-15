@@ -232,6 +232,8 @@ t_pcb* obtener_siguiente_ready()
  		case PRIORIDADES:
  			proceso_seleccionado = obtener_siguiente_PRIORIDADES();
  			break;
+        case RR:
+            proceso_seleccionado = obtener_siguiente_RR();
  		default:
  			break;
  		}
@@ -257,6 +259,12 @@ algoritmo obtener_algoritmo(){
  		 switcher = PRIORIDADES;
  		log_info(kernel_logger, "El algoritmo de planificacion elegido es PRIORIDADES \n");
  	 }
+        //RR
+     if (strcmp(algoritmo,"RR") == 0)
+     {
+         switcher = RR;
+        log_info(kernel_logger, "El algoritmo de planificacion elegido es RR \n");
+     }
  	 return switcher;
 }
 
@@ -281,6 +289,12 @@ t_pcb* obtener_siguiente_PRIORIDADES()
 {
 
 }
+
+t_pcb* obtener_siguiente_RR() // tener en cuenta como implementar con quantum
+{
+   
+}
+
 
 //=================================================== Diccionarios y Colas ==================================================================
 void inicializar_diccionarios()
