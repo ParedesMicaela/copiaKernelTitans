@@ -57,8 +57,10 @@ void iniciar_proceso (char* , int , int );
 void inicializar_diccionarios();
 void inicializar_colas();
 void inicializar_planificador();
+void inicializarSemaforos();
 
 //============================================= Planificador =================================================================================================================
+void inicializar_planificador();
 void planificador_largo_plazo();
 void planificador_corto_plazo();
 void enviar_path_a_memoria(char* );

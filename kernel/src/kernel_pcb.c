@@ -1,11 +1,11 @@
 #include "kernel.h"
 
 //=============================================== Variables Globales =========================================================================================================
-uint32_t indice_pid = 0;
+int indice_pid = 0;
 
 //============================================================================================================================================================================
 //cada vez que la consola interactiva nos dice de crear un pcb, nos va a pasar la prioridad, el pid lo podemos poner nosotros
-t_pcb *crear_pcb(int prioridad, int tam_swap) 
+t_pcb* crear_pcb(int prioridad, int tam_swap) 
 {
     //esto lo ponemos aca para no tener que hacerlo en la funcion iniciar_proceso si total lo vamos a hacer siempre
     t_pcb *pcb = malloc(sizeof(*pcb)); //nota de Martín: este malloc después se libera en cpu cuando termina el proceso junto al pcb (posible memory leak?)
@@ -20,6 +20,7 @@ t_pcb *crear_pcb(int prioridad, int tam_swap)
     //cuando lo creamos el estado siempre es new
     pcb->estado_pcb = NEW;
     pcb->program_counter = 0;
+    /*
     pcb->registros_cpu.AX = 0;
     pcb->registros_cpu.BX = 0;
     pcb->registros_cpu.CX = 0;
@@ -28,11 +29,11 @@ t_pcb *crear_pcb(int prioridad, int tam_swap)
     pcb->archivosAbiertos = dictionary_create();
     pthread_mutex_t *mutex = malloc(sizeof(*(pcb->mutex))); 
     pthread_mutex_init (mutex, NULL);
-    pcb->mutex = mutex;  
+    pcb->mutex = mutex;  */
 
     meter_en_cola(pcb, NEW);
 
-    log_info(kernel_logger, "Se crea el proceso %d en NEW", pcb->pid);
+    log_info(kernel_logger, "Se crea el proceso %d en NEW \n", pcb->pid);
 
     /*cada vez que creamos un proceso le tenemos que avisar a memoria que debe crear la estructura
     en memoria del proceso*/
@@ -43,7 +44,7 @@ t_pcb *crear_pcb(int prioridad, int tam_swap)
     agregar_entero_a_paquete(paquete,tam_swap);
 
     enviar_paquete(paquete, socket_memoria);
-    log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso");
+    log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso \n");
 
     return pcb;
 }
@@ -67,7 +68,7 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
 
     enviar_paquete(paquete, socket_cpu_dispatch);
-    log_info(kernel_logger, "Se envio el PCB %d a la CPU", pcb_a_enviar->pid);
+    log_info(kernel_logger, "Se envio el PCB %d a la CPU \n", pcb_a_enviar->pid);
 
     return;
 }
@@ -90,7 +91,7 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
         motivo_de_devolucion = sacar_cadena_de_paquete(&stream);
     }
     else{
-        log_info(kernel_logger, "Falla al recibir PCB, se cierra el Kernel");
+        log_error(kernel_logger, "Falla al recibir PCB, se cierra el Kernel \n");
         exit(1);
     }
 
@@ -98,7 +99,7 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 	proceso->program_counter = program_counter;
 	//proceso->registros_cpu = registros;
 
-    log_info(kernel_logger, "Recibi el pcb de la CPU con program counter = %d", program_counter);
+    log_info(kernel_logger, "Recibi el pcb de la CPU con program counter = %d \n", program_counter);
 
     //retornamos el motivo de devolucion para que ejecutar se encargue de manejarlo
     return motivo_de_devolucion;

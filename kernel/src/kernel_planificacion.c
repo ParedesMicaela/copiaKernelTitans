@@ -72,7 +72,7 @@ pthread_mutex_t mutex_exec;
 pthread_mutex_t mutex_exit;
 
 
-static sem_t gradoMultiprogramacion;
+sem_t gradoMultiprogramacion;
 sem_t dispatchPermitido;
 //pthread_mutex_t mutexSocketMemoria; 
 //pthread_mutex_t mutexSocketFileSystem; los comento porque son terreno inexplorado por ahora
@@ -86,14 +86,23 @@ void inicializar_planificador()
 {
     //creamos todas las colas que vamos a usar
     inicializar_colas();
+    log_info(kernel_logger, "Iniciando colas.. \n");
 
     //creamos los diccionarios donde vamos a meter las distintas colas
     inicializar_diccionarios();
+    log_info(kernel_logger, "Iniciando diccionarios.. \n");
 
-    //empieza la diversion con los planificadores
-    planificador_largo_plazo();
+    inicializar_semaforos();
+    log_info(kernel_logger, "Preparando planificacion.. \n");
 }
 
+void inicializarSemaforos(){   
+    grado = config_get_int_value(config, "GRADO_MULTIPROGRAMACION_INI")
+    pthread_mutex_init(&mutex_ready, NULL);
+    pthread_mutex_init(&mutex_exec,NULL); 
+
+    sem_init(&gradoMultiprogramacion, 0, grado);
+}
 
 void planificador_largo_plazo()
 {
@@ -102,11 +111,6 @@ void planificador_largo_plazo()
 
 void planificador_corto_plazo()
 {
-    //inicializamos los semaforos para controlar el acceso a las distintas colas
-	pthread_mutex_init(&mutex_ready, NULL);
-	pthread_mutex_init(&mutex_exec, NULL);
-	//pthread_mutex_init(&mutex_blocked, NULL);
-
     /*vamos a usar hilos para manejar toda la parte de ready execute y blocked porque sabemos que 
     el planificador tiene que poder hacer varias cosas a la vez*/
 	pthread_create(&thread_ready, NULL, (void *)proceso_en_ready, NULL);
@@ -117,13 +121,19 @@ void planificador_corto_plazo()
 	pthread_detach(thread_ready);
 	pthread_detach(thread_exec);
 	//pthread_detach(thread_blocked);
+
+  log_info(kernel_logger, "Iniciando planificador de corto plazo..\n");
+
 }
+
 
 //======================================================== Estados ==================================================================
 void proceso_en_ready()
 {
     while(1)
     {
+        log_info(kernel_logger, "estoy en proceso ready\n");
+
         //creamos un proceso, que va a ser el elegido por obtener_siguiente_ready
         t_pcb* siguiente_proceso = obtener_siguiente_ready();
 
@@ -198,16 +208,17 @@ t_pcb* obtener_siguiente_ready()
 {
     //creamos un proceso para seleccionar
 	t_pcb* proceso_seleccionado;
-	int tamanio_cola_ready;
-
+	int tamanio_cola_ready = 0;
+    int ejecutando = 0;
+    
     /*necesito saber la cantidad de procesos que estan listos para ejecutar y para eso bloqueo sino capaz
     cuento y al final resulta que entraron 4 procesos mas*/
     pthread_mutex_lock(&mutex_ready);
-	tamanio_cola_ready = list_size(cola_READY);
+	tamanio_cola_ready = dictionary_int_size(READY);
     pthread_mutex_unlock(&mutex_ready);
 
 	//despues vemos cual seria el grado maximo pero supongamos que es esto
-    int gradoMultiprogramacion = config_valores_kernel.grado_multiprogramacion_ini;
+    int grado = config_valores_kernel.grado_multiprogramacion_ini;
 
     /*el grado de multiprogramacion es el que yo tengo que fijarme para saber si puedo admitir mas procesos 
     en ready, o no. Entonces para saber eso necesito saber cuantos procesos estan esperando en ready
@@ -215,17 +226,20 @@ t_pcb* obtener_siguiente_ready()
     y ver si podemos meter un proceso mas.*/
 
     //quiero saber el algoritmo con el que estoy trabajando
- 	algoritmo algoritmo = obtener_algoritmo();
+
+    log_info(kernel_logger, "estoy por meterme a obtener algoritmo\n");
+
+ 	algoritmo algoritmo_elegido = obtener_algoritmo();
 
  	//obtenemos el tamaño de la cola de ejecutando, nuevamente pongo un semaforo
  	pthread_mutex_lock(&mutex_exec);
-	int ejecutando = list_size(cola_EXEC);
+	ejecutando = dictionary_int_size(EXEC);
 	pthread_mutex_unlock(&mutex_exec);
 
  	/*vemos si todavia hay procesos en ready y si el grado de multiprogramacion me permite ejecutar 
     los procesos que estoy ejecutando justo ahora con un proceso mas*/
- 	if (tamanio_cola_ready > 0 && ejecutando < gradoMultiprogramacion){
- 		switch(algoritmo){
+ 	if (tamanio_cola_ready > 0 && ejecutando < grado){
+ 		switch(algoritmo_elegido){
  		case FIFO:
  			proceso_seleccionado = obtener_siguiente_FIFO();
  			break;
@@ -243,26 +257,30 @@ t_pcb* obtener_siguiente_ready()
 
 algoritmo obtener_algoritmo(){ 
 
- 	 algoritmo switcher;
- 	 char* algoritmo = config_valores_kernel.algoritmo_planificacion;
+ 	algoritmo switcher;
+    char* algoritmo_actual = NULL;
+ 	algoritmo_actual = config_valores_kernel.algoritmo_planificacion;
+
+    log_info(kernel_logger, "El algoritmo actual de planificacion es %s \n",algoritmo_actual);
+
  	    //FIFO
- 	 if (strcmp(algoritmo,"FIFO") == 0)
- 	 {
- 		 switcher = FIFO;
- 		log_info(kernel_logger, "El algoritmo de planificacion elegido es FIFO \n");
- 	 }
+ 	if (strcmp(algoritmo_actual,"FIFO") == 0)
+ 	{
+ 		switcher = FIFO;
+ 		//log_info(kernel_logger, "El algoritmo de planificacion elegido es FIFO \n");
+ 	}
  	    //PRIORIDADES
- 	 if (strcmp(algoritmo,"PRIORIDADES") == 0)
- 	 {
- 		 switcher = PRIORIDADES;
+ 	if (strcmp(algoritmo_actual,"PRIORIDADES") == 0)
+ 	{
+ 		switcher = PRIORIDADES;
  		log_info(kernel_logger, "El algoritmo de planificacion elegido es PRIORIDADES \n");
- 	 }
- 	 return switcher;
+ 	}
+ 	return switcher;
 }
 
 t_pcb* obtener_siguiente_FIFO()
 {
-    log_info(kernel_logger, "Inicio la planificacion FIFO");
+    log_info(kernel_logger, "Inicio la planificacion FIFO \n");
 
     //mostramos los que estan en ready
  	mostrar_lista_pcb(cola_READY);
