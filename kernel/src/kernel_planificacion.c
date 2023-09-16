@@ -49,8 +49,9 @@ Al recibir el Contexto de Ejecución del proceso en ejecución
 #include "kernel.h"
 
 //=============================================== Variables Globales ========================================================
-t_dictionary* diccionario_colas;
-t_dictionary* diccionario_estados;
+t_dictionary_int* diccionario_colas;
+t_dictionary_int* diccionario_estados;
+t_dictionary* diccionario_tipo_instrucciones;
 
 t_list* cola_NEW;
 t_list* cola_READY;
@@ -96,8 +97,8 @@ void inicializar_planificador()
     log_info(kernel_logger, "Preparando planificacion.. \n");
 }
 
-void inicializarSemaforos(){   
-    grado = config_get_int_value(config, "GRADO_MULTIPROGRAMACION_INI")
+void inicializar_semaforos(){   
+    int grado = config_get_int_value(config, "GRADO_MULTIPROGRAMACION_INI");
     pthread_mutex_init(&mutex_ready, NULL);
     pthread_mutex_init(&mutex_exec,NULL); 
 
@@ -109,33 +110,40 @@ void planificador_largo_plazo()
     sem_wait (&gradoMultiprogramacion);
 }
 
-void planificador_corto_plazo()
+void planificador_corto_plazo(t_pcb* pcb)
 {
+    while(1){
     /*vamos a usar hilos para manejar toda la parte de ready execute y blocked porque sabemos que 
     el planificador tiene que poder hacer varias cosas a la vez*/
-	pthread_create(&thread_ready, NULL, (void *)proceso_en_ready, NULL);
-	pthread_create(&thread_exec, NULL, (void *)proceso_en_execute, NULL);
+	pthread_create(&thread_ready, NULL, (void *)proceso_en_ready, pcb);
+	pthread_create(&thread_exec, NULL, (void *)proceso_en_execute, pcb);
     //pthread_create(&thread_blocked, NULL, (void *)proceso_en_blocked, NULL);
 
     //y le mando esto porque despues quiero que ellos solos me borren las porquerias que hacen
 	pthread_detach(thread_ready);
 	pthread_detach(thread_exec);
 	//pthread_detach(thread_blocked);
-
-  log_info(kernel_logger, "Iniciando planificador de corto plazo..\n");
-
+    }
 }
 
+void planificar (t_pcb* pcb)
+{
+    //un hilo para largo y uno para corto, hilo para consola, en bucles usamos join, detach en corto y largo
+    //
+    planificador_largo_plazo(pcb);
+    log_info(kernel_logger, "Iniciando planificador de largo plazo..\n");
+    planificador_corto_plazo(pcb);
+}
 
 //======================================================== Estados ==================================================================
-void proceso_en_ready()
+void proceso_en_ready(t_pcb* siguiente_proceso)
 {
     while(1)
     {
         log_info(kernel_logger, "estoy en proceso ready\n");
 
         //creamos un proceso, que va a ser el elegido por obtener_siguiente_ready
-        t_pcb* siguiente_proceso = obtener_siguiente_ready();
+        siguiente_proceso = obtener_siguiente_ready();
 
         //lo metemos en la cola de ready y avisamos que lo metimos ahi
         meter_en_cola(siguiente_proceso,READY);
@@ -207,14 +215,15 @@ proceso_en_ready, que hacer todo este calculo alla arriba.*/
 t_pcb* obtener_siguiente_ready()
 {
     //creamos un proceso para seleccionar
-	t_pcb* proceso_seleccionado;
+    t_pcb* proceso_seleccionado;
+
 	int tamanio_cola_ready = 0;
     int ejecutando = 0;
     
     /*necesito saber la cantidad de procesos que estan listos para ejecutar y para eso bloqueo sino capaz
     cuento y al final resulta que entraron 4 procesos mas*/
     pthread_mutex_lock(&mutex_ready);
-	tamanio_cola_ready = dictionary_int_size(READY);
+	tamanio_cola_ready = list_size(cola_READY);
     pthread_mutex_unlock(&mutex_ready);
 
 	//despues vemos cual seria el grado maximo pero supongamos que es esto
@@ -233,7 +242,7 @@ t_pcb* obtener_siguiente_ready()
 
  	//obtenemos el tamaño de la cola de ejecutando, nuevamente pongo un semaforo
  	pthread_mutex_lock(&mutex_exec);
-	ejecutando = dictionary_int_size(EXEC);
+	ejecutando = list_size(cola_EXEC);
 	pthread_mutex_unlock(&mutex_exec);
 
  	/*vemos si todavia hay procesos en ready y si el grado de multiprogramacion me permite ejecutar 
@@ -253,7 +262,7 @@ t_pcb* obtener_siguiente_ready()
 
  	//devolvemos el proceso seleccionado segun el algoritmo que elegimos
  	return proceso_seleccionado;
-}
+};
 
 algoritmo obtener_algoritmo(){ 
 
@@ -293,12 +302,12 @@ t_pcb* obtener_siguiente_FIFO()
 
  	log_info(kernel_logger, "PID[%d] sale de READY por planificacion FIFO \n", proceso_seleccionado->pid);
 	return proceso_seleccionado;
-}
+};
 
 t_pcb* obtener_siguiente_PRIORIDADES()
 {
 
-}
+};
 
 //=================================================== Diccionarios y Colas ==================================================================
 void inicializar_diccionarios()
@@ -318,6 +327,11 @@ void inicializar_diccionarios()
     dictionary_int_put(diccionario_estados, BLOCKED, "Blocked");
     dictionary_int_put(diccionario_estados, EXEC, "Exec");
     dictionary_int_put(diccionario_estados, EXIT, "Exit");
+
+    diccionario_tipo_instrucciones = dictionary_create();
+
+    dictionary_put(diccionario_tipo_instrucciones, "SET", (void*)SET);
+    dictionary_put(diccionario_tipo_instrucciones, "EXIT", (void*)EXIT);
 }
 
 void inicializar_colas()

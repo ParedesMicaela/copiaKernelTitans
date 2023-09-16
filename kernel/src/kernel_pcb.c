@@ -8,11 +8,11 @@ int indice_pid = 0;
 t_pcb* crear_pcb(int prioridad, int tam_swap) 
 {
     //esto lo ponemos aca para no tener que hacerlo en la funcion iniciar_proceso si total lo vamos a hacer siempre
-    t_pcb *pcb = malloc(sizeof(*pcb)); //nota de Martín: este malloc después se libera en cpu cuando termina el proceso junto al pcb (posible memory leak?)
+    t_pcb *pcb = malloc(sizeof(pcb)); //nota de Martín: este malloc después se libera en cpu cuando termina el proceso junto al pcb (posible memory leak?)
 
     //el indice lo vamos a estar modificando cada vez que tengamos que crear un pcb entonces conviene ponerlo como variable global
     //cosa que todos sabemos cuanto vale y no repetimos pid
-    indice_pid ++;
+    indice_pid ++; //poner semaforo
     pcb->pid = indice_pid;
     pcb->program_counter = 0;
     pcb->prioridad = prioridad;

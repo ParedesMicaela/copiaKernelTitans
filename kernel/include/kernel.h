@@ -57,18 +57,19 @@ void iniciar_proceso (char* , int , int );
 void inicializar_diccionarios();
 void inicializar_colas();
 void inicializar_planificador();
-void inicializarSemaforos();
+void inicializar_semaforos();
 
 //============================================= Planificador =================================================================================================================
 void inicializar_planificador();
 void planificador_largo_plazo();
-void planificador_corto_plazo();
+void planificador_corto_plazo(t_pcb*);
+void planificar();
 void enviar_path_a_memoria(char* );
 void mostrar_lista_pcb(t_list* );
 void meter_en_cola(t_pcb* , estado );
 t_pcb* obtener_siguiente_ready();
 void proceso_en_execute(t_pcb* );
-void proceso_en_ready();
+void proceso_en_ready(t_pcb*);
 void proceso_en_exit(t_pcb* );
 t_pcb* obtener_siguiente_FIFO();
 algoritmo obtener_algoritmo();

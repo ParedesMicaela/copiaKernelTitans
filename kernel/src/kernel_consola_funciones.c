@@ -23,7 +23,7 @@ Detener planificación // DETENER_PLANIFICACION
 
 
 Iniciar planificación // INICIAR_PLANIFICACION
-    - Es un mensaje 
+    - Es un mensaje
     - en caso que se encuentre pausada:
         --retoma la planificación de corto y largo plazo
     - En caso que no se encuentre pausada
@@ -50,26 +50,22 @@ Listar procesos por estado // PROCESO_ESTADO
 
 //===============================================================================================================================
 
-//nos van a decir la prioridad, el archivo de pseudocodigo a ejecutar y el tamanio de memoria swap que va a ejecutar
-void iniciar_proceso (char* path, int tam_proceso_swap, int prioridad)
+// nos van a decir la prioridad, el archivo de pseudocodigo a ejecutar y el tamanio de memoria swap que va a ejecutar
+void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
 {
-  log_info(kernel_logger, "Iniciando proceso.. \n");
+    log_info(kernel_logger, "Iniciando proceso.. \n");
 
-  //nos llega de la consola interactiva que tenemos que iniciar un proceso
-  //inicializamos el proceso con su pcb respectivo
-  t_pcb* pcb = crear_pcb(prioridad,tam_proceso_swap);
+    // nos llega de la consola interactiva que tenemos que iniciar un proceso
+    // inicializamos el proceso con su pcb respectivo
+    t_pcb *pcb = crear_pcb(prioridad, tam_proceso_swap);
 
-  //necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
-  enviar_path_a_memoria(path);
+    // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
+    enviar_path_a_memoria(path);
 
-  //en caso de que el grado máximo de multiprogramación lo permita
-  planificador_largo_plazo();
-  log_info(kernel_logger, "Iniciando planificador de largo plazo..\n");
+    // el new no lo tenemos en memoria
 
-while(1){
-    planificador_corto_plazo();
+    planificar(pcb);
 
+    // en caso de que el grado máximo de multiprogramación lo permita
+    proceso_en_exit(pcb);
 }
-  proceso_en_exit(pcb);
-
-  }

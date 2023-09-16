@@ -1,0 +1,35 @@
+[INFO] 16:27:00:513 kernel.log/(10667:10667): Archivo de configuracion cargado 
+
+[INFO] 16:27:00:531 kernel.log/(10667:10667): Iniciando colas.. 
+
+[INFO] 16:27:00:533 kernel.log/(10667:10667): Iniciando diccionarios.. 
+
+[INFO] 16:27:00:535 kernel.log/(10667:10667): Preparando planificacion.. 
+
+[INFO] 16:27:00:542 kernel.log/(10667:10667): Kernel conectado con cpu 
+
+[INFO] 16:27:00:547 kernel.log/(10667:10667): Kernel conectado con memoria 
+
+[INFO] 16:27:00:564 kernel.log/(10667:10667): Kernel conectado con filesystem 
+
+[INFO] 16:27:00:579 kernel.log/(10667:10667): Servidor creado 
+
+[INFO] 16:27:00:580 kernel.log/(10667:10667): Kernel listo para recibir al modulo cliente 
+
+[INFO] 16:27:00:580 kernel.log/(10667:10667): Iniciando proceso.. 
+
+[INFO] 16:27:00:582 kernel.log/(10667:10667): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 16:27:00:582 kernel.log/(10667:10667): Se crea el proceso 1 en NEW 
+
+[INFO] 16:27:00:584 kernel.log/(10667:10667): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 16:27:00:585 kernel.log/(10667:10667): Mandando a memoria el PATH: /home/utnso/path.txt
+[INFO] 16:27:00:586 kernel.log/(10667:10667): Iniciando planificador de largo plazo..
+
+[INFO] 16:27:00:595 kernel.log/(10667:10669): estoy en proceso ready
+
+[INFO] 16:27:00:599 kernel.log/(10667:10669): estoy por meterme a obtener algoritmo
+
+[INFO] 16:27:00:614 kernel.log/(10667:10669): El algoritmo actual de planificacion es FIFO 
+

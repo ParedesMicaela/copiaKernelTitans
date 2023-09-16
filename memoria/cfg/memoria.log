@@ -1,84 +1,21 @@
-[INFO] 22:20:47:561 memoria.log/(18375:18375): Configuracion de memoria cargada correctamente
+[INFO] 16:26:52:540 memoria.log/(10648:10648): Configuracion de memoria cargada correctamente
 
-[INFO] 22:20:47:562 memoria.log/(18375:18375): Inicializando memoria
+[INFO] 16:26:52:540 memoria.log/(10648:10648): Inicializando memoria
 
-[INFO] 22:20:47:563 memoria.log/(18375:18375): Servidor creado
+[INFO] 16:26:52:541 memoria.log/(10648:10648): Servidor creado
 
-[INFO] 22:20:47:563 memoria.log/(18375:18375): Memoria lista para recibir al modulo cliente 
+[INFO] 16:26:52:541 memoria.log/(10648:10648): Memoria lista para recibir al modulo cliente 
 
-[INFO] 22:20:49:374 memoria.log/(18375:18375): Se conecto un cliente 
+[INFO] 16:26:56:001 memoria.log/(10648:10648): Se conecto un cliente 
 
-[INFO] 22:20:49:378 memoria.log/(18375:18380): Me llego el handshake :)
+[INFO] 16:26:56:002 memoria.log/(10648:10658): Me llego el handshake :)
 
-[INFO] 22:20:50:380 memoria.log/(18375:18380): Handshake enviado :)
+[INFO] 16:26:57:003 memoria.log/(10648:10658): Handshake enviado :)
 
-[INFO] 22:20:50:380 memoria.log/(18375:18380): Se envio el tamaño de pagina 16 bytes al CPU 
+[INFO] 16:26:57:003 memoria.log/(10648:10658): Se envio el tamaño de pagina 16 bytes al CPU 
 
-[INFO] 22:20:52:718 memoria.log/(18375:18375): Se conecto un cliente 
+[INFO] 16:27:00:544 memoria.log/(10648:10648): Se conecto un cliente 
 
-[INFO] 22:20:52:719 memoria.log/(18375:18390): PATH recibido: /home/utnso/path.txt
-[INFO] 22:20:52:720 memoria.log/(18375:18390): Instrucciones enviadas :)
-
-[INFO] 23:38:05:315 memoria.log/(18487:18487): Configuracion de memoria cargada correctamente
-
-[INFO] 23:38:05:315 memoria.log/(18487:18487): Inicializando memoria
-
-[INFO] 23:38:05:315 memoria.log/(18487:18487): Servidor creado
-
-[INFO] 23:38:05:315 memoria.log/(18487:18487): Memoria lista para recibir al modulo cliente 
-
-[INFO] 23:38:07:212 memoria.log/(18487:18487): Se conecto un cliente 
-
-[INFO] 23:38:07:213 memoria.log/(18487:18491): Me llego el handshake :)
-
-[INFO] 23:38:08:216 memoria.log/(18487:18491): Handshake enviado :)
-
-[INFO] 23:38:08:216 memoria.log/(18487:18491): Se envio el tamaño de pagina 16 bytes al CPU 
-
-[INFO] 23:38:10:811 memoria.log/(18487:18487): Se conecto un cliente 
-
-[INFO] 23:38:10:812 memoria.log/(18487:18495): PATH recibido: /home/utnso/path.txt
-[INFO] 23:38:10:812 memoria.log/(18487:18495): Instrucciones enviadas :)
-
-[INFO] 23:40:52:998 memoria.log/(18745:18745): Configuracion de memoria cargada correctamente
-
-[INFO] 23:40:52:998 memoria.log/(18745:18745): Inicializando memoria
-
-[INFO] 23:40:52:999 memoria.log/(18745:18745): Servidor creado
-
-[INFO] 23:40:52:999 memoria.log/(18745:18745): Memoria lista para recibir al modulo cliente 
-
-[INFO] 23:40:55:013 memoria.log/(18745:18745): Se conecto un cliente 
-
-[INFO] 23:40:55:013 memoria.log/(18745:18749): Me llego el handshake :)
-
-[INFO] 23:40:56:015 memoria.log/(18745:18749): Handshake enviado :)
-
-[INFO] 23:40:56:015 memoria.log/(18745:18749): Se envio el tamaño de pagina 16 bytes al CPU 
-
-[INFO] 23:40:57:471 memoria.log/(18745:18745): Se conecto un cliente 
-
-[INFO] 23:40:57:471 memoria.log/(18745:18762): PATH recibido: /home/utnso/path.txt
-[INFO] 23:40:57:472 memoria.log/(18745:18762): Instrucciones enviadas :)
-
-[INFO] 23:41:47:955 memoria.log/(18852:18852): Configuracion de memoria cargada correctamente
-
-[INFO] 23:41:47:955 memoria.log/(18852:18852): Inicializando memoria
-
-[INFO] 23:41:47:955 memoria.log/(18852:18852): Servidor creado
-
-[INFO] 23:41:47:955 memoria.log/(18852:18852): Memoria lista para recibir al modulo cliente 
-
-[INFO] 23:41:49:662 memoria.log/(18852:18852): Se conecto un cliente 
-
-[INFO] 23:41:49:662 memoria.log/(18852:18856): Me llego el handshake :)
-
-[INFO] 23:41:50:663 memoria.log/(18852:18856): Handshake enviado :)
-
-[INFO] 23:41:50:663 memoria.log/(18852:18856): Se envio el tamaño de pagina 16 bytes al CPU 
-
-[INFO] 23:41:52:564 memoria.log/(18852:18852): Se conecto un cliente 
-
-[INFO] 23:41:52:567 memoria.log/(18852:18876): PATH recibido: /home/utnso/path.txt
-[INFO] 23:41:52:567 memoria.log/(18852:18876): Instrucciones enviadas :)
+[INFO] 16:27:00:585 memoria.log/(10648:10668): PATH recibido: /home/utnso/path.txt
+[INFO] 16:27:00:585 memoria.log/(10648:10668): Instrucciones enviadas :)
 
