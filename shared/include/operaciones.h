@@ -40,13 +40,13 @@ typedef enum{
 	READY,
 	EXEC,
 	BLOCKED,
-	YIELD,
 	EXIT
 } estado;
 
 typedef enum{
 	FIFO,
-	PRIORIDADES
+	PRIORIDADES,
+	RR
 } algoritmo;
 
 typedef enum {

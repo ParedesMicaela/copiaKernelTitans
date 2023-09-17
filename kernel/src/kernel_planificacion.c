@@ -231,6 +231,9 @@ t_pcb* obtener_siguiente_ready()
  		case PRIORIDADES:
  			proceso_seleccionado = obtener_siguiente_PRIORIDADES();
  			break;
+        case RR:
+            proceso_seleccionado = obtener_siguiente_RR();
+ 			break;
  		default:
  			break;
  		}
@@ -258,6 +261,12 @@ algoritmo obtener_algoritmo(){
  		switcher = PRIORIDADES;
  		log_info(kernel_logger, "El algoritmo de planificacion elegido es PRIORIDADES \n");
  	}
+        //RR
+    if (strcmp(algoritmo_actual,"RR") == 0)
+ 	{
+ 		switcher = RR;
+ 		log_info(kernel_logger, "El algoritmo de planificacion elegido es RR \n");
+    }
  	return switcher;
 }
 
@@ -280,7 +289,7 @@ t_pcb* obtener_siguiente_FIFO()
 
 t_pcb* obtener_siguiente_PRIORIDADES()
 {
-    ///
+    /// recordar que es con desalojo
     printf("<3");
 }
 
@@ -333,7 +342,7 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO)
 
     //hay que poner un if por si la cola esta vacia jejej
 
-    log_info(kernel_logger, " Cola %s\n",(char *)dictionary_int_get(diccionario_estados, cola));
+    log_info(kernel_logger, " Cola %s\n",dictionary_int_get(diccionario_estados, cola));
 
     //recorremos la cola y buscamos el pid del pcb
     for(int i=0;i<list_size(cola) ;i++)
@@ -358,7 +367,18 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO)
     sem_wait(&(mutex_colas));
     list_add(dictionary_int_get(diccionario_colas, ESTADO), pcb);
     sem_post(&(mutex_colas));
-    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual %s\n", pcb->pid,(char *)dictionary_int_get(diccionario_estados, estado_viejo),(char *)dictionary_int_get(diccionario_estados, ESTADO));
+    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual %s\n", pcb->pid,dictionary_int_get(diccionario_estados, estado_viejo),dictionary_int_get(diccionario_estados, ESTADO));
+    //creo que lo arreglé lo de mostrar los estados (saqué los (char*))
+    /*
+    otra posible solución, estamos 100% seguros que (char *)dictionary_int_get nos devuelve un char?
+    si queremos un char pero no estamos TAAANNN seguros podríamos hacer:
+    
+    char *estado_anterior = (char *)dictionary_int_get(diccionario_estados, estado_viejo);
+    char *estado_actual = (char *)dictionary_int_get(diccionario_estados, ESTADO);
+    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual %s\n", pcb->pid, estado_anterior, estado_actual;
+    
+
+    */
 }
 
 //esta funcion es para que nos muestre los pcb que estan en una cola, medio accesorio pero sirve
