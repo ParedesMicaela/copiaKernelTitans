@@ -27,38 +27,6 @@ void cargar_configuracion(char* path) {
 }
 
 //================================================== Manejo de Clientes =====================================================================
-int atender_clientes_kernel(int socket_servidor)
-{
-  //el kernel es un servidor entonces va a recibir pedidos todo el tiempo de cpu filesystem y memoria
-  int socket_cliente = esperar_cliente(socket_servidor);
-  
-  if(socket_cliente != -1) {
-
-	//el kernel tiene que hacer muchas cosas entonces le mandamos un hilo para que se ocupe de atender gente
-  	pthread_t hilo_cliente;
-
-      /*tenemos que crear un puntero al socket porque al ser un hilo, necesito que la info del socket este 
-      disponible durante todo momento que el hilo lo necesite y no quiero que nadie ni nada modifique mi
-      socket_cliente entonces mejor me guardo espacio de memoria para asegurarme que nunca va a modificarse*/
-  	int* puntero_socket_cliente = malloc(sizeof(int)); 
-  	*puntero_socket_cliente = socket_cliente;
-
-      //despues de que el hilo termine quiero que me borre todo los recursos que uso
-  	pthread_create(&hilo_cliente, NULL, (void*) manejar_conexion, puntero_socket_cliente); 
-    pthread_detach(hilo_cliente);
-  	return 1;
-
-   } else {
-  	log_error(kernel_logger, "Error al escuchar clientes... Finalizando servidor \n");
-   }
-
-   return 0;
-}
-
-void manejar_conexion(int socket_cliente) {
-  //aca seguro vamos a recibir distintos tipos de paquetes y tenemos que crear funcion para cada tipo
-  //return 0;
-}
 
 void finalizar_kernel(){
   log_info(kernel_logger,"Finalizando el modulo Kernel");
