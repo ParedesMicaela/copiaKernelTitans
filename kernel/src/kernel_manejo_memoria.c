@@ -44,6 +44,7 @@ La resolución del Page Fault:
 
 //============================================================================================================================================================================
 
+//lo vamos a usar cuando tengamos que iniciar un proceso nuevo
 void enviar_path_a_memoria(char* path)
 {
     t_paquete* paquete = crear_paquete(RECIBIR_PATH);
@@ -53,3 +54,22 @@ void enviar_path_a_memoria(char* path)
     
     log_info(kernel_logger, "Mandando a memoria el PATH: %s", path);
 }
+
+//lo vamos a usar cuando finaliza el proceso y le tenemos que decir a memoria que borre las estructuras
+void enviar_pcb_a_memoria(t_pcb* proceso, int socket_memoria, op_code codigo)
+{
+    t_paquete* paquete = crear_paquete(codigo);
+
+    agregar_entero_a_paquete(paquete,proceso->pid);
+    enviar_paquete(paquete, socket_memoria);
+    eliminar_paquete(paquete);
+}
+
+//lo vamos a usar cuando querramos saber si memoria pudo eliminar las estructuras, es solamente un aviso
+op_code esperar_respuesta_memoria(int socket_memoria) {
+ 	op_code codigo;
+
+    //usamos este porque solamente quiero saber si pudo o no
+ 	recibir_datos(socket_memoria,&codigo,sizeof(op_code));
+ 	return codigo;
+ }

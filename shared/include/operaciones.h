@@ -40,9 +40,15 @@ typedef enum{
 	READY,
 	EXEC,
 	BLOCKED,
-	YIELD,
+	//YIELD no es requerido para este tp
 	EXIT
 } estado;
+
+typedef enum{
+	FIFO,
+	PRIORIDADES,
+	RR
+} algoritmo;
 
 typedef enum {
 	SET,
@@ -88,7 +94,7 @@ typedef struct
 	
 	t_dictionary *archivosAbiertos;
 	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
-
+	pthread_mutex_t *mutex;
 	//aca NO vamos a poner las cosas con las que se relaciona el proceso en memoria (tam paginas por ejemplo)
 	//vamos a ponerlo en memoria pero despues
 }t_pcb; //declaro el pcb
@@ -96,6 +102,7 @@ typedef struct
 //======================================================= Operaciones ======================================================================================================
 int recibir_operacion(int);
 int enviar_datos(int , void *, uint32_t );
+int recibir_datos(int , void *, uint32_t );
 t_paquete *crear_paquete_con_codigo_de_operacion(uint8_t codigo);
 void crear_buffer(t_paquete *paquete);
 void *recibir_stream(int *size, int socket_cliente);

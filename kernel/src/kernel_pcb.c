@@ -26,6 +26,10 @@ t_pcb *crear_pcb(int prioridad, int tam_swap)
     pcb->registros_cpu.DX = 0;
     //pcb->tabla_archivos_abiertos = diccionario;
     pcb->archivosAbiertos = dictionary_create();
+    pthread_mutex_t *mutex = malloc(sizeof(*(pcb->mutex))); 
+    pthread_mutex_init (mutex, NULL);
+    pcb->mutex = mutex;  
+
     meter_en_cola(pcb, NEW);
 
     log_info(kernel_logger, "Se crea el proceso %d en NEW", pcb->pid);
@@ -36,7 +40,7 @@ t_pcb *crear_pcb(int prioridad, int tam_swap)
 
     //a la memoria solamente le pasamos el pid y el tamanio que va a ocupar en swap, despues se encarga ella
     agregar_entero_a_paquete(paquete,pcb-> pid);
-    agregar_entero_a_paquete(paquete,string_array_size(tam_swap));
+    agregar_entero_a_paquete(paquete,tam_swap);
 
     enviar_paquete(paquete, socket_memoria);
     log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso");
@@ -60,10 +64,74 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
     
 
-    agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos);
+    agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
 
     enviar_paquete(paquete, socket_cpu_dispatch);
     log_info(kernel_logger, "Se envio el PCB %d a la CPU", pcb_a_enviar->pid);
 
     return;
 }
+
+//hay que ver bien esto porque le faltan cosas
+ char* recibir_contexto(t_pcb* proceso)
+ {
+    //esta funcion lo que hace es recibir un paquete, si ese paquete es un pcb lo abre y nos dice el motivo por el cual se devolvio
+    char* motivo_de_devolucion = NULL;
+    t_paquete* paquete = recibir_paquete(socket_cpu_dispatch);
+    void* stream = paquete->buffer->stream;
+    int program_counter =-1;
+
+    //si lo que recibimos es en efecto un pcb, lo abrimos
+	if(paquete->codigo_operacion == PCB)
+	{
+		//nosotros solamente vamos a sacar el contexto
+        program_counter = sacar_entero_de_paquete(&stream);
+        //registros
+        motivo_de_devolucion = sacar_cadena_de_paquete(&stream);
+    }
+    else{
+        log_info(kernel_logger, "Falla al recibir PCB, se cierra el Kernel");
+        exit(1);
+    }
+
+	//actualizamos el pc y los registros
+	proceso->program_counter = program_counter;
+	//proceso->registros_cpu = registros;
+
+    log_info(kernel_logger, "Recibi el pcb de la CPU con program counter = %d", program_counter);
+
+    //retornamos el motivo de devolucion para que ejecutar se encargue de manejarlo
+    return motivo_de_devolucion;
+ }
+
+//eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
+void eliminar_pcb(t_pcb* proceso)
+{
+    //free(proceso->pid); ta tirando error al hacer el make, voy a ver que onda
+	eliminar_registros_pcb(proceso->registros_cpu);
+	free(proceso->prioridad);   
+	//free(proceso->estado_pcb); acá también tira error con el make también
+	eliminar_archivos_abiertos(proceso->archivosAbiertos);
+	eliminar_mutex(proceso->mutex);
+
+    free(proceso); //intuyo con que al hacerle free van a haber cosas del pcb que vuelan pero me hace ruido 
+}
+
+void eliminar_registros_pcb (t_registros_cpu registros_cpu)
+{
+    free(registros_cpu.AX);
+    free(registros_cpu.AX);
+    free(registros_cpu.AX);
+    free(registros_cpu.AX);
+}
+
+void eliminar_archivos_abiertos(t_dictionary *archivosAbiertos)
+{
+    //esto hay que revisarlo porque no se si esta bien, pero a rezar que lo ultimo que se pierde es la esperanza
+    dictionary_destroy_and_destroy_elements(archivosAbiertos, dictionary_elements(archivosAbiertos));
+}
+
+void eliminar_mutex(pthread_mutex_t *mutex)
+{
+    pthread_mutex_destroy(mutex);
+}	
