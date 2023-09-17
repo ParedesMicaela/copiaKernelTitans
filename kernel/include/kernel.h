@@ -62,20 +62,22 @@ void inicializar_semaforos();
 //============================================= Planificador =================================================================================================================
 void inicializar_planificador();
 void planificador_largo_plazo();
-void planificador_corto_plazo(t_pcb*);
+void planificador_corto_plazo();
 void planificar();
 void enviar_path_a_memoria(char* );
 void mostrar_lista_pcb(t_list* );
 void meter_en_cola(t_pcb* , estado );
 t_pcb* obtener_siguiente_ready();
 void proceso_en_execute(t_pcb* );
-void proceso_en_ready(t_pcb*);
+void proceso_en_ready();
 void proceso_en_exit(t_pcb* );
 t_pcb* obtener_siguiente_FIFO();
 algoritmo obtener_algoritmo();
+t_pcb* obtener_siguiente_RR();
 t_pcb* obtener_siguiente_PRIORIDADES();
+t_pcb* obtener_siguiente_new();
 
-////========================================= Relacion con Memoria ===========================================================================================================
+////======================================== Relacion con Memoria ===========================================================================================================
 void enviar_path_a_memoria(char* );
 void enviar_pcb_a_memoria(t_pcb* , int , op_code );
 op_code esperar_respuesta_memoria(int );
@@ -88,5 +90,8 @@ char* recibir_contexto(t_pcb* );
 //================================================ Destruir ==================================================================================================================
 void finalizar_kernel();
 void eliminar_pcb(t_pcb* );
+void eliminar_registros_pcb (t_registros_cpu );
+void eliminar_archivos_abiertos(t_dictionary *);
+void eliminar_mutex(pthread_mutex_t *);
 
 #endif
