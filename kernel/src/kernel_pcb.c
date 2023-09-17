@@ -2,6 +2,7 @@
 
 //=============================================== Variables Globales =========================================================================================================
 int indice_pid = 0;
+//esto lo voy a usar para que nadie me joda el pid cuando lo modifico
 
 //============================================================================================================================================================================
 //cada vez que la consola interactiva nos dice de crear un pcb, nos va a pasar la prioridad, el pid lo podemos poner nosotros
@@ -12,7 +13,9 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
 
     //el indice lo vamos a estar modificando cada vez que tengamos que crear un pcb entonces conviene ponerlo como variable global
     //cosa que todos sabemos cuanto vale y no repetimos pid
-    indice_pid ++; //poner semaforo
+    //sem_wait(&(mutex_pid));
+    indice_pid ++;
+    //sem_post(&(mutex_pid)); 
     pcb->pid = indice_pid;
     pcb->program_counter = 0;
     pcb->prioridad = prioridad;
@@ -20,7 +23,6 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     //cuando lo creamos el estado siempre es new
     pcb->estado_pcb = NEW;
     pcb->program_counter = 0;
-    /*
     pcb->registros_cpu.AX = 0;
     pcb->registros_cpu.BX = 0;
     pcb->registros_cpu.CX = 0;
@@ -29,7 +31,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     pcb->archivosAbiertos = dictionary_create();
     pthread_mutex_t *mutex = malloc(sizeof(*(pcb->mutex))); 
     pthread_mutex_init (mutex, NULL);
-    pcb->mutex = mutex;  */
+    pcb->mutex = mutex; 
 
     meter_en_cola(pcb, NEW);
 
@@ -105,7 +107,34 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     return motivo_de_devolucion;
  }
 
+//eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)
 {
+    free(proceso->pid);
+    //free(proceso->pid); ta tirando error al hacer el make, voy a ver que onda
+	eliminar_registros_pcb(proceso->registros_cpu);
+	free(proceso->prioridad);   
+	//free(proceso->estado_pcb); tira error 
+	//free(proceso->estado_pcb); acá también tira error con el make también
+	eliminar_archivos_abiertos(proceso->archivosAbiertos);
+	eliminar_mutex(proceso->mutex);
 
+    free(proceso); //intuyo con que al hacerle free van a haber cosas del pcb que vuelan pero me hace ruido 
 }
+
+void eliminar_registros_pcb (t_registros_cpu registros_cpu)
+{
+    free(registros_cpu.AX);
+    free(registros_cpu.AX);
+    free(registros_cpu.AX);
+    free(registros_cpu.AX);
+}
+void eliminar_archivos_abiertos(t_dictionary *archivosAbiertos)
+{
+    //esto hay que revisarlo porque no se si esta bien, pero a rezar que lo ultimo que se pierde es la esperanza
+    dictionary_destroy_and_destroy_elements(archivosAbiertos, dictionary_elements(archivosAbiertos));
+}
+void eliminar_mutex(pthread_mutex_t *mutex)
+{
+    pthread_mutex_destroy(mutex);
+}	
