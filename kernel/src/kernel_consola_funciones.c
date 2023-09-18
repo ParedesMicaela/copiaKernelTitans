@@ -17,11 +17,11 @@ void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
     // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
     enviar_path_a_memoria(path);
 
-	pthread_create(&largo_plazo, NULL, (void *) planificador_largo_plazo, NULL);
-	pthread_create(&corto_plazo, NULL, (void*) planificador_corto_plazo, NULL);
+	pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);
+	pthread_create(&corto_plazo, NULL, (void* ) planificador_corto_plazo, NULL);
 
-    pthread_detach(largo_plazo);
-    pthread_detach(corto_plazo);
+    pthread_join(largo_plazo,NULL);
+    pthread_join(corto_plazo,NULL);
 
     // en caso de que el grado máximo de multiprogramación lo permita
     proceso_en_exit(pcb);

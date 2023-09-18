@@ -183,10 +183,6 @@ t_pcb* obtener_siguiente_new()
 
         log_info(kernel_logger, "PID[%d] sale de NEW para planificacion \n", proceso_seleccionado->pid);
         return proceso_seleccionado;
-    } else {
-        pthread_mutex_unlock(&mutex_new);
-        log_info(kernel_logger, "No processes in NEW for scheduling\n");
-        return NULL; // Return NULL when no processes are available
     }
 }
 
@@ -345,7 +341,10 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO)
     pasandole el estado del proceso (key) nos va a devolver la cola en la que esta*/
     t_list* cola = dictionary_int_get(diccionario_colas, pcb->estado_pcb);
 
-    //hay que poner un if por si la cola esta vacia jejej
+    if(list_size(cola) == 0)
+    {
+        log_info(kernel_logger, "esta vacio esto");
+    }
 
     //recorremos la cola y buscamos el pid del pcb
     for(int i=0;i<list_size(cola) ;i++)
@@ -412,7 +411,7 @@ void mostrar_lista_pcb(t_list* cola){
 	
     sem_post(&mutex_colas);
 
-    free(pids);
+    //free(pids);
 }
 
 
