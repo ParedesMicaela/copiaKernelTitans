@@ -63,8 +63,7 @@ void inicializar_semaforos(){
 
     sem_init(&grado_multiprogramacion, 0, grado);
     sem_init (&(mutex_colas), 0, 1);
-    sem_init (&(hay_procesos_ready), 0, 0);
-
+    sem_init (&(hay_procesos_ready), 0, 1);
 }
 
 void planificador_largo_plazo()
@@ -107,10 +106,6 @@ void proceso_en_ready()
         //lo metemos en la cola de ready y avisamos que lo metimos ahi
 
         log_info(kernel_logger, "PID: %d - Estado Anterior: %s\n", siguiente_proceso->pid,siguiente_proceso->estado_pcb);
-
-
-        meter_en_cola(siguiente_proceso,READY);
-        mostrar_lista_pcb(READY);
 
         log_info(kernel_logger, "PID[%d] ingresando a EXEC\n", siguiente_proceso->pid);
 
@@ -342,7 +337,7 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO)
 
     //hay que poner un if por si la cola esta vacia jejej
 
-    log_info(kernel_logger, " Cola %s\n",dictionary_int_get(diccionario_estados, cola));
+    log_info(kernel_logger, " Cola %s\n",(char* )dictionary_int_get(diccionario_estados, cola));
 
     //recorremos la cola y buscamos el pid del pcb
     for(int i=0;i<list_size(cola) ;i++)

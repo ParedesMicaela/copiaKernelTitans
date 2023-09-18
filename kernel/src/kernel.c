@@ -46,10 +46,7 @@ int main(void)
 
    iniciar_proceso("/home/utnso/path.txt",16,1);
 
-   while(atender_clientes_kernel(server_fd)); //creo que lo tenemos que hacer en un hilo
-
    void finalizar_kernel();
 
    return EXIT_SUCCESS;
-
 }

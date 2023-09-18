@@ -33,3 +33,271 @@
 
 [INFO] 16:27:00:614 kernel.log/(10667:10669): El algoritmo actual de planificacion es FIFO 
 
+[INFO] 00:14:08:734 kernel.log/(4311:4311): Archivo de configuracion cargado 
+
+[INFO] 00:14:08:752 kernel.log/(4311:4311): Iniciando colas.. 
+
+[INFO] 00:14:08:755 kernel.log/(4311:4311): Iniciando diccionarios.. 
+
+[INFO] 00:14:08:756 kernel.log/(4311:4311): Preparando planificacion.. 
+
+[INFO] 00:14:08:762 kernel.log/(4311:4311): Kernel conectado con cpu 
+
+[INFO] 00:14:08:763 kernel.log/(4311:4311): Kernel conectado con memoria 
+
+[INFO] 00:14:08:769 kernel.log/(4311:4311): Kernel conectado con filesystem 
+
+[INFO] 00:14:08:782 kernel.log/(4311:4311): Servidor creado 
+
+[INFO] 00:14:08:783 kernel.log/(4311:4311): Kernel listo para recibir al modulo cliente 
+
+[INFO] 00:14:08:784 kernel.log/(4311:4311): Iniciando proceso.. 
+
+[INFO] 00:14:08:785 kernel.log/(4311:4311):  Cola (null)
+
+[INFO] 00:14:08:787 kernel.log/(4311:4311): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 00:14:08:788 kernel.log/(4311:4311): Se crea el proceso 1 en NEW 
+
+[INFO] 00:14:08:789 kernel.log/(4311:4311): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 00:14:08:790 kernel.log/(4311:4311): Mandando a memoria el PATH: /home/utnso/path.txt
+[INFO] 00:22:09:915 kernel.log/(4699:4699): Archivo de configuracion cargado 
+
+[INFO] 00:22:09:931 kernel.log/(4699:4699): Iniciando colas.. 
+
+[INFO] 00:22:09:946 kernel.log/(4699:4699): Iniciando diccionarios.. 
+
+[INFO] 00:22:09:949 kernel.log/(4699:4699): Preparando planificacion.. 
+
+[INFO] 00:22:09:957 kernel.log/(4699:4699): Kernel conectado con cpu 
+
+[INFO] 00:22:09:959 kernel.log/(4699:4699): Kernel conectado con memoria 
+
+[INFO] 00:22:09:967 kernel.log/(4699:4699): Kernel conectado con filesystem 
+
+[INFO] 00:22:09:982 kernel.log/(4699:4699): Servidor creado 
+
+[INFO] 00:22:09:982 kernel.log/(4699:4699): Kernel listo para recibir al modulo cliente 
+
+[INFO] 00:22:09:983 kernel.log/(4699:4699): Iniciando proceso.. 
+
+[INFO] 00:22:09:983 kernel.log/(4699:4699):  Cola (null)
+
+[INFO] 00:22:09:986 kernel.log/(4699:4699): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 00:22:09:987 kernel.log/(4699:4699): Se crea el proceso 1 en NEW 
+
+[INFO] 00:22:09:988 kernel.log/(4699:4699): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 00:22:09:989 kernel.log/(4699:4699): Mandando a memoria el PATH: /home/utnso/path.txt
+[INFO] 00:22:10:005 kernel.log/(4699:4701):  Cola (null) FIFO : [1]
+
+[INFO] 00:25:53:452 kernel.log/(4885:4885): Archivo de configuracion cargado 
+
+[INFO] 00:25:53:492 kernel.log/(4885:4885): Iniciando colas.. 
+
+[INFO] 00:25:53:494 kernel.log/(4885:4885): Iniciando diccionarios.. 
+
+[INFO] 00:25:53:496 kernel.log/(4885:4885): Preparando planificacion.. 
+
+[INFO] 00:25:53:501 kernel.log/(4885:4885): Kernel conectado con cpu 
+
+[INFO] 00:25:53:502 kernel.log/(4885:4885): Kernel conectado con memoria 
+
+[INFO] 00:25:53:507 kernel.log/(4885:4885): Kernel conectado con filesystem 
+
+[INFO] 00:25:53:522 kernel.log/(4885:4885): Servidor creado 
+
+[INFO] 00:25:53:523 kernel.log/(4885:4885): Kernel listo para recibir al modulo cliente 
+
+[INFO] 00:25:53:524 kernel.log/(4885:4885): Iniciando proceso.. 
+
+[INFO] 00:25:53:526 kernel.log/(4885:4885):  Cola (null)
+
+[INFO] 00:25:53:529 kernel.log/(4885:4885): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 00:25:53:530 kernel.log/(4885:4885): Se crea el proceso 1 en NEW 
+
+[INFO] 00:25:53:531 kernel.log/(4885:4885): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 00:25:53:532 kernel.log/(4885:4885): Mandando a memoria el PATH: /home/utnso/path.txt
+[INFO] 00:25:53:542 kernel.log/(4885:4887):  Cola (null) FIFO : [1]
+
+[INFO] 00:26:30:503 kernel.log/(4980:4980): Archivo de configuracion cargado 
+
+[INFO] 00:26:30:505 kernel.log/(4980:4980): Iniciando colas.. 
+
+[INFO] 00:26:30:505 kernel.log/(4980:4980): Iniciando diccionarios.. 
+
+[INFO] 00:26:30:505 kernel.log/(4980:4980): Preparando planificacion.. 
+
+[INFO] 00:26:30:505 kernel.log/(4980:4980): Kernel conectado con cpu 
+
+[INFO] 00:26:30:506 kernel.log/(4980:4980): Kernel conectado con memoria 
+
+[INFO] 00:26:30:506 kernel.log/(4980:4980): Kernel conectado con filesystem 
+
+[INFO] 00:26:30:506 kernel.log/(4980:4980): Servidor creado 
+
+[INFO] 00:26:30:507 kernel.log/(4980:4980): Kernel listo para recibir al modulo cliente 
+
+[INFO] 00:26:30:507 kernel.log/(4980:4980): Iniciando proceso.. 
+
+[INFO] 00:26:30:507 kernel.log/(4980:4980):  Cola (null)
+
+[INFO] 00:26:30:507 kernel.log/(4980:4980): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 00:26:30:507 kernel.log/(4980:4980): Se crea el proceso 1 en NEW 
+
+[INFO] 00:26:30:507 kernel.log/(4980:4980): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 00:26:30:507 kernel.log/(4980:4980): Mandando a memoria el PATH: /home/utnso/path.txt
+[INFO] 00:26:30:509 kernel.log/(4980:4985):  Cola (null) FIFO : [1]
+
+[INFO] 00:26:30:509 kernel.log/(4980:4985): PID[1] sale de NEW para planificacion 
+
+[INFO] 00:26:30:509 kernel.log/(4980:4985):  Cola (null)
+
+[INFO] 00:26:30:509 kernel.log/(4980:4985): PID: 1 - Estado Anterior: New - Estado Actual Ready
+
+[INFO] 00:26:30:509 kernel.log/(4980:4985):  Cola (null) FIFO : []
+
+[INFO] 00:26:30:521 kernel.log/(4980:4986): estoy en proceso ready
+
+[INFO] 00:26:30:521 kernel.log/(4980:4986): estoy por meterme a obtener algoritmo
+
+[INFO] 00:26:30:521 kernel.log/(4980:4986): El algoritmo de planificacion elegido es FIFO 
+
+[INFO] 00:26:30:521 kernel.log/(4980:4986): Inicio la planificacion FIFO 
+
+[INFO] 00:26:30:521 kernel.log/(4980:4986):  Cola (null) FIFO : [1]
+
+[INFO] 00:26:30:521 kernel.log/(4980:4986): PID[1] sale de READY por planificacion FIFO 
+
+[INFO] 00:30:27:810 kernel.log/(5388:5388): Archivo de configuracion cargado 
+
+[INFO] 00:30:27:811 kernel.log/(5388:5388): Iniciando colas.. 
+
+[INFO] 00:30:27:811 kernel.log/(5388:5388): Iniciando diccionarios.. 
+
+[INFO] 00:30:27:812 kernel.log/(5388:5388): Preparando planificacion.. 
+
+[INFO] 00:30:27:812 kernel.log/(5388:5388): Kernel conectado con cpu 
+
+[INFO] 00:30:27:813 kernel.log/(5388:5388): Kernel conectado con memoria 
+
+[INFO] 00:30:27:813 kernel.log/(5388:5388): Kernel conectado con filesystem 
+
+[INFO] 00:30:27:814 kernel.log/(5388:5388): Servidor creado 
+
+[INFO] 00:30:27:814 kernel.log/(5388:5388): Kernel listo para recibir al modulo cliente 
+
+[INFO] 00:30:27:814 kernel.log/(5388:5388): Iniciando proceso.. 
+
+[INFO] 00:31:05:707 kernel.log/(5388:5388):  Cola (null)
+
+[INFO] 00:31:39:640 kernel.log/(5388:5388): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 00:31:49:307 kernel.log/(5388:5388): Se crea el proceso 1 en NEW 
+
+[INFO] 00:31:53:219 kernel.log/(5388:5388): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 00:31:59:719 kernel.log/(5388:5388): Mandando a memoria el PATH: /home/utnso/path.txt
+[INFO] 00:32:16:705 kernel.log/(5388:5665):  Cola (null) FIFO : [1]
+
+[INFO] 00:32:16:709 kernel.log/(5388:5665): PID[1] sale de NEW para planificacion 
+
+[INFO] 00:32:16:709 kernel.log/(5388:5665):  Cola (null)
+
+[INFO] 00:32:16:709 kernel.log/(5388:5665): PID: 1 - Estado Anterior: New - Estado Actual Ready
+
+[INFO] 00:32:16:710 kernel.log/(5388:5665):  Cola (null) FIFO : []
+
+[INFO] 00:34:16:627 kernel.log/(5945:5945): Archivo de configuracion cargado 
+
+[INFO] 00:34:16:627 kernel.log/(5945:5945): Iniciando colas.. 
+
+[INFO] 00:34:16:627 kernel.log/(5945:5945): Iniciando diccionarios.. 
+
+[INFO] 00:34:16:627 kernel.log/(5945:5945): Preparando planificacion.. 
+
+[INFO] 00:34:16:627 kernel.log/(5945:5945): Kernel conectado con cpu 
+
+[INFO] 00:34:16:628 kernel.log/(5945:5945): Kernel conectado con memoria 
+
+[INFO] 00:34:16:629 kernel.log/(5945:5945): Kernel conectado con filesystem 
+
+[INFO] 00:34:16:629 kernel.log/(5945:5945): Servidor creado 
+
+[INFO] 00:34:16:629 kernel.log/(5945:5945): Kernel listo para recibir al modulo cliente 
+
+[INFO] 00:34:16:629 kernel.log/(5945:5945): Iniciando proceso.. 
+
+[INFO] 00:34:16:629 kernel.log/(5945:5945):  Cola (null)
+
+[INFO] 00:34:16:629 kernel.log/(5945:5945): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 00:34:16:629 kernel.log/(5945:5945): Se crea el proceso 1 en NEW 
+
+[INFO] 00:34:16:629 kernel.log/(5945:5945): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 00:34:16:630 kernel.log/(5945:5945): Mandando a memoria el PATH: /home/utnso/path.txt
+[INFO] 00:35:46:274 kernel.log/(6128:6128): Archivo de configuracion cargado 
+
+[INFO] 00:35:46:275 kernel.log/(6128:6128): Iniciando colas.. 
+
+[INFO] 00:35:46:275 kernel.log/(6128:6128): Iniciando diccionarios.. 
+
+[INFO] 00:35:46:275 kernel.log/(6128:6128): Preparando planificacion.. 
+
+[INFO] 00:35:46:275 kernel.log/(6128:6128): Kernel conectado con cpu 
+
+[INFO] 00:35:46:275 kernel.log/(6128:6128): Kernel conectado con memoria 
+
+[INFO] 00:35:46:276 kernel.log/(6128:6128): Kernel conectado con filesystem 
+
+[INFO] 00:35:46:276 kernel.log/(6128:6128): Servidor creado 
+
+[INFO] 00:35:46:276 kernel.log/(6128:6128): Kernel listo para recibir al modulo cliente 
+
+[INFO] 00:35:46:276 kernel.log/(6128:6128): Iniciando proceso.. 
+
+[INFO] 00:35:46:276 kernel.log/(6128:6128):  Cola (null)
+
+[INFO] 00:35:46:276 kernel.log/(6128:6128): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 00:35:46:276 kernel.log/(6128:6128): Se crea el proceso 1 en NEW 
+
+[INFO] 00:35:46:276 kernel.log/(6128:6128): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 00:35:46:276 kernel.log/(6128:6128): Mandando a memoria el PATH: /home/utnso/path.txt
+[INFO] 00:42:34:045 kernel.log/(6805:6805): Archivo de configuracion cargado 
+
+[INFO] 00:42:34:051 kernel.log/(6805:6805): Iniciando colas.. 
+
+[INFO] 00:42:34:051 kernel.log/(6805:6805): Iniciando diccionarios.. 
+
+[INFO] 00:42:34:051 kernel.log/(6805:6805): Preparando planificacion.. 
+
+[INFO] 00:42:34:051 kernel.log/(6805:6805): Kernel conectado con cpu 
+
+[INFO] 00:42:34:051 kernel.log/(6805:6805): Kernel conectado con memoria 
+
+[INFO] 00:42:34:052 kernel.log/(6805:6805): Kernel conectado con filesystem 
+
+[INFO] 00:42:34:056 kernel.log/(6805:6805): Servidor creado 
+
+[INFO] 00:42:34:058 kernel.log/(6805:6805): Kernel listo para recibir al modulo cliente 
+
+[INFO] 00:42:34:060 kernel.log/(6805:6805): Iniciando proceso.. 
+
+[INFO] 00:42:34:060 kernel.log/(6805:6805):  Cola (null)
+
+[INFO] 00:42:34:060 kernel.log/(6805:6805): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 00:42:34:060 kernel.log/(6805:6805): Se crea el proceso 1 en NEW 
+
+[INFO] 00:42:34:075 kernel.log/(6805:6805): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 00:42:34:075 kernel.log/(6805:6805): Mandando a memoria el PATH: /home/utnso/path.txt

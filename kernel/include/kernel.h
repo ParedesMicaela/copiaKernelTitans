@@ -51,7 +51,6 @@ extern arch_config_kernel config_valores_kernel;
 
 //============================================= Inicializacion =====================================================================
 void cargar_configuracion(char* );
-int atender_clientes_kernel(int ); 
 void manejar_conexion(int );
 void iniciar_proceso (char* , int , int );
 void inicializar_diccionarios();
@@ -63,7 +62,6 @@ void inicializar_semaforos();
 void inicializar_planificador();
 void planificador_largo_plazo();
 void planificador_corto_plazo();
-void planificar();
 void enviar_path_a_memoria(char* );
 void mostrar_lista_pcb(t_list* );
 void meter_en_cola(t_pcb* , estado );

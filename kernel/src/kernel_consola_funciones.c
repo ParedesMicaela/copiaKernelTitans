@@ -1,3 +1,32 @@
+#include "kernel.h"
+
+pthread_t largo_plazo;
+pthread_t corto_plazo;
+
+//===============================================================================================================================
+
+// nos van a decir la prioridad, el archivo de pseudocodigo a ejecutar y el tamanio de memoria swap que va a ejecutar
+void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
+{
+    log_info(kernel_logger, "Iniciando proceso.. \n");
+
+    // nos llega de la consola interactiva que tenemos que iniciar un proceso
+    // inicializamos el proceso con su pcb respectivo
+    t_pcb* pcb = crear_pcb(prioridad, tam_proceso_swap);
+
+    // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
+    enviar_path_a_memoria(path);
+
+	pthread_create(&largo_plazo, NULL, (void *) planificador_largo_plazo, NULL);
+	pthread_create(&corto_plazo, NULL, (void*) planificador_corto_plazo, NULL);
+
+    pthread_detach(largo_plazo);
+    pthread_detach(corto_plazo);
+
+    // en caso de que el grado máximo de multiprogramación lo permita
+    proceso_en_exit(pcb);
+}
+
 
 /*
 
@@ -45,27 +74,3 @@ Listar procesos por estado // PROCESO_ESTADO
         --el sistema debe permanecer estable sin reacción alguna.
 
 */
-
-#include "kernel.h"
-
-//===============================================================================================================================
-
-// nos van a decir la prioridad, el archivo de pseudocodigo a ejecutar y el tamanio de memoria swap que va a ejecutar
-void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
-{
-    log_info(kernel_logger, "Iniciando proceso.. \n");
-
-    // nos llega de la consola interactiva que tenemos que iniciar un proceso
-    // inicializamos el proceso con su pcb respectivo
-    t_pcb *pcb = crear_pcb(prioridad, tam_proceso_swap);
-
-    // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
-    enviar_path_a_memoria(path);
-
-    // el new no lo tenemos en memoria
-
-    planificar(pcb);
-
-    // en caso de que el grado máximo de multiprogramación lo permita
-    proceso_en_exit(pcb);
-}
