@@ -24,7 +24,7 @@ void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
     pthread_join(corto_plazo,NULL);
 
     // en caso de que el grado máximo de multiprogramación lo permita
-    proceso_en_exit(pcb);
+    //proceso_en_exit(pcb);
 }
 
 

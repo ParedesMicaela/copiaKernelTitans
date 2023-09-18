@@ -78,7 +78,8 @@ void planificador_largo_plazo()
         t_pcb* proceso_nuevo = obtener_siguiente_new();
 
         //metemos el proceso en la cola de ready
-        meter_en_cola(proceso_nuevo,READY);
+        meter_en_cola(proceso_nuevo, READY, cola_READY);
+        mostrar_lista_pcb(cola_READY,"READY");
 
         /*le avisamos al corto plazo que puede empezar a planificar. Aca solamente vamos a poner el proceso
         en la cola de ready pero no vamos a elegir cual va a ejecutar el de corto plazo porque no hacemos eso
@@ -172,7 +173,6 @@ void proceso_en_exit(t_pcb* proceso){
 
 t_pcb* obtener_siguiente_new()
 {
-    mostrar_lista_pcb(cola_NEW);
 
     pthread_mutex_lock(&mutex_new);
     int size = list_size(cola_NEW);
@@ -276,7 +276,7 @@ t_pcb* obtener_siguiente_FIFO()
     log_info(kernel_logger, "Inicio la planificacion FIFO \n");
 
     //mostramos los que estan en ready
- 	mostrar_lista_pcb(cola_READY);
+ 	mostrar_lista_pcb(cola_READY,"READY");
 
     /*voy a seleccionar el primer proceso que esta en ready usando esta funcion porque me retorna el proceso 
     que le pido y tambien me lo borra. Como FIFO va a ejecutar todo hasta terminar, me biene barbaro*/
@@ -335,13 +335,15 @@ void inicializar_colas()
 }
 
 //vamos a usar esta funcion cada vez que el proceso cambie de estado
-void meter_en_cola(t_pcb* pcb, estado ESTADO)
+void meter_en_cola(t_pcb* pcb, estado ESTADO,t_list* cola)
 {
 	/*creamos una cola con el estado en el que esta el proceso usando la funcion int_get
     pasandole el estado del proceso (key) nos va a devolver la cola en la que esta*/
-    t_list* cola = dictionary_int_get(diccionario_colas, pcb->estado_pcb);
+    //t_list* cola = dictionary_int_get(diccionario_colas, pcb->estado_pcb);
 
-    if(list_size(cola) == 0)
+    int tam_cola = list_size(cola);
+
+    if(tam_cola == 0)
     {
         log_info(kernel_logger, "esta vacio esto");
     }
@@ -354,7 +356,7 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO)
                 sem_wait(&(mutex_colas));
                 /*y cuando los encontramos lo vamos a sacar porque va a cambiar de estado entonces ya
                 no lo quiero en esa cola*/
-                list_remove(cola, i); //aca me sale error
+                list_remove(cola, i);
                 sem_post(&(mutex_colas));
             }
       }
@@ -367,27 +369,15 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO)
 
     //finalmente lo agregamos a la cola de nuestro nuevo estado
     sem_wait(&(mutex_colas));
-    list_add(dictionary_int_get(diccionario_colas, ESTADO), pcb);
-    sem_post(&(mutex_colas));
-
+    //list_add(dictionary_int_get(diccionario_colas, ESTADO), pcb);
+    list_add(cola,pcb);
     log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual %s\n", pcb->pid,dictionary_int_get(diccionario_estados, estado_viejo),dictionary_int_get(diccionario_estados, ESTADO));
-    //creo que lo arreglé lo de mostrar los estados (saqué los (char*))
-    /*
-    otra posible solución, estamos 100% seguros que (char *)dictionary_int_get nos devuelve un char?
-    si queremos un char pero no estamos TAAANNN seguros podríamos hacer:
-    
-    char *estado_anterior = (char *)dictionary_int_get(diccionario_estados, estado_viejo);
-    char *estado_actual = (char *)dictionary_int_get(diccionario_estados, ESTADO);
-    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual %s\n", pcb->pid, estado_anterior, estado_actual;
-    
-
-    */
+    sem_post(&(mutex_colas));
 }
 
 //esta funcion es para que nos muestre los pcb que estan en una cola, medio accesorio pero sirve
-void mostrar_lista_pcb(t_list* cola){
+void mostrar_lista_pcb(t_list* cola, char* nombre_cola){
 
-    sem_wait(&mutex_colas);
 	//creamos un string vacio llamado pid y recorremos la cola que le pasamos por parametro
 	char* pids = string_new();
 	  for (int i=0; i < list_size(cola);i++){
@@ -405,14 +395,11 @@ void mostrar_lista_pcb(t_list* cola){
 
 	//mostramos la lista con los pids en la cola dada
 
-    char *estado_actual = (char *)dictionary_int_get(diccionario_estados, cola);
-
-	log_info(kernel_logger, " Cola %s %s : [%s]\n",estado_actual,config_valores_kernel.algoritmo_planificacion, pids);
+	log_info(kernel_logger, " Cola %s %s : [%s]\n",nombre_cola,config_valores_kernel.algoritmo_planificacion, pids);
 	
-    sem_post(&mutex_colas);
-
-    //free(pids);
+    free(pids);
 }
+
 
 
 // largo plazo

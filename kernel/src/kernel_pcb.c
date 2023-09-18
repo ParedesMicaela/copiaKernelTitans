@@ -34,7 +34,9 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     pthread_mutex_init (mutex, NULL);
     pcb->mutex = mutex; */
 
-    meter_en_cola(pcb, NEW);
+    meter_en_cola(pcb, NEW,cola_NEW);
+    mostrar_lista_pcb(cola_NEW,"NEW");
+
 
     log_info(kernel_logger, "Se crea el proceso %d en NEW \n", pcb->pid);
 

@@ -28,7 +28,7 @@ extern int socket_memoria;
 extern int socket_filesystem;
 extern sem_t mutex_pid;
 
-
+extern t_list* cola_NEW;
 //==============================================================================================================================
 
 typedef struct 
@@ -65,8 +65,8 @@ void inicializar_planificador();
 void planificador_largo_plazo();
 void planificador_corto_plazo();
 void enviar_path_a_memoria(char* );
-void mostrar_lista_pcb(t_list* );
-void meter_en_cola(t_pcb* , estado );
+void mostrar_lista_pcb(t_list* , char* );
+void meter_en_cola(t_pcb* pcb, estado, t_list* );
 t_pcb* obtener_siguiente_ready();
 void proceso_en_execute(t_pcb* );
 void proceso_en_ready();
