@@ -1,92 +1,21 @@
-[INFO] 00:30:16:670 memoria.log/(5360:5360): Configuracion de memoria cargada correctamente
+[INFO] 01:50:21:772 memoria.log/(12954:12954): Configuracion de memoria cargada correctamente
 
-[INFO] 00:30:16:670 memoria.log/(5360:5360): Inicializando memoria
+[INFO] 01:50:21:774 memoria.log/(12954:12954): Inicializando memoria
 
-[INFO] 00:30:16:670 memoria.log/(5360:5360): Servidor creado
+[INFO] 01:50:21:775 memoria.log/(12954:12954): Servidor creado
 
-[INFO] 00:30:16:670 memoria.log/(5360:5360): Memoria lista para recibir al modulo cliente 
+[INFO] 01:50:21:775 memoria.log/(12954:12954): Memoria lista para recibir al modulo cliente 
 
-[INFO] 00:30:19:005 memoria.log/(5360:5360): Se conecto un cliente 
+[INFO] 01:50:23:916 memoria.log/(12954:12954): Se conecto un cliente 
 
-[INFO] 00:30:19:005 memoria.log/(5360:5364): Me llego el handshake :)
+[INFO] 01:50:23:916 memoria.log/(12954:12958): Me llego el handshake :)
 
-[INFO] 00:30:20:006 memoria.log/(5360:5364): Handshake enviado :)
+[INFO] 01:50:24:917 memoria.log/(12954:12958): Handshake enviado :)
 
-[INFO] 00:30:20:006 memoria.log/(5360:5364): Se envio el tamaño de pagina 16 bytes al CPU 
+[INFO] 01:50:24:920 memoria.log/(12954:12958): Se envio el tamaño de pagina 16 bytes al CPU 
 
-[INFO] 00:30:27:813 memoria.log/(5360:5360): Se conecto un cliente 
+[INFO] 01:50:26:966 memoria.log/(12954:12954): Se conecto un cliente 
 
-[INFO] 00:31:59:719 memoria.log/(5360:5423): PATH recibido: /home/utnso/path.txt
-[INFO] 00:31:59:720 memoria.log/(5360:5423): Instrucciones enviadas :)
-
-[INFO] 00:33:33:612 memoria.log/(5869:5869): Configuracion de memoria cargada correctamente
-
-[INFO] 00:33:33:613 memoria.log/(5869:5869): Inicializando memoria
-
-[INFO] 00:34:06:066 memoria.log/(5905:5905): Configuracion de memoria cargada correctamente
-
-[INFO] 00:34:06:066 memoria.log/(5905:5905): Inicializando memoria
-
-[INFO] 00:34:06:066 memoria.log/(5905:5905): Servidor creado
-
-[INFO] 00:34:06:066 memoria.log/(5905:5905): Memoria lista para recibir al modulo cliente 
-
-[INFO] 00:34:07:963 memoria.log/(5905:5905): Se conecto un cliente 
-
-[INFO] 00:34:07:964 memoria.log/(5905:5909): Me llego el handshake :)
-
-[INFO] 00:34:08:975 memoria.log/(5905:5909): Handshake enviado :)
-
-[INFO] 00:34:08:976 memoria.log/(5905:5909): Se envio el tamaño de pagina 16 bytes al CPU 
-
-[INFO] 00:34:16:629 memoria.log/(5905:5905): Se conecto un cliente 
-
-[INFO] 00:34:16:630 memoria.log/(5905:5961): PATH recibido: /home/utnso/path.txt
-[INFO] 00:34:16:630 memoria.log/(5905:5961): Instrucciones enviadas :)
-
-[INFO] 00:35:02:449 memoria.log/(6063:6063): Configuracion de memoria cargada correctamente
-
-[INFO] 00:35:02:451 memoria.log/(6063:6063): Inicializando memoria
-
-[INFO] 00:35:02:453 memoria.log/(6063:6063): Servidor creado
-
-[INFO] 00:35:02:453 memoria.log/(6063:6063): Memoria lista para recibir al modulo cliente 
-
-[INFO] 00:35:05:733 memoria.log/(6063:6063): Se conecto un cliente 
-
-[INFO] 00:35:05:734 memoria.log/(6063:6073): Me llego el handshake :)
-
-[INFO] 00:35:06:734 memoria.log/(6063:6073): Handshake enviado :)
-
-[INFO] 00:35:06:734 memoria.log/(6063:6073): Se envio el tamaño de pagina 16 bytes al CPU 
-
-[INFO] 00:35:46:277 memoria.log/(6063:6063): Se conecto un cliente 
-
-[INFO] 00:35:46:295 memoria.log/(6063:6133): PATH recibido: /home/utnso/path.txt
-[INFO] 00:35:46:300 memoria.log/(6063:6133): Instrucciones enviadas :)
-
-[INFO] 00:42:21:389 memoria.log/(6744:6744): Configuracion de memoria cargada correctamente
-
-[INFO] 00:42:21:390 memoria.log/(6744:6744): Inicializando memoria
-
-[INFO] 00:42:21:391 memoria.log/(6744:6744): Servidor creado
-
-[INFO] 00:42:21:391 memoria.log/(6744:6744): Memoria lista para recibir al modulo cliente 
-
-[INFO] 00:42:24:119 memoria.log/(6744:6744): Se conecto un cliente 
-
-[INFO] 00:42:24:119 memoria.log/(6744:6754): Me llego el handshake :)
-
-[INFO] 00:42:25:120 memoria.log/(6744:6754): Handshake enviado :)
-
-[INFO] 00:42:25:121 memoria.log/(6744:6754): Se envio el tamaño de pagina 16 bytes al CPU 
-
-[INFO] 00:42:34:052 memoria.log/(6744:6744): Se conecto un cliente 
-
-[INFO] 00:42:34:075 memoria.log/(6744:6820): PATH recibido: /home/utnso/path.txt
-[INFO] 00:42:34:077 memoria.log/(6744:6820): Instrucciones enviadas :)
-
-[INFO] 00:43:08:831 memoria.log/(6968:6968): Configuracion de memoria cargada correctamente
-
-[INFO] 00:43:08:833 memoria.log/(6968:6968): Inicializando memoria
+[INFO] 01:50:27:009 memoria.log/(12954:12968): PATH recibido: /home/utnso/path.txt
+[INFO] 01:50:27:009 memoria.log/(12954:12968): Instrucciones enviadas :)
 

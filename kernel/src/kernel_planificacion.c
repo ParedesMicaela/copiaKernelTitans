@@ -32,8 +32,9 @@ sem_t dispatchPermitido;
 sem_t semFRead;
 sem_t semFWrite;
 sem_t mutex_colas;
-
 sem_t hay_procesos_ready;
+
+sem_t mutex_pid;
 
 bool fRead;
 bool fWrite;
@@ -64,6 +65,7 @@ void inicializar_semaforos(){
     sem_init(&grado_multiprogramacion, 0, grado);
     sem_init (&(mutex_colas), 0, 1);
     sem_init (&(hay_procesos_ready), 0, 1);
+    sem_init(&(mutex_pid),0,1);
 }
 
 void planificador_largo_plazo()
@@ -110,6 +112,8 @@ void proceso_en_ready()
         log_info(kernel_logger, "PID[%d] ingresando a EXEC\n", siguiente_proceso->pid);
 
         proceso_en_execute(siguiente_proceso);
+
+        sem_post(&hay_procesos_ready);
 }
 
 void proceso_en_execute(t_pcb* proceso_seleccionado)
@@ -168,16 +172,22 @@ void proceso_en_exit(t_pcb* proceso){
 
 t_pcb* obtener_siguiente_new()
 {
-    //mostramos los que estan en new
- 	mostrar_lista_pcb(cola_NEW);
+    mostrar_lista_pcb(cola_NEW);
 
-    //los procesos salen de new a ready por FIFO entonces usamos la misma funcion que obtener_siguiente_FIFO
-	pthread_mutex_lock(&mutex_new);
-	t_pcb* proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, NEW), 0);
-	pthread_mutex_unlock(&mutex_new);
+    pthread_mutex_lock(&mutex_new);
+    int size = list_size(cola_NEW);
 
- 	log_info(kernel_logger, "PID[%d] sale de NEW para planificacion \n", proceso_seleccionado->pid);
-	return proceso_seleccionado;
+    if (size > 0) {
+        t_pcb* proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, NEW), 0);
+        pthread_mutex_unlock(&mutex_new);
+
+        log_info(kernel_logger, "PID[%d] sale de NEW para planificacion \n", proceso_seleccionado->pid);
+        return proceso_seleccionado;
+    } else {
+        pthread_mutex_unlock(&mutex_new);
+        log_info(kernel_logger, "No processes in NEW for scheduling\n");
+        return NULL; // Return NULL when no processes are available
+    }
 }
 
 /*esta funcion la voy a poner para que me haga todo el calculo de que proceso deberia ir primero dependiendo
@@ -337,8 +347,6 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO)
 
     //hay que poner un if por si la cola esta vacia jejej
 
-    log_info(kernel_logger, " Cola %s\n",(char* )dictionary_int_get(diccionario_estados, cola));
-
     //recorremos la cola y buscamos el pid del pcb
     for(int i=0;i<list_size(cola) ;i++)
         {
@@ -362,6 +370,7 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO)
     sem_wait(&(mutex_colas));
     list_add(dictionary_int_get(diccionario_colas, ESTADO), pcb);
     sem_post(&(mutex_colas));
+
     log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual %s\n", pcb->pid,dictionary_int_get(diccionario_estados, estado_viejo),dictionary_int_get(diccionario_estados, ESTADO));
     //creo que lo arreglé lo de mostrar los estados (saqué los (char*))
     /*
@@ -379,6 +388,7 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO)
 //esta funcion es para que nos muestre los pcb que estan en una cola, medio accesorio pero sirve
 void mostrar_lista_pcb(t_list* cola){
 
+    sem_wait(&mutex_colas);
 	//creamos un string vacio llamado pid y recorremos la cola que le pasamos por parametro
 	char* pids = string_new();
 	  for (int i=0; i < list_size(cola);i++){
@@ -395,8 +405,14 @@ void mostrar_lista_pcb(t_list* cola){
 	    }
 
 	//mostramos la lista con los pids en la cola dada
-	log_info(kernel_logger, " Cola %s %s : [%s]\n",(char *)dictionary_int_get(diccionario_estados, cola),config_valores_kernel.algoritmo_planificacion, pids);
-	free(pids);
+
+    char *estado_actual = (char *)dictionary_int_get(diccionario_estados, cola);
+
+	log_info(kernel_logger, " Cola %s %s : [%s]\n",estado_actual,config_valores_kernel.algoritmo_planificacion, pids);
+	
+    sem_post(&mutex_colas);
+
+    free(pids);
 }
 
 

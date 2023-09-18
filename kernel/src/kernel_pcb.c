@@ -9,13 +9,13 @@ int indice_pid = 0;
 t_pcb* crear_pcb(int prioridad, int tam_swap) 
 {
     //esto lo ponemos aca para no tener que hacerlo en la funcion iniciar_proceso si total lo vamos a hacer siempre
-    t_pcb *pcb = malloc(sizeof(pcb)); //nota de Martín: este malloc después se libera en cpu cuando termina el proceso junto al pcb (posible memory leak?)
+    t_pcb* pcb = malloc(sizeof(pcb)); //nota de Martín: este malloc después se libera en cpu cuando termina el proceso junto al pcb (posible memory leak?)
 
     //el indice lo vamos a estar modificando cada vez que tengamos que crear un pcb entonces conviene ponerlo como variable global
     //cosa que todos sabemos cuanto vale y no repetimos pid
-    //sem_wait(&(mutex_pid));
+    sem_wait(&(mutex_pid));
     indice_pid ++;
-    //sem_post(&(mutex_pid)); 
+    sem_post(&(mutex_pid)); 
     pcb->pid = indice_pid;
     pcb->program_counter = 0;
     pcb->prioridad = prioridad;
@@ -29,9 +29,10 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     pcb->registros_cpu.DX = 0;
     //pcb->tabla_archivos_abiertos = diccionario;
     pcb->archivosAbiertos = dictionary_create();
+    /*
     pthread_mutex_t *mutex = malloc(sizeof(*(pcb->mutex))); 
     pthread_mutex_init (mutex, NULL);
-    pcb->mutex = mutex; 
+    pcb->mutex = mutex; */
 
     meter_en_cola(pcb, NEW);
 
@@ -117,7 +118,7 @@ void eliminar_pcb(t_pcb* proceso)
 	//free(proceso->estado_pcb); tira error 
 	//free(proceso->estado_pcb); acá también tira error con el make también
 	eliminar_archivos_abiertos(proceso->archivosAbiertos);
-	eliminar_mutex(proceso->mutex);
+	//eliminar_mutex(proceso->mutex);
 
     free(proceso); //intuyo con que al hacerle free van a haber cosas del pcb que vuelan pero me hace ruido 
 }
@@ -134,7 +135,8 @@ void eliminar_archivos_abiertos(t_dictionary *archivosAbiertos)
     //esto hay que revisarlo porque no se si esta bien, pero a rezar que lo ultimo que se pierde es la esperanza
     dictionary_destroy_and_destroy_elements(archivosAbiertos, dictionary_elements(archivosAbiertos));
 }
+/*
 void eliminar_mutex(pthread_mutex_t *mutex)
 {
     pthread_mutex_destroy(mutex);
-}	
+}	*/
