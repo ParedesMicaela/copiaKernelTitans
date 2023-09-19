@@ -110,9 +110,6 @@ void proceso_en_ready()
         t_pcb* siguiente_proceso = obtener_siguiente_ready();
 
         //lo metemos en la cola de ready y avisamos que lo metimos ahi
-
-        log_info(kernel_logger, "PID: %d - Estado Anterior: %s\n", siguiente_proceso->pid,siguiente_proceso->estado_pcb);
-
         log_info(kernel_logger, "PID[%d] ingresando a EXEC\n", siguiente_proceso->pid);
 
         proceso_en_execute(siguiente_proceso);
@@ -244,7 +241,7 @@ t_pcb* obtener_siguiente_ready()
 
  	//devolvemos el proceso seleccionado segun el algoritmo que elegimos
  	return proceso_seleccionado;
-};
+}
 
 algoritmo obtener_algoritmo(){ 
 
