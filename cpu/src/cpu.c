@@ -30,11 +30,11 @@ int main(void)
     // esperamos los 2 clientes de kernel
     int socket_cliente_dispatch = esperar_cliente(socket_servidor_dispatch);
     int socket_cliente_interrupt = esperar_cliente(socket_servidor_interrupt);
-    printf("Se conectaron los clientes de dispatch e interrupt\n");
+    log_info(cpu_logger, "Se conectaron los clientes de dispatch e interrupt\n");
 
-    // creamos el hilo para atender las interrupciones
+    /* creamos el hilo para atender las interrupciones
     pthread_create(&hilo_interrupt, NULL, (void *)atender_interrupt, &socket_cliente_interrupt);
-    pthread_detach(hilo_interrupt);
+    pthread_detach(hilo_interrupt);*/
 
     while (1)
     {

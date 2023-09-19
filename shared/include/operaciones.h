@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h> // para los uint32_t de los registros de CPU
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netdb.h>
@@ -19,17 +20,34 @@
 #include "inttypes.h"
 
 
-// ESTRUCTURAS //
+//==================================================== Estructuras =========================================================================================================
 typedef enum
 {
 	PAQUETE,
 	HANDSHAKE,
+	RECIBIR_PATH,
 	MANDAR_INSTRUCCIONES,
+	CREACION_ESTRUCTURAS_MEMORIA,
 	INSTRUCCIONES,
 	PCB,
 	FINALIZACION,
+	FINALIZAR_EN_MEMORIA,
 	DESALOJO
 } op_code;
+
+typedef enum{
+	NEW,
+	READY,
+	EXEC,
+	BLOCKED,
+	EXIT
+} estado;
+
+typedef enum{
+	FIFO,
+	PRIORIDADES,
+	RR
+} algoritmo;
 
 typedef enum {
 	SET,
@@ -55,17 +73,41 @@ typedef struct{
 	char* ip;
 }conexion_t;
 
-// OPERACION //
+//======================================================= PCB ==============================================================================================================
+typedef struct registros_cpu
+{
+	uint32_t AX;
+	uint32_t BX;
+	uint32_t CX;
+	uint32_t DX;
+} t_registros_cpu;
+
+typedef struct
+{
+	uint32_t pid;
+	uint32_t program_counter;
+ 	t_registros_cpu registros_cpu;
+	int prioridad;
+	//en el estado vamos a ir viendo en que parte del ciclo de instruccion esta
+	estado estado_pcb;
+	
+	t_dictionary *archivosAbiertos;
+	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
+	//pthread_mutex_t *mutex;
+	//aca NO vamos a poner las cosas con las que se relaciona el proceso en memoria (tam paginas por ejemplo)
+	//vamos a ponerlo en memoria pero despues
+}t_pcb; //declaro el pcb
+
+//======================================================= Operaciones ======================================================================================================
 int recibir_operacion(int);
-
 int enviar_datos(int , void *, uint32_t );
-
+int recibir_datos(int , void *, uint32_t );
 t_paquete *crear_paquete_con_codigo_de_operacion(uint8_t codigo);
 void crear_buffer(t_paquete *paquete);
 void *recibir_stream(int *size, int socket_cliente);
 
 
-// PAQUETES //
+//======================================================= Paquetes =========================================================================================================
 t_paquete* crear_paquete(op_code );
 void agregar_caracter_a_paquete(t_paquete* ,char );
 void agregar_entero_a_paquete(t_paquete* ,int );
@@ -83,20 +125,16 @@ void eliminar_paquete(t_paquete* );
 //SERIALIZACION
 void* serializar_paquete(t_paquete* , int );
 
-// MENSAJE //
+//======================================================= Mensaje ==========================================================================================================
 void enviar_mensaje(char*, int);
 void recibir_mensaje(int ,t_log*);
 
-// BUFFER //
+/*======================================================= Buffer ======================================================
 void* recibir_buffer(int*, int);
 void crear_buffer(t_paquete*);
 void agregar_a_buffer(t_buffer*, void*, int);
 t_buffer* inicializar_buffer_con_parametros(uint32_t, void*);
-
-//CONEXION //
-
-
-// BUFFER //
+*/
 
 
 #endif

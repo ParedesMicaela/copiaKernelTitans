@@ -1,6 +1,6 @@
 #include "kernel.h"
-//..................................CONFIGURACIONES.......................................................................
 
+//================================================== Configuracion =====================================================================
 void cargar_configuracion(char* path) {
 
 	  config = config_create(path); 
@@ -26,14 +26,13 @@ void cargar_configuracion(char* path) {
       config_valores_kernel.instancias_recursos = config_get_array_value(config, "INSTANCIAS_RECURSOS");
 }
 
-//---------------------------------------MANEJO CLIENTES - CONEXIONES -----------------------
-int atender_clientes_kernel(int socket_servidor){
-  int socket_cliente = esperar_cliente(socket_servidor);
-  // TODO
-  return 0;
-}
+//================================================== Manejo de Clientes =====================================================================
 
-void manejar_conexion(int socket_cliente) {
-  //TODO
-  //return 0;
+void finalizar_kernel(){
+  log_info(kernel_logger,"Finalizando el modulo Kernel");
+  log_destroy(kernel_logger);
+  liberar_conexion(server_fd);
+  liberar_conexion(socket_memoria);
+  liberar_conexion(socket_cpu_dispatch);
+  liberar_conexion(socket_cpu_interrupt);
 }

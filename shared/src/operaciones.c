@@ -13,7 +13,10 @@ int recibir_operacion(int socket_cliente)
 	}
 }
 
-//de nuestro tp
+int recibir_datos(int socket_fd, void *dest, uint32_t size) {
+	return recv(socket_fd, dest, size, 0);
+}
+
 int enviar_datos(int socket_fd, void *source, uint32_t size) {
 	return send(socket_fd, source, size, 0);
 }
@@ -30,7 +33,6 @@ t_paquete* crear_paquete(op_code codigo)
 	return paquete;
 }
 
-//sospecho que esta funcion esta mal
 t_paquete* recibir_paquete(int conexion)
 {
     t_paquete* paquete = malloc(sizeof(t_paquete));

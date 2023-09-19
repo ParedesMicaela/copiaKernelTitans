@@ -1,20 +1,56 @@
-[INFO] 00:06:02:088 kernel.log/(7236:7236): Archivo de configuracion cargado 
+[INFO] 01:43:08:935 kernel.log/(5013:5013): Archivo de configuracion cargado 
 
-[INFO] 00:06:02:089 kernel.log/(7236:7236): Kernel conectado con cpu 
+[INFO] 01:43:08:935 kernel.log/(5013:5013): Iniciando colas.. 
 
-[INFO] 00:06:02:089 kernel.log/(7236:7236): Kernel conectado con memoria 
+[INFO] 01:43:08:935 kernel.log/(5013:5013): Iniciando diccionarios.. 
 
-[INFO] 00:06:02:090 kernel.log/(7236:7236): Kernel conectado con filesystem 
+[INFO] 01:43:08:935 kernel.log/(5013:5013): Preparando planificacion.. 
 
-[INFO] 01:05:38:426 kernel.log/(8182:8182): Archivo de configuracion cargado 
+[INFO] 01:43:08:936 kernel.log/(5013:5013): Kernel conectado con cpu 
 
-[INFO] 01:05:38:431 kernel.log/(8182:8182): Kernel conectado con cpu 
+[INFO] 01:43:08:937 kernel.log/(5013:5013): Kernel conectado con memoria 
 
-[INFO] 01:05:38:432 kernel.log/(8182:8182): Kernel conectado con memoria 
+[INFO] 01:43:08:937 kernel.log/(5013:5013): Kernel conectado con filesystem 
 
-[INFO] 01:05:38:432 kernel.log/(8182:8182): Kernel conectado con filesystem 
+[INFO] 01:43:08:937 kernel.log/(5013:5013): Servidor creado 
 
-[INFO] 01:05:38:432 kernel.log/(8182:8182): Servidor creado 
+[INFO] 01:43:08:937 kernel.log/(5013:5013): Kernel listo para recibir al modulo cliente 
 
-[INFO] 01:05:38:432 kernel.log/(8182:8182): Kernel listo para recibir al modulo cliente 
+[INFO] 01:43:08:937 kernel.log/(5013:5013): Iniciando proceso.. 
+
+[INFO] 01:43:08:937 kernel.log/(5013:5013): esta vacio esto
+[INFO] 01:43:08:937 kernel.log/(5013:5013): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 01:43:08:937 kernel.log/(5013:5013):  Cola NEW FIFO : [1]
+
+[INFO] 01:43:08:937 kernel.log/(5013:5013): Se crea el proceso 1 en NEW 
+
+[INFO] 01:43:08:938 kernel.log/(5013:5013): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 01:43:08:938 kernel.log/(5013:5013): Mandando a memoria el PATH: /home/utnso/path.txt
+[INFO] 01:43:08:938 kernel.log/(5013:5015): PID[1] sale de NEW para planificacion 
+
+[INFO] 01:43:08:938 kernel.log/(5013:5015): esta vacio esto
+[INFO] 01:43:08:938 kernel.log/(5013:5015): PID: 1 - Estado Anterior: New - Estado Actual Ready
+
+[INFO] 01:43:08:938 kernel.log/(5013:5015):  Cola READY FIFO : [1]
+
+[INFO] 01:43:08:939 kernel.log/(5013:5016): estoy en proceso ready
+
+[INFO] 01:43:08:939 kernel.log/(5013:5016): estoy por meterme a obtener algoritmo
+
+[INFO] 01:43:08:939 kernel.log/(5013:5016): El algoritmo de planificacion elegido es FIFO 
+
+[INFO] 01:43:08:939 kernel.log/(5013:5016): Inicio la planificacion FIFO 
+
+[INFO] 01:43:08:939 kernel.log/(5013:5016):  Cola READY FIFO : [1]
+
+[INFO] 01:43:08:939 kernel.log/(5013:5016): PID[1] sale de READY por planificacion FIFO 
+
+[INFO] 01:43:08:939 kernel.log/(5013:5016): PID[1] ingresando a EXEC
+
+[INFO] 01:43:08:939 kernel.log/(5013:5016): Se envio el PCB 1 a la CPU 
+
+[INFO] 01:43:08:939 kernel.log/(5013:5016): PCB enviado cpu para ejecucion
+[ERROR] 01:43:09:048 kernel.log/(5013:5016): Falla al recibir PCB, se cierra el Kernel 
 

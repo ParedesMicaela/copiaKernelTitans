@@ -126,7 +126,7 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         contexto_ejecucion->prioridad = sacar_entero_de_paquete(&stream);
         contexto_ejecucion->registros = sacar_array_cadenas_de_paquete(&stream);
 
-        log_info(cpu_logger, "Recibi un PCB del Kernel");
+        log_info(cpu_logger, "Recibi un PCB del Kernel :)");
 
         // una vez que recibimos el pcb inicializamos los registros de uso general de la cpu
         iniciar_registros(contexto_ejecucion->registros);
@@ -149,7 +149,7 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
 void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memoria, t_contexto_ejecucion *contexto_ejecucion)
 {
     bool seguir_ejecutando = true;
-    int cant_instruccioness = string_array_size(instruccion); 
+    //int cant_instruccioness = string_array_size(instruccion); 
 
     while (seguir_ejecutando)
     {

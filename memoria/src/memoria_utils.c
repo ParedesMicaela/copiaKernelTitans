@@ -49,15 +49,32 @@ void manejo_conexiones(void* socket_cliente)
 {
 	int cliente = *(int*)socket_cliente;
 	while(1){
-
 	t_paquete* paquete = recibir_paquete(cliente);
-	void* stream = paquete->buffer->stream;
-	switch(paquete->codigo_operacion){
-	case HANDSHAKE: //HANDSHAKE con CPU
+    void* stream = paquete->buffer->stream;
+
+	switch(paquete->codigo_operacion){		
+	case HANDSHAKE:
+
+		//va a recibir un handshake de la cpu y le va a tener que mandar como min el tam_pagina
 		log_info(memoria_logger,"Me llego el handshake :)\n");
-		usleep(config_valores_memoria.retardo_respuesta * 1000); //lo retardamos un poquito
+
+		//lo retardamos
+		usleep(config_valores_memoria.retardo_respuesta * 1000); 
 		enviar_paquete_handshake(cliente);
 		break;
+
+	case RECIBIR_PATH:
+
+		//del kernel va a recibir un path que va a tener que leer para pasarle a la cpu la instruccion
+		char* path_recibido = sacar_cadena_de_paquete(&stream);
+
+		/*el path va a ser distinto al del archivo de config entonces lo tengo que modificar
+	    no lo pongo en MANDAR_INSTRUCCIONES porque el kernel no me pide que le lea la instruccion, eso me lo pide la cpu
+		el kernel me dice solamente el path que necesito leerle a la cpu*/
+		config_valores_memoria.path_instrucciones = path_recibido;
+
+		log_info(memoria_logger, "PATH recibido: %s", path_recibido);
+
 	case MANDAR_INSTRUCCIONES:
 		//leemos el archivo de pseudo codigo del path de la config  y lo metemos en una cadena TODO JUNTO
 		char* instrucciones_leidas = leer_archivo_instrucciones(config_valores_memoria.path_instrucciones);
@@ -66,6 +83,7 @@ void manejo_conexiones(void* socket_cliente)
 		int posicion_pedida = sacar_entero_de_paquete(&stream);
 		enviar_paquete_instrucciones(cliente, instrucciones_leidas,posicion_pedida);
 		break;
+
 	default:
 		break;
 	}
@@ -80,7 +98,7 @@ void enviar_paquete_handshake(int socket_cliente) {
 
 	enviar_paquete(handshake,socket_cliente);
 	log_info(memoria_logger,"Handshake enviado :)\n");
-	log_info(memoria_logger,"Se envio el tamaño de pagina %d bytes al CPU",config_get_int_value(config, "TAM_PAGINA"));
+	log_info(memoria_logger,"Se envio el tamaño de pagina %d bytes al CPU \n",config_get_int_value(config, "TAM_PAGINA"));
 
 	eliminar_paquete(handshake);
 }
