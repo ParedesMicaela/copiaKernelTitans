@@ -16,11 +16,13 @@ char *instruccion;
 //======================= Funciones Internas ==============================================================================
 static void enviar_handshake(int socket_cliente_memoria);
 static void recibir_handshake(int socket_cliente_memoria);
-static void iniciar_registros(char **registros);
+//static void iniciar_registros(char **registros);
+static void iniciar_registros(t_registros_cpu *registros_cpu);
+// de momento solo voy a tocar el iniciar_registros
 static void setear_registro(char *registro, int valor);
 static int sumar_registros(char *registro_destino, char *registro_origen);
 static int restar_registros(char *registro_destino, char *registro_origen);
-static int buscar_registro(char *registro);
+static int buscar_registro(char *registros);
 static int tipo_inst(char *instruccion);
 static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo);
 static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo);
@@ -159,7 +161,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
     {
 
         // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
-        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", contexto_ejecucion->registros.AX, contexto_ejecucion->registros.DX, contexto_ejecucion->registros.CX, contexto_ejecucion->registros.DX);
+        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", contexto_ejecucion->registros.AX, contexto_ejecucion->registros.BX, contexto_ejecucion->registros.CX, contexto_ejecucion->registros.DX);
 
         //=============================================== FETCH =================================================================
         
@@ -255,28 +257,34 @@ void atender_interrupt(void *cliente)
 }
 
 
-/*
+
 //================================================== REGISTROS =====================================================================
-static void iniciar_registros(char **registros)
+static void iniciar_registros(t_registros_cpu *registros)
 {
-    AX = atoi(registros[0]);
-    BX = atoi(registros[1]);
-    CX = atoi(registros[2]);
-    DX = atoi(registros[3]);
+    registros->AX;
+    registros->BX;
+    registros->CX;
+    registros->DX; 
+    /*AX = atoi(registros_cpu[0]); esto está medio feo
+    BX = atoi(registros_cpu[1]);
+    CX = atoi(registros_cpu[2]);
+    DX = atoi(registros_cpu[3]); */
+    
 }
 
-static void setear_registro(char *registro, int valor)
+
+static void setear_registro(char *registros, int valor)
 {
-    if (string_equals_ignore_case(registro, "AX"))
+    if (string_equals_ignore_case(registros, "AX"))
         AX = valor;
 
-    if (string_equals_ignore_case(registro, "BX"))
+    if (string_equals_ignore_case(registros, "BX"))
         BX = valor;
 
-    if (string_equals_ignore_case(registro, "CX"))
+    if (string_equals_ignore_case(registros, "CX"))
         CX = valor;
 
-    if (string_equals_ignore_case(registro, "DX"))
+    if (string_equals_ignore_case(registros, "DX"))
         DX = valor;
 }
 
@@ -300,20 +308,20 @@ static int restar_registros(char *registro_destino, char *registro_origen)
     return resta;
 }
 
-static int buscar_registro(char *registro)
+static int buscar_registro(char *registros)
 {
     int valor = -1;
 
-    if (string_equals_ignore_case(registro, "AX"))
+    if (string_equals_ignore_case(registros, "AX"))
         valor = AX;
 
-    if (string_equals_ignore_case(registro, "BX"))
+    if (string_equals_ignore_case(registros, "BX"))
         valor = BX;
 
-    if (string_equals_ignore_case(registro, "CX"))
+    if (string_equals_ignore_case(registros, "CX"))
         valor = CX;
 
-    if (string_equals_ignore_case(registro, "DX"))
+    if (string_equals_ignore_case(registros, "DX"))
         valor = DX;
 
     return valor;
@@ -344,11 +352,15 @@ static int tipo_inst(char *instruccion)
 static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo)
 {
     // aca nosotros agregamos las modificaciones de los registros
-    (contexto_ejecucion->registros)[0] = string_itoa(AX);
+/*    (contexto_ejecucion->registros)[0] = string_itoa(AX);
     (contexto_ejecucion->registros)[1] = string_itoa(BX);
     (contexto_ejecucion->registros)[2] = string_itoa(CX);
     (contexto_ejecucion->registros)[3] = string_itoa(DX);
-
+*/
+    (contexto_ejecucion->registros.AX) = AX;
+    (contexto_ejecucion->registros.BX) = BX;
+    (contexto_ejecucion->registros.CX) = CX;
+    (contexto_ejecucion->registros.DX) = DX;
     enviar_contexto(socket_cliente, contexto_ejecucion, motivo);
     log_info(cpu_logger, "devolvi el contexo ejecucion al kernel por motivo de: %s \n", motivo);
 }
@@ -359,10 +371,12 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
 
     // le mandamos esto porque creo que es lo unico que se cambia pero vemos
     agregar_entero_a_paquete(paquete, contexto_ejecucion->program_counter);
-    agregar_array_cadenas_a_paquete(paquete, contexto_ejecucion->registros);
+    agregar_array_cadenas_a_paquete(paquete, contexto_ejecucion->registros.AX);
+    agregar_array_cadenas_a_paquete(paquete, contexto_ejecucion->registros.BX);
+    agregar_array_cadenas_a_paquete(paquete, contexto_ejecucion->registros.CX);
+    agregar_array_cadenas_a_paquete(paquete, contexto_ejecucion->registros.DX);
     agregar_cadena_a_paquete(paquete, motivo);
     // agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_que_bloquear);
 
     enviar_paquete(paquete, socket_cliente);
 }
-*/

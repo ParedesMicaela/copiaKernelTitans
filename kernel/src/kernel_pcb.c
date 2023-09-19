@@ -28,7 +28,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     pcb->registros_cpu.CX = 0;
     pcb->registros_cpu.DX = 0;
     //pcb->tabla_archivos_abiertos = diccionario;
-    pcb->archivosAbiertos = dictionary_create();
+    //pcb->archivosAbiertos = dictionary_create();
     /*
     pthread_mutex_t *mutex = malloc(sizeof(*(pcb->mutex))); 
     pthread_mutex_init (mutex, NULL);
@@ -119,7 +119,7 @@ void eliminar_pcb(t_pcb* proceso)
 	free(proceso->prioridad);   
 	//free(proceso->estado_pcb); tira error 
 	//free(proceso->estado_pcb); acá también tira error con el make también
-	eliminar_archivos_abiertos(proceso->archivosAbiertos);
+	//eliminar_archivos_abiertos(proceso->archivosAbiertos);
 	//eliminar_mutex(proceso->mutex);
 
     free(proceso); //intuyo con que al hacerle free van a haber cosas del pcb que vuelan pero me hace ruido 
