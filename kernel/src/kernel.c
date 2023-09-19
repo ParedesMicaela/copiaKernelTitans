@@ -43,8 +43,8 @@ int main(void)
    log_info(kernel_logger, "Servidor creado \n");
 
    log_info(kernel_logger, "Kernel listo para recibir al modulo cliente \n");
-
-   iniciar_proceso("/home/utnso/path.txt",16,1);
+   
+   inicializar_consola_interactiva();
 
    void finalizar_kernel();
 
