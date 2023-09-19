@@ -1,46 +1,121 @@
-[INFO] 00:06:02:088 kernel.log/(7236:7236): Archivo de configuracion cargado 
+[INFO] 20:21:45:261 kernel.log/(3622:3622): Archivo de configuracion cargado 
 
-[INFO] 00:06:02:089 kernel.log/(7236:7236): Kernel conectado con cpu 
+[INFO] 20:21:45:261 kernel.log/(3622:3622): Iniciando colas.. 
 
-[INFO] 00:06:02:089 kernel.log/(7236:7236): Kernel conectado con memoria 
+[INFO] 20:21:45:262 kernel.log/(3622:3622): Iniciando diccionarios.. 
 
-[INFO] 00:06:02:090 kernel.log/(7236:7236): Kernel conectado con filesystem 
+[INFO] 20:21:45:262 kernel.log/(3622:3622): Preparando planificacion.. 
 
-[INFO] 01:05:38:426 kernel.log/(8182:8182): Archivo de configuracion cargado 
+[INFO] 20:21:45:263 kernel.log/(3622:3622): Kernel conectado con cpu 
 
-[INFO] 01:05:38:431 kernel.log/(8182:8182): Kernel conectado con cpu 
+[INFO] 20:21:45:263 kernel.log/(3622:3622): Kernel conectado con memoria 
 
-[INFO] 01:05:38:432 kernel.log/(8182:8182): Kernel conectado con memoria 
+[INFO] 20:21:45:264 kernel.log/(3622:3622): Kernel conectado con filesystem 
 
-[INFO] 01:05:38:432 kernel.log/(8182:8182): Kernel conectado con filesystem 
+[INFO] 20:21:45:266 kernel.log/(3622:3622): Servidor creado 
 
-[INFO] 01:05:38:432 kernel.log/(8182:8182): Servidor creado 
+[INFO] 20:21:45:266 kernel.log/(3622:3622): Kernel listo para recibir al modulo cliente 
 
-[INFO] 01:05:38:432 kernel.log/(8182:8182): Kernel listo para recibir al modulo cliente 
+[INFO] 20:22:03:848 kernel.log/(3622:3622): Iniciando proceso.. 
 
-[INFO] 00:44:30:456 kernel.log/(11779:11779): Archivo de configuracion cargado 
+[INFO] 20:22:23:597 kernel.log/(3627:3627): Archivo de configuracion cargado 
 
-[INFO] 00:44:30:456 kernel.log/(11779:11779): Kernel conectado con cpu 
+[INFO] 20:22:23:597 kernel.log/(3627:3627): Iniciando colas.. 
 
-[INFO] 00:44:30:457 kernel.log/(11779:11779): Kernel conectado con memoria 
+[INFO] 20:22:23:597 kernel.log/(3627:3627): Iniciando diccionarios.. 
 
-[INFO] 00:44:30:457 kernel.log/(11779:11779): Kernel conectado con filesystem 
+[INFO] 20:22:23:597 kernel.log/(3627:3627): Preparando planificacion.. 
 
-[INFO] 00:44:30:457 kernel.log/(11779:11779): Servidor creado 
+[INFO] 20:22:23:598 kernel.log/(3627:3627): Kernel conectado con cpu 
 
-[INFO] 00:44:30:457 kernel.log/(11779:11779): Kernel listo para recibir al modulo cliente 
+[INFO] 20:22:23:598 kernel.log/(3627:3627): Kernel conectado con memoria 
 
-[INFO] 18:08:35:615 kernel.log/(42917:42917): Archivo de configuracion cargado 
+[INFO] 20:22:23:598 kernel.log/(3627:3627): Kernel conectado con filesystem 
 
-[INFO] 18:08:35:761 kernel.log/(42917:42917): Kernel conectado con cpu 
+[INFO] 20:22:23:598 kernel.log/(3627:3627): Servidor creado 
 
-[INFO] 18:08:35:781 kernel.log/(42917:42917): Kernel conectado con memoria 
+[INFO] 20:22:23:598 kernel.log/(3627:3627): Kernel listo para recibir al modulo cliente 
 
-[INFO] 18:08:35:792 kernel.log/(42917:42917): Kernel conectado con filesystem 
+[INFO] 20:24:50:349 kernel.log/(3689:3689): Archivo de configuracion cargado 
 
-[INFO] 18:08:35:891 kernel.log/(42917:42917): Servidor creado 
+[INFO] 20:24:50:349 kernel.log/(3689:3689): Iniciando colas.. 
 
-[INFO] 18:08:35:903 kernel.log/(42917:42917): Kernel listo para recibir al modulo cliente 
+[INFO] 20:24:50:349 kernel.log/(3689:3689): Iniciando diccionarios.. 
+
+[INFO] 20:24:50:349 kernel.log/(3689:3689): Preparando planificacion.. 
+
+[INFO] 20:24:50:350 kernel.log/(3689:3689): Kernel conectado con cpu 
+
+[INFO] 20:24:50:350 kernel.log/(3689:3689): Kernel conectado con memoria 
+
+[INFO] 20:24:50:351 kernel.log/(3689:3689): Kernel conectado con filesystem 
+
+[INFO] 20:24:50:351 kernel.log/(3689:3689): Servidor creado 
+
+[INFO] 20:24:50:351 kernel.log/(3689:3689): Kernel listo para recibir al modulo cliente 
+
+[INFO] 20:25:50:208 kernel.log/(3708:3708): Archivo de configuracion cargado 
+
+[INFO] 20:25:50:208 kernel.log/(3708:3708): Iniciando colas.. 
+
+[INFO] 20:25:50:208 kernel.log/(3708:3708): Iniciando diccionarios.. 
+
+[INFO] 20:25:50:208 kernel.log/(3708:3708): Preparando planificacion.. 
+
+[INFO] 20:25:50:210 kernel.log/(3708:3708): Kernel conectado con cpu 
+
+[INFO] 20:25:50:211 kernel.log/(3708:3708): Kernel conectado con memoria 
+
+[INFO] 20:25:50:212 kernel.log/(3708:3708): Kernel conectado con filesystem 
+
+[INFO] 20:25:50:212 kernel.log/(3708:3708): Servidor creado 
+
+[INFO] 20:25:50:213 kernel.log/(3708:3708): Kernel listo para recibir al modulo cliente 
+
+[INFO] 20:26:08:597 kernel.log/(3708:3708): Iniciando proceso.. 
+
+[INFO] 20:26:08:597 kernel.log/(3708:3708): esta vacio esto
+[INFO] 20:26:08:597 kernel.log/(3708:3708): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 20:26:08:597 kernel.log/(3708:3708):  Cola NEW FIFO : [1]
+
+[INFO] 20:26:08:597 kernel.log/(3708:3708): Se crea el proceso 1 en NEW 
+
+[INFO] 20:26:29:498 kernel.log/(3712:3712): Archivo de configuracion cargado 
+
+[INFO] 20:26:29:499 kernel.log/(3712:3712): Iniciando colas.. 
+
+[INFO] 20:26:29:499 kernel.log/(3712:3712): Iniciando diccionarios.. 
+
+[INFO] 20:26:29:499 kernel.log/(3712:3712): Preparando planificacion.. 
+
+[INFO] 20:26:29:499 kernel.log/(3712:3712): Kernel conectado con cpu 
+
+[INFO] 20:26:29:500 kernel.log/(3712:3712): Kernel conectado con memoria 
+
+[INFO] 20:26:29:500 kernel.log/(3712:3712): Kernel conectado con filesystem 
+
+[INFO] 20:26:29:500 kernel.log/(3712:3712): Servidor creado 
+
+[INFO] 20:26:29:501 kernel.log/(3712:3712): Kernel listo para recibir al modulo cliente 
+
+[INFO] 20:27:01:502 kernel.log/(3737:3737): Archivo de configuracion cargado 
+
+[INFO] 20:27:01:502 kernel.log/(3737:3737): Iniciando colas.. 
+
+[INFO] 20:27:01:502 kernel.log/(3737:3737): Iniciando diccionarios.. 
+
+[INFO] 20:27:01:502 kernel.log/(3737:3737): Preparando planificacion.. 
+
+[INFO] 20:27:01:503 kernel.log/(3737:3737): Kernel conectado con cpu 
+
+[INFO] 20:27:01:503 kernel.log/(3737:3737): Kernel conectado con memoria 
+
+[INFO] 20:27:01:503 kernel.log/(3737:3737): Kernel conectado con filesystem 
+
+[INFO] 20:27:01:503 kernel.log/(3737:3737): Servidor creado 
+
+[INFO] 20:27:01:503 kernel.log/(3737:3737): Kernel listo para recibir al modulo cliente 
 
 [INFO] 21:25:31:853 kernel.log/(4434:4434): Archivo de configuracion cargado 
 

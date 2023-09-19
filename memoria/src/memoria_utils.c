@@ -50,9 +50,9 @@ void manejo_conexiones(void* socket_cliente)
 	int cliente = *(int*)socket_cliente;
 	while(1){
 	t_paquete* paquete = recibir_paquete(cliente);
-	void* stream = paquete->buffer->stream;
-	switch(paquete->codigo_operacion){
-		
+    void* stream = paquete->buffer->stream;
+
+	switch(paquete->codigo_operacion){		
 	case HANDSHAKE:
 
 		//va a recibir un handshake de la cpu y le va a tener que mandar como min el tam_pagina
@@ -72,6 +72,8 @@ void manejo_conexiones(void* socket_cliente)
 	    no lo pongo en MANDAR_INSTRUCCIONES porque el kernel no me pide que le lea la instruccion, eso me lo pide la cpu
 		el kernel me dice solamente el path que necesito leerle a la cpu*/
 		config_valores_memoria.path_instrucciones = path_recibido;
+
+		log_info(memoria_logger, "PATH recibido: %s", path_recibido);
 
 	case MANDAR_INSTRUCCIONES:
 		//leemos el archivo de pseudo codigo del path de la config  y lo metemos en una cadena TODO JUNTO
@@ -96,7 +98,7 @@ void enviar_paquete_handshake(int socket_cliente) {
 
 	enviar_paquete(handshake,socket_cliente);
 	log_info(memoria_logger,"Handshake enviado :)\n");
-	log_info(memoria_logger,"Se envio el tamaño de pagina %d bytes al CPU",config_get_int_value(config, "TAM_PAGINA"));
+	log_info(memoria_logger,"Se envio el tamaño de pagina %d bytes al CPU \n",config_get_int_value(config, "TAM_PAGINA"));
 
 	eliminar_paquete(handshake);
 }

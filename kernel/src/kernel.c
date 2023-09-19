@@ -19,7 +19,7 @@ int main(void)
 
 	log_info(kernel_logger, "Archivo de configuracion cargado \n");
 
-    //inciar_planificacion()
+    inicializar_planificador();
     
     //conexion con CPU
     socket_cpu_dispatch = crear_conexion(config_valores_kernel.ip_cpu, config_valores_kernel.puerto_cpu_dispatch);
@@ -43,11 +43,10 @@ int main(void)
    log_info(kernel_logger, "Servidor creado \n");
 
    log_info(kernel_logger, "Kernel listo para recibir al modulo cliente \n");
-
-   while(atender_clientes_kernel(server_fd)); //creo que lo tenemos que hacer en un hilo
+   
+   inicializar_consola_interactiva();
 
    void finalizar_kernel();
 
    return EXIT_SUCCESS;
-
 }

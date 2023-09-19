@@ -40,7 +40,10 @@ typedef enum{
 	READY,
 	EXEC,
 	BLOCKED,
+<<<<<<< HEAD
 	//YIELD no es requerido para este tp
+=======
+>>>>>>> kernel_planificacion
 	EXIT
 } estado;
 
@@ -92,9 +95,9 @@ typedef struct
 	//en el estado vamos a ir viendo en que parte del ciclo de instruccion esta
 	estado estado_pcb;
 	
-	t_dictionary *archivosAbiertos;
+	//t_dictionary *archivosAbiertos;
 	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
-	pthread_mutex_t *mutex;
+	//pthread_mutex_t *mutex;
 	//aca NO vamos a poner las cosas con las que se relaciona el proceso en memoria (tam paginas por ejemplo)
 	//vamos a ponerlo en memoria pero despues
 }t_pcb; //declaro el pcb

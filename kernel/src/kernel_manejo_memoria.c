@@ -51,7 +51,8 @@ void enviar_path_a_memoria(char* path)
 
     agregar_cadena_a_paquete(paquete,path);
     enviar_paquete(paquete, socket_memoria);
-    
+    eliminar_paquete(paquete);
+
     log_info(kernel_logger, "Mandando a memoria el PATH: %s", path);
 }
 

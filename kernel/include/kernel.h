@@ -26,7 +26,9 @@ extern int socket_cpu_dispatch;
 extern int socket_cpu_interrupt;
 extern int socket_memoria;
 extern int socket_filesystem;
+extern sem_t mutex_pid;
 
+extern t_list* cola_NEW;
 //==============================================================================================================================
 
 typedef struct 
@@ -51,29 +53,35 @@ extern arch_config_kernel config_valores_kernel;
 
 //============================================= Inicializacion =====================================================================
 void cargar_configuracion(char* );
-int atender_clientes_kernel(int );
 void manejar_conexion(int );
 void iniciar_proceso (char* , int , int );
 void inicializar_diccionarios();
 void inicializar_colas();
 void inicializar_planificador();
+void inicializar_semaforos();
 
 //============================================= Planificador =================================================================================================================
+void inicializar_planificador();
 void planificador_largo_plazo();
 void planificador_corto_plazo();
 void enviar_path_a_memoria(char* );
-void mostrar_lista_pcb(t_list* );
-void meter_en_cola(t_pcb* , estado );
+void mostrar_lista_pcb(t_list* , char* );
+void meter_en_cola(t_pcb* pcb, estado, t_list* );
 t_pcb* obtener_siguiente_ready();
 void proceso_en_execute(t_pcb* );
 void proceso_en_ready();
 void proceso_en_exit(t_pcb* );
 t_pcb* obtener_siguiente_FIFO();
 algoritmo obtener_algoritmo();
-t_pcb* obtener_siguiente_PRIORIDADES();
 t_pcb* obtener_siguiente_RR();
+t_pcb* obtener_siguiente_PRIORIDADES();
+<<<<<<< HEAD
+t_pcb* obtener_siguiente_RR();
+=======
+t_pcb* obtener_siguiente_new();
+>>>>>>> kernel_planificacion
 
-////========================================= Relacion con Memoria ===========================================================================================================
+////======================================== Relacion con Memoria ===========================================================================================================
 void enviar_path_a_memoria(char* );
 void enviar_pcb_a_memoria(t_pcb* , int , op_code );
 op_code esperar_respuesta_memoria(int );
@@ -86,5 +94,22 @@ char* recibir_contexto(t_pcb* );
 //================================================ Destruir ==================================================================================================================
 void finalizar_kernel();
 void eliminar_pcb(t_pcb* );
+void eliminar_registros_pcb (t_registros_cpu );
+void eliminar_archivos_abiertos(t_dictionary *);
+void eliminar_mutex(pthread_mutex_t *);
+
+//================================================ Consola ==================================================================================================================
+void inicializar_consola_interactiva();
+void consola_parsear_instruccion(char * leer_linea);
+void consola_iniciar_proceso();
+//void consola_finalizar_proceso();
+//no hace falta porque esta el proceso_en_exit
+void consola_iniciar_planificacion();
+void consola_detener_planificacion();
+void consola_modificar_multiprogramacion();
+void consola_mostrar_proceso_estado();
+
+
+
 
 #endif
