@@ -60,17 +60,17 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 
     agregar_entero_a_paquete(paquete, pcb_a_enviar->pid);
     agregar_entero_a_paquete(paquete, pcb_a_enviar->program_counter);
-    agregar_entero_a_paquete(paquete, pcb_a_enviar->pid);
+    agregar_entero_a_paquete(paquete, pcb_a_enviar->prioridad);
+
 
     // ojo al piojo, es un struct, tengo que mandar los registros por separado
-    agregar_entero_a_paquete(paquete, pcb_a_enviar->program_counter);
     agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.AX); 
     agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.BX);
     agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.CX);
     agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
     
 
-    agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
+    //agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
 
     enviar_paquete(paquete, socket_cpu_dispatch);
     log_info(kernel_logger, "Se envio el PCB %d a la CPU \n", pcb_a_enviar->pid);

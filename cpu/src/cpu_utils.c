@@ -11,7 +11,7 @@ uint32_t AX;
 uint32_t BX;
 uint32_t CX;
 uint32_t DX;
-char **instruccion;
+char *instruccion;
 
 //======================= Funciones Internas ==============================================================================
 static void enviar_handshake(int socket_cliente_memoria);
@@ -90,7 +90,7 @@ static void recibir_instruccion(int socket_cliente_memoria)
 
     if (paquete->codigo_operacion == INSTRUCCIONES)
     {
-        instruccion = sacar_array_cadenas_de_paquete(&stream);
+        instruccion = sacar_cadena_de_paquete(&stream);
     }
     else
     {
@@ -104,6 +104,7 @@ static void pedir_instruccion(int socket_cliente_memoria,int posicion)
     t_paquete *paquete = crear_paquete(MANDAR_INSTRUCCIONES);
     agregar_entero_a_paquete(paquete,posicion);
     enviar_paquete(paquete, socket_cliente_memoria);
+    eliminar_paquete(paquete);
 }
 
 //================================================== Dispatch =====================================================================
@@ -124,12 +125,15 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
         contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
         contexto_ejecucion->prioridad = sacar_entero_de_paquete(&stream);
-        contexto_ejecucion->registros = sacar_array_cadenas_de_paquete(&stream);
+        contexto_ejecucion->registros.AX = sacar_entero_de_paquete(&stream);
+        contexto_ejecucion->registros.BX= sacar_entero_de_paquete(&stream);
+        contexto_ejecucion->registros.CX= sacar_entero_de_paquete(&stream);
+        contexto_ejecucion->registros.DX= sacar_entero_de_paquete(&stream);
 
         log_info(cpu_logger, "Recibi un PCB del Kernel :)");
 
         // una vez que recibimos el pcb inicializamos los registros de uso general de la cpu
-        iniciar_registros(contexto_ejecucion->registros);
+        //iniciar_registros(contexto_ejecucion->registros);
 
         // iniciamos el procedimiento para procesar cualquier instruccion
         ciclo_de_instruccion(socket_cliente_dispatch, socket_cliente_memoria, contexto_ejecucion);
@@ -155,16 +159,19 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
     {
 
         // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
-        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
+        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", contexto_ejecucion->registros.AX, contexto_ejecucion->registros.DX, contexto_ejecucion->registros.CX, contexto_ejecucion->registros.DX);
 
         //=============================================== FETCH =================================================================
         
         //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
         pedir_instruccion(socket_cliente_memoria, contexto_ejecucion->program_counter);
+        log_info(cpu_logger,"Pidiendo instruccion a memoria\n");
 
         //una vez que la recibo de memoria, la guardo en la var global de arriba
         recibir_instruccion(socket_cliente_memoria);
+        log_info(cpu_logger,"Recibi una instruccion de memoria\n");
 
+     /*
         //=============================================== DECODE =================================================================
         // vemos si la instruccion requiere de una traducción de dirección lógica a dirección física
         /*
@@ -173,7 +180,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger,"%s requiere traduccion", instruccion);
             //traducir_a_direccion_fisica(instruccion);
         }
-        */
+        
 
         //=============================================== EXECUTE =================================================================
 
@@ -212,7 +219,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             // eliminar_todas_las_entradas(contexto_ejecucion->pid);
             seguir_ejecutando = false;
             break;
-        }
+        } */
     }
 }
 
@@ -247,6 +254,8 @@ void atender_interrupt(void *cliente)
     }
 }
 
+
+/*
 //================================================== REGISTROS =====================================================================
 static void iniciar_registros(char **registros)
 {
@@ -356,3 +365,4 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
 
     enviar_paquete(paquete, socket_cliente);
 }
+*/

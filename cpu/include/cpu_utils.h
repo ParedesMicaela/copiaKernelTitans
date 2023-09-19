@@ -36,12 +36,21 @@ typedef struct  // archivo de configuracion cpu
 } arch_config;
 
 extern arch_config config_valores_cpu;
+
+typedef struct 
+{
+	uint32_t AX;
+	uint32_t BX;
+	uint32_t CX;
+	uint32_t DX;
+} registros_cpu;
 typedef struct
 {
     int pid;
     int program_counter;
     int prioridad;
-    char** registros;
+ 	registros_cpu registros;
+
 }t_contexto_ejecucion;
 
 //======================= Funciones =======================
