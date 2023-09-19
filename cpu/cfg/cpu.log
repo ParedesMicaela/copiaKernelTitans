@@ -1,32 +1,48 @@
-[INFO] 18:52:23:678 cpu.log/(15184:15184): Configuracion de CPU cargada
-[INFO] 18:52:23:679 cpu.log/(15184:15184): Archivo de configuracion cargado 
+[INFO] 00:10:26:746 cpu.log/(3495:3495): Configuracion de CPU cargada
+[INFO] 00:10:26:746 cpu.log/(3495:3495): Archivo de configuracion cargado 
 
-[INFO] 18:52:23:679 cpu.log/(15184:15184): Conexion con memoria realizada 
+[INFO] 00:10:26:746 cpu.log/(3495:3495): Conexion con memoria realizada 
 
-[INFO] 18:52:23:679 cpu.log/(15184:15184): Handshake enviado a memoria 
+[INFO] 00:10:26:747 cpu.log/(3495:3495): Handshake enviado a memoria 
 
-[INFO] 18:52:24:680 cpu.log/(15184:15184): Tamanio de pagina 16 para realizar handshake :)
-[INFO] 18:52:24:680 cpu.log/(15184:15184): Servidores iniciados en CPU 
+[INFO] 00:10:27:756 cpu.log/(3495:3495): Tamanio de pagina 16 para realizar handshake :)
+[INFO] 00:10:27:756 cpu.log/(3495:3495): Servidores iniciados en CPU 
 
-[INFO] 18:52:27:345 cpu.log/(15184:15184): Se conectaron los clientes de dispatch e interrupt
+[INFO] 00:11:16:027 cpu.log/(3495:3495): Se conectaron los clientes de dispatch e interrupt
 
-[INFO] 18:52:27:345 cpu.log/(15184:15184): Espero recibir paquete
-[INFO] 18:52:27:429 cpu.log/(15184:15184): Ya recibi paquete
-[INFO] 18:52:30:431 cpu.log/(15184:15184): Espero recibir paquete
-[INFO] 18:52:30:431 cpu.log/(15184:15184): Ya recibi paquete
-[INFO] 18:52:33:431 cpu.log/(15184:15184): Espero recibir paquete
-[INFO] 18:52:33:431 cpu.log/(15184:15184): Ya recibi paquete
-[INFO] 18:56:06:835 cpu.log/(15981:15981): Configuracion de CPU cargada
-[INFO] 18:56:06:835 cpu.log/(15981:15981): Archivo de configuracion cargado 
+[INFO] 00:11:16:027 cpu.log/(3495:3495): Espero recibir paquete
+[INFO] 00:11:16:126 cpu.log/(3495:3495): Ya recibi paquete
+[INFO] 00:11:19:127 cpu.log/(3495:3495): Espero recibir paquete
+[INFO] 00:11:19:128 cpu.log/(3495:3495): Ya recibi paquete
+[INFO] 00:13:10:070 cpu.log/(3576:3576): Configuracion de CPU cargada
+[INFO] 00:13:10:070 cpu.log/(3576:3576): Archivo de configuracion cargado 
 
-[INFO] 18:56:06:835 cpu.log/(15981:15981): Conexion con memoria realizada 
+[INFO] 00:13:10:070 cpu.log/(3576:3576): Conexion con memoria realizada 
 
-[INFO] 18:56:06:835 cpu.log/(15981:15981): Handshake enviado a memoria 
+[INFO] 00:13:10:070 cpu.log/(3576:3576): Handshake enviado a memoria 
 
-[INFO] 18:56:07:836 cpu.log/(15981:15981): Tamanio de pagina 16 para realizar handshake :)
-[INFO] 18:56:07:837 cpu.log/(15981:15981): Servidores iniciados en CPU 
+[INFO] 00:13:11:071 cpu.log/(3576:3576): Tamanio de pagina 16 para realizar handshake :)
+[INFO] 00:13:11:072 cpu.log/(3576:3576): Servidores iniciados en CPU 
 
-[INFO] 18:56:19:239 cpu.log/(15981:15981): Se conectaron los clientes de dispatch e interrupt
+[INFO] 00:13:14:190 cpu.log/(3576:3576): Se conectaron los clientes de dispatch e interrupt
 
-[INFO] 18:56:19:240 cpu.log/(15981:15981): Espero recibir paquete
-[INFO] 18:56:19:360 cpu.log/(15981:15981): Ya recibi paquete
+[INFO] 00:13:14:190 cpu.log/(3576:3576): Espero recibir paquete
+[INFO] 00:13:14:278 cpu.log/(3576:3576): Ya recibi paquete
+[INFO] 00:13:17:403 cpu.log/(3576:3576): Espero recibir paquete
+[INFO] 00:13:17:405 cpu.log/(3576:3576): Ya recibi paquete
+[INFO] 01:12:39:253 cpu.log/(4408:4408): Configuracion de CPU cargada
+[INFO] 01:12:39:253 cpu.log/(4408:4408): Archivo de configuracion cargado 
+
+[INFO] 01:12:39:254 cpu.log/(4408:4408): Conexion con memoria realizada 
+
+[INFO] 01:12:39:254 cpu.log/(4408:4408): Handshake enviado a memoria 
+
+[INFO] 01:12:40:255 cpu.log/(4408:4408): Tamanio de pagina 16 para realizar handshake :)
+[INFO] 01:12:40:256 cpu.log/(4408:4408): Servidores iniciados en CPU 
+
+[INFO] 01:12:42:760 cpu.log/(4408:4408): Se conectaron los clientes de dispatch e interrupt
+
+[INFO] 01:12:42:760 cpu.log/(4408:4408): Espero recibir paquete
+[INFO] 01:12:42:869 cpu.log/(4408:4408): Ya recibi paquete
+[INFO] 01:12:45:984 cpu.log/(4408:4408): Espero recibir paquete
+[INFO] 01:12:45:984 cpu.log/(4408:4408): Ya recibi paquete

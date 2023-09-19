@@ -62,7 +62,7 @@ void inicializar_semaforos(){
     pthread_mutex_init(&mutex_new,NULL); 
 
 
-    sem_init(&grado_multiprogramacion, 0, grado);
+    sem_init(&grado_multiprogramacion, 0, 1);
     sem_init (&(mutex_colas), 0, 1);
     sem_init (&(hay_procesos_ready), 0, 1);
     sem_init(&(mutex_pid),0,1);
@@ -78,7 +78,10 @@ void planificador_largo_plazo()
         t_pcb* proceso_nuevo = obtener_siguiente_new();
 
         //metemos el proceso en la cola de ready
+        pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso_nuevo, READY, cola_READY);
+        pthread_mutex_unlock(&mutex_ready);
+
         mostrar_lista_pcb(cola_READY,"READY");
 
         /*le avisamos al corto plazo que puede empezar a planificar. Aca solamente vamos a poner el proceso
@@ -114,7 +117,6 @@ void proceso_en_ready()
 
         proceso_en_execute(siguiente_proceso);
 
-        sem_post(&hay_procesos_ready);
 }
 
 void proceso_en_execute(t_pcb* proceso_seleccionado)
@@ -335,7 +337,7 @@ void inicializar_colas()
 }
 
 //vamos a usar esta funcion cada vez que el proceso cambie de estado
-void meter_en_cola(t_pcb* pcb, estado ESTADO,t_list* cola)
+void meter_en_cola(t_pcb* pcb, estado ESTADO, t_list* cola)
 {
 	/*creamos una cola con el estado en el que esta el proceso usando la funcion int_get
     pasandole el estado del proceso (key) nos va a devolver la cola en la que esta*/
@@ -347,6 +349,9 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO,t_list* cola)
     {
         log_info(kernel_logger, "esta vacio esto");
     }
+
+    pthread_mutex_lock(&mutex_new);
+
 
     //recorremos la cola y buscamos el pid del pcb
     for(int i=0;i<list_size(cola) ;i++)
@@ -360,6 +365,9 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO,t_list* cola)
                 sem_post(&(mutex_colas));
             }
       }
+
+    pthread_mutex_unlock(&mutex_new);
+
 
     //el estado viejo va a ser el estado original en que estaba el pcb
     estado estado_viejo = pcb->estado_pcb;
@@ -378,6 +386,14 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO,t_list* cola)
 //esta funcion es para que nos muestre los pcb que estan en una cola, medio accesorio pero sirve
 void mostrar_lista_pcb(t_list* cola, char* nombre_cola){
 
+sem_wait(&mutex_colas);
+
+    int tam_cola = list_size(cola);
+
+    if(tam_cola == 0)
+    {
+        log_info(kernel_logger, "esta vacia la cola %s",nombre_cola);
+    }
 	//creamos un string vacio llamado pid y recorremos la cola que le pasamos por parametro
 	char* pids = string_new();
 	  for (int i=0; i < list_size(cola);i++){
@@ -396,7 +412,8 @@ void mostrar_lista_pcb(t_list* cola, char* nombre_cola){
 	//mostramos la lista con los pids en la cola dada
 
 	log_info(kernel_logger, " Cola %s %s : [%s]\n",nombre_cola,config_valores_kernel.algoritmo_planificacion, pids);
-	
+	sem_post(&mutex_colas);
+
     free(pids);
 }
 
