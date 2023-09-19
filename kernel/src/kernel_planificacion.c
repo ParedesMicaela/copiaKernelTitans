@@ -233,10 +233,7 @@ t_pcb* obtener_siguiente_ready()
  			break;
         case RR:
             proceso_seleccionado = obtener_siguiente_RR();
-<<<<<<< HEAD
-=======
  			break;
->>>>>>> kernel_planificacion
  		default:
  			break;
  		}
@@ -263,16 +260,6 @@ algoritmo obtener_algoritmo(){
  	{
  		switcher = PRIORIDADES;
  		log_info(kernel_logger, "El algoritmo de planificacion elegido es PRIORIDADES \n");
-<<<<<<< HEAD
- 	 }
-        //RR
-     if (strcmp(algoritmo,"RR") == 0)
-     {
-         switcher = RR;
-        log_info(kernel_logger, "El algoritmo de planificacion elegido es RR \n");
-     }
- 	 return switcher;
-=======
  	}
         //RR
     if (strcmp(algoritmo_actual,"RR") == 0)
@@ -281,7 +268,6 @@ algoritmo obtener_algoritmo(){
  		log_info(kernel_logger, "El algoritmo de planificacion elegido es RR \n");
     }
  	return switcher;
->>>>>>> kernel_planificacion
 }
 
 t_pcb* obtener_siguiente_FIFO()
@@ -312,12 +298,6 @@ t_pcb* obtener_siguiente_RR() // tener en cuenta como implementar con quantum
    ///
    printf("<3");
 }
-
-t_pcb* obtener_siguiente_RR() // tener en cuenta como implementar con quantum
-{
-   
-}
-
 
 //=================================================== Diccionarios y Colas ==================================================================
 void inicializar_diccionarios()

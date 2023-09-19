@@ -75,11 +75,10 @@ t_pcb* obtener_siguiente_FIFO();
 algoritmo obtener_algoritmo();
 t_pcb* obtener_siguiente_RR();
 t_pcb* obtener_siguiente_PRIORIDADES();
-<<<<<<< HEAD
-t_pcb* obtener_siguiente_RR();
-=======
+
+//t_pcb* obtener_siguiente_RR();
 t_pcb* obtener_siguiente_new();
->>>>>>> kernel_planificacion
+
 
 ////======================================== Relacion con Memoria ===========================================================================================================
 void enviar_path_a_memoria(char* );

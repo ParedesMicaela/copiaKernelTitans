@@ -40,10 +40,6 @@ typedef enum{
 	READY,
 	EXEC,
 	BLOCKED,
-<<<<<<< HEAD
-	//YIELD no es requerido para este tp
-=======
->>>>>>> kernel_planificacion
 	EXIT
 } estado;
 

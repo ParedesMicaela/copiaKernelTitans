@@ -113,14 +113,6 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 //eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)
 {
-<<<<<<< HEAD
-    //free(proceso->pid); ta tirando error al hacer el make, voy a ver que onda
-	eliminar_registros_pcb(proceso->registros_cpu);
-	free(proceso->prioridad);   
-	//free(proceso->estado_pcb); acá también tira error con el make también
-	eliminar_archivos_abiertos(proceso->archivosAbiertos);
-	eliminar_mutex(proceso->mutex);
-=======
     free(proceso->pid);
     //free(proceso->pid); ta tirando error al hacer el make, voy a ver que onda
 	eliminar_registros_pcb(proceso->registros_cpu);
@@ -129,7 +121,6 @@ void eliminar_pcb(t_pcb* proceso)
 	//free(proceso->estado_pcb); acá también tira error con el make también
 	//eliminar_archivos_abiertos(proceso->archivosAbiertos);
 	//eliminar_mutex(proceso->mutex);
->>>>>>> kernel_planificacion
 
     free(proceso); //intuyo con que al hacerle free van a haber cosas del pcb que vuelan pero me hace ruido 
 }
@@ -141,25 +132,13 @@ void eliminar_registros_pcb (t_registros_cpu registros_cpu)
     free(registros_cpu.AX);
     free(registros_cpu.AX);
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> kernel_planificacion
 void eliminar_archivos_abiertos(t_dictionary *archivosAbiertos)
 {
     //esto hay que revisarlo porque no se si esta bien, pero a rezar que lo ultimo que se pierde es la esperanza
     dictionary_destroy_and_destroy_elements(archivosAbiertos, dictionary_elements(archivosAbiertos));
 }
-<<<<<<< HEAD
-
-void eliminar_mutex(pthread_mutex_t *mutex)
-{
-    pthread_mutex_destroy(mutex);
-}	
-=======
 /*
 void eliminar_mutex(pthread_mutex_t *mutex)
 {
     pthread_mutex_destroy(mutex);
 }	*/
->>>>>>> kernel_planificacion
