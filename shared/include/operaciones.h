@@ -84,8 +84,8 @@ typedef struct registros_cpu
 
 typedef struct
 {
-	uint32_t pid;
-	uint32_t program_counter;
+	int pid;
+	int program_counter;
  	t_registros_cpu registros_cpu;
 	int prioridad;
 	//en el estado vamos a ir viendo en que parte del ciclo de instruccion esta
@@ -111,6 +111,7 @@ void *recibir_stream(int *size, int socket_cliente);
 t_paquete* crear_paquete(op_code );
 void agregar_caracter_a_paquete(t_paquete* ,char );
 void agregar_entero_a_paquete(t_paquete* ,int );
+void agregar_entero_sin_signo_a_paquete(t_paquete* , uint32_t);
 void agregar_cadena_a_paquete(t_paquete* , char* );
 void agregar_array_cadenas_a_paquete(t_paquete* , char** );
 void agregar_a_paquete(t_paquete* , void* , int );
@@ -118,6 +119,7 @@ void* serializar_paquete(t_paquete* , int );
 t_paquete* recibir_paquete(int );
 char* sacar_cadena_de_paquete(void** );
 int sacar_entero_de_paquete(void** );
+uint32_t sacar_entero_sin_signo_de_paquete(void** );
 char** sacar_array_cadenas_de_paquete(void** );
 void enviar_paquete(t_paquete* , int );
 void eliminar_paquete(t_paquete* );

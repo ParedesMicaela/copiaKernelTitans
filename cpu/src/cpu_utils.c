@@ -17,7 +17,7 @@ char *instruccion;
 static void enviar_handshake(int socket_cliente_memoria);
 static void recibir_handshake(int socket_cliente_memoria);
 //static void iniciar_registros(char **registros);
-static void iniciar_registros(t_registros_cpu *registros_cpu);
+//static void iniciar_registros(t_registros_cpu *registros_cpu);
 // de momento solo voy a tocar el iniciar_registros
 static void setear_registro(char *registro, int valor);
 static int sumar_registros(char *registro_destino, char *registro_origen);
@@ -118,8 +118,10 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
     t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
     void *stream = paquete->buffer->stream;
     log_info(cpu_logger, "Ya recibi paquete");
-
+    //se queda loopeando acá cuando corre :(x
     t_contexto_ejecucion *contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
+    //si se queda loopeando acá, no estamos teniendo un problema con el malloc? pero me resulta raro si para crear proceso en el pcb el malloc lo hace sin drama y acá le pifea
+
 
     // el kernel nos va a pasar el pcb al momento de poner a ejecutar un proceso
     if (paquete->codigo_operacion == PCB)
@@ -127,15 +129,18 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
         contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
         contexto_ejecucion->prioridad = sacar_entero_de_paquete(&stream);
-        contexto_ejecucion->registros.AX = sacar_entero_de_paquete(&stream);
-        contexto_ejecucion->registros.BX= sacar_entero_de_paquete(&stream);
-        contexto_ejecucion->registros.CX= sacar_entero_de_paquete(&stream);
-        contexto_ejecucion->registros.DX= sacar_entero_de_paquete(&stream);
+        contexto_ejecucion->registros_cpu.AX = sacar_entero_sin_signo_de_paquete(&stream);
+        contexto_ejecucion->registros_cpu.BX = sacar_entero_sin_signo_de_paquete(&stream);
+        contexto_ejecucion->registros_cpu.CX = sacar_entero_sin_signo_de_paquete(&stream);
+        contexto_ejecucion->registros_cpu.DX = sacar_entero_sin_signo_de_paquete(&stream);
 
         log_info(cpu_logger, "Recibi un PCB del Kernel :)");
 
         // una vez que recibimos el pcb inicializamos los registros de uso general de la cpu
-        //iniciar_registros(contexto_ejecucion->registros);
+       /* iniciar_registros(contexto_ejecucion->registros.AX);
+        iniciar_registros(contexto_ejecucion->registros.BX);
+        iniciar_registros(contexto_ejecucion->registros.CX);
+        iniciar_registros(contexto_ejecucion->registros.DX);*/
 
         // iniciamos el procedimiento para procesar cualquier instruccion
         ciclo_de_instruccion(socket_cliente_dispatch, socket_cliente_memoria, contexto_ejecucion);
@@ -161,7 +166,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
     {
 
         // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
-        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", contexto_ejecucion->registros.AX, contexto_ejecucion->registros.BX, contexto_ejecucion->registros.CX, contexto_ejecucion->registros.DX);
+        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", contexto_ejecucion->registros_cpu.AX, contexto_ejecucion->registros_cpu.BX, contexto_ejecucion->registros_cpu.CX, contexto_ejecucion->registros_cpu.DX);
 
         //=============================================== FETCH =================================================================
         
@@ -259,19 +264,16 @@ void atender_interrupt(void *cliente)
 
 
 //================================================== REGISTROS =====================================================================
-static void iniciar_registros(t_registros_cpu *registros)
+/*static void iniciar_registros(t_registros_cpu *registros_cpu)
 {
-    registros->AX;
-    registros->BX;
-    registros->CX;
-    registros->DX; 
-    /*AX = atoi(registros_cpu[0]); esto está medio feo
-    BX = atoi(registros_cpu[1]);
-    CX = atoi(registros_cpu[2]);
-    DX = atoi(registros_cpu[3]); */
-    
+    registros_cpu->AX;
+    registros_cpu->BX;
+    registros_cpu->CX;
+    registros_cpu->DX; 
+     
+  
 }
-
+*/
 
 static void setear_registro(char *registros, int valor)
 {
@@ -357,10 +359,10 @@ static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion
     (contexto_ejecucion->registros)[2] = string_itoa(CX);
     (contexto_ejecucion->registros)[3] = string_itoa(DX);
 */
-    (contexto_ejecucion->registros.AX) = AX;
-    (contexto_ejecucion->registros.BX) = BX;
-    (contexto_ejecucion->registros.CX) = CX;
-    (contexto_ejecucion->registros.DX) = DX;
+    (contexto_ejecucion->registros_cpu.AX) = AX;
+    (contexto_ejecucion->registros_cpu.BX) = BX;
+    (contexto_ejecucion->registros_cpu.CX) = CX;
+    (contexto_ejecucion->registros_cpu.DX) = DX;
     enviar_contexto(socket_cliente, contexto_ejecucion, motivo);
     log_info(cpu_logger, "devolvi el contexo ejecucion al kernel por motivo de: %s \n", motivo);
 }
@@ -370,11 +372,13 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
     t_paquete *paquete = crear_paquete(PCB);
 
     // le mandamos esto porque creo que es lo unico que se cambia pero vemos
+    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
+    //comentar si no funca lo de arriba
     agregar_entero_a_paquete(paquete, contexto_ejecucion->program_counter);
-    agregar_array_cadenas_a_paquete(paquete, contexto_ejecucion->registros.AX);
-    agregar_array_cadenas_a_paquete(paquete, contexto_ejecucion->registros.BX);
-    agregar_array_cadenas_a_paquete(paquete, contexto_ejecucion->registros.CX);
-    agregar_array_cadenas_a_paquete(paquete, contexto_ejecucion->registros.DX);
+    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.AX);
+    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.BX);
+    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.CX);
+    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.DX);
     agregar_cadena_a_paquete(paquete, motivo);
     // agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_que_bloquear);
 

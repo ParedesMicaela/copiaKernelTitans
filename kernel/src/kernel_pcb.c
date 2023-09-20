@@ -64,10 +64,10 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 
 
     // ojo al piojo, es un struct, tengo que mandar los registros por separado
-    agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.AX); 
-    agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.BX);
-    agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.CX);
-    agregar_entero_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
+    agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.AX); 
+    agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.BX);
+    agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.CX);
+    agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
     
 
     //agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto

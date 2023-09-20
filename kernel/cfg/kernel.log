@@ -222,3 +222,197 @@
 
 [INFO] 21:04:44:813 kernel.log/(5465:5465): Kernel listo para recibir al modulo cliente 
 
+[INFO] 21:18:01:804 kernel.log/(10077:10077): Archivo de configuracion cargado 
+
+[INFO] 21:18:01:804 kernel.log/(10077:10077): Iniciando colas.. 
+
+[INFO] 21:18:01:804 kernel.log/(10077:10077): Iniciando diccionarios.. 
+
+[INFO] 21:18:01:804 kernel.log/(10077:10077): Preparando planificacion.. 
+
+[INFO] 21:18:01:806 kernel.log/(10077:10077): Kernel conectado con cpu 
+
+[INFO] 21:18:01:809 kernel.log/(10077:10077): Kernel conectado con memoria 
+
+[INFO] 21:18:01:811 kernel.log/(10077:10077): Kernel conectado con filesystem 
+
+[INFO] 21:18:01:811 kernel.log/(10077:10077): Servidor creado 
+
+[INFO] 21:18:01:811 kernel.log/(10077:10077): Kernel listo para recibir al modulo cliente 
+
+[INFO] 21:18:22:203 kernel.log/(10077:10077): Iniciando proceso.. 
+
+[INFO] 21:18:22:203 kernel.log/(10077:10077): esta vacio esto
+[INFO] 21:18:22:203 kernel.log/(10077:10077): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 21:18:22:203 kernel.log/(10077:10077):  Cola NEW FIFO : [1]
+
+[INFO] 21:21:22:762 kernel.log/(10219:10219): Archivo de configuracion cargado 
+
+[INFO] 21:21:22:776 kernel.log/(10219:10219): Iniciando colas.. 
+
+[INFO] 21:21:22:777 kernel.log/(10219:10219): Iniciando diccionarios.. 
+
+[INFO] 21:21:22:777 kernel.log/(10219:10219): Preparando planificacion.. 
+
+[INFO] 21:21:22:780 kernel.log/(10219:10219): Kernel conectado con cpu 
+
+[INFO] 21:21:22:782 kernel.log/(10219:10219): Kernel conectado con memoria 
+
+[INFO] 21:21:22:784 kernel.log/(10219:10219): Kernel conectado con filesystem 
+
+[INFO] 21:21:22:785 kernel.log/(10219:10219): Servidor creado 
+
+[INFO] 21:21:22:785 kernel.log/(10219:10219): Kernel listo para recibir al modulo cliente 
+
+[INFO] 21:21:44:757 kernel.log/(10219:10219): Iniciando proceso.. 
+
+[INFO] 21:45:41:869 kernel.log/(10673:10673): Archivo de configuracion cargado 
+
+[INFO] 21:45:41:882 kernel.log/(10673:10673): Iniciando colas.. 
+
+[INFO] 21:45:41:883 kernel.log/(10673:10673): Iniciando diccionarios.. 
+
+[INFO] 21:45:41:883 kernel.log/(10673:10673): Preparando planificacion.. 
+
+[INFO] 21:45:41:885 kernel.log/(10673:10673): Kernel conectado con cpu 
+
+[INFO] 21:45:41:886 kernel.log/(10673:10673): Kernel conectado con memoria 
+
+[INFO] 21:45:41:889 kernel.log/(10673:10673): Kernel conectado con filesystem 
+
+[INFO] 21:45:41:889 kernel.log/(10673:10673): Servidor creado 
+
+[INFO] 21:45:41:889 kernel.log/(10673:10673): Kernel listo para recibir al modulo cliente 
+
+[INFO] 21:46:05:061 kernel.log/(10673:10673): Iniciando proceso.. 
+
+[INFO] 21:46:05:061 kernel.log/(10673:10673): esta vacio esto
+[INFO] 21:46:05:061 kernel.log/(10673:10673): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 21:46:05:061 kernel.log/(10673:10673):  Cola NEW FIFO : [1]
+
+[INFO] 21:46:05:061 kernel.log/(10673:10673): Se crea el proceso 1 en NEW 
+
+[INFO] 21:46:05:062 kernel.log/(10673:10673): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 21:46:05:062 kernel.log/(10673:10673): Mandando a memoria el PATH: menganito
+[INFO] 21:46:05:067 kernel.log/(10673:10676): estoy en proceso ready
+
+[INFO] 21:46:05:067 kernel.log/(10673:10676): estoy por meterme a obtener algoritmo
+
+[INFO] 21:46:05:067 kernel.log/(10673:10676): El algoritmo de planificacion elegido es FIFO 
+
+[INFO] 21:46:05:067 kernel.log/(10673:10676): Inicio la planificacion FIFO 
+
+[INFO] 21:46:05:067 kernel.log/(10673:10676): esta vacia la cola READY
+[INFO] 21:46:05:067 kernel.log/(10673:10676):  Cola READY FIFO : []
+
+[INFO] 14:18:52:119 kernel.log/(2502:2502): Archivo de configuracion cargado 
+
+[INFO] 14:18:52:121 kernel.log/(2502:2502): Iniciando colas.. 
+
+[INFO] 14:18:52:121 kernel.log/(2502:2502): Iniciando diccionarios.. 
+
+[INFO] 14:18:52:121 kernel.log/(2502:2502): Preparando planificacion.. 
+
+[INFO] 14:18:52:125 kernel.log/(2502:2502): Kernel conectado con cpu 
+
+[INFO] 14:18:52:125 kernel.log/(2502:2502): Kernel conectado con memoria 
+
+[INFO] 14:18:52:126 kernel.log/(2502:2502): Kernel conectado con filesystem 
+
+[INFO] 14:18:52:127 kernel.log/(2502:2502): Servidor creado 
+
+[INFO] 14:18:52:128 kernel.log/(2502:2502): Kernel listo para recibir al modulo cliente 
+
+[INFO] 14:19:53:744 kernel.log/(2620:2620): Archivo de configuracion cargado 
+
+[INFO] 14:19:53:744 kernel.log/(2620:2620): Iniciando colas.. 
+
+[INFO] 14:19:53:744 kernel.log/(2620:2620): Iniciando diccionarios.. 
+
+[INFO] 14:19:53:744 kernel.log/(2620:2620): Preparando planificacion.. 
+
+[INFO] 14:19:53:749 kernel.log/(2620:2620): Kernel conectado con cpu 
+
+[INFO] 14:19:53:750 kernel.log/(2620:2620): Kernel conectado con memoria 
+
+[INFO] 14:19:53:750 kernel.log/(2620:2620): Kernel conectado con filesystem 
+
+[INFO] 14:19:53:752 kernel.log/(2620:2620): Servidor creado 
+
+[INFO] 14:19:53:752 kernel.log/(2620:2620): Kernel listo para recibir al modulo cliente 
+
+[INFO] 14:20:43:908 kernel.log/(2620:2620): Iniciando proceso.. 
+
+[INFO] 14:20:43:908 kernel.log/(2620:2620): esta vacio esto
+[INFO] 14:20:43:908 kernel.log/(2620:2620): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 14:20:43:908 kernel.log/(2620:2620):  Cola NEW FIFO : [1]
+
+[INFO] 14:30:42:438 kernel.log/(2808:2808): Archivo de configuracion cargado 
+
+[INFO] 14:30:42:439 kernel.log/(2808:2808): Iniciando colas.. 
+
+[INFO] 14:30:42:439 kernel.log/(2808:2808): Iniciando diccionarios.. 
+
+[INFO] 14:30:42:439 kernel.log/(2808:2808): Preparando planificacion.. 
+
+[INFO] 14:30:42:440 kernel.log/(2808:2808): Kernel conectado con cpu 
+
+[INFO] 14:30:42:441 kernel.log/(2808:2808): Kernel conectado con memoria 
+
+[INFO] 14:30:42:442 kernel.log/(2808:2808): Kernel conectado con filesystem 
+
+[INFO] 14:30:42:442 kernel.log/(2808:2808): Servidor creado 
+
+[INFO] 14:30:42:442 kernel.log/(2808:2808): Kernel listo para recibir al modulo cliente 
+
+[INFO] 14:31:52:899 kernel.log/(2808:2808): Iniciando proceso.. 
+
+[INFO] 14:31:52:899 kernel.log/(2808:2808): esta vacio esto
+[INFO] 14:31:52:899 kernel.log/(2808:2808): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 14:31:52:899 kernel.log/(2808:2808):  Cola NEW FIFO : [1]
+
+[INFO] 15:01:25:059 kernel.log/(3571:3571): Archivo de configuracion cargado 
+
+[INFO] 15:01:25:061 kernel.log/(3571:3571): Iniciando colas.. 
+
+[INFO] 15:01:25:061 kernel.log/(3571:3571): Iniciando diccionarios.. 
+
+[INFO] 15:01:25:061 kernel.log/(3571:3571): Preparando planificacion.. 
+
+[INFO] 15:01:25:062 kernel.log/(3571:3571): Kernel conectado con cpu 
+
+[INFO] 15:01:25:063 kernel.log/(3571:3571): Kernel conectado con memoria 
+
+[INFO] 15:01:25:064 kernel.log/(3571:3571): Kernel conectado con filesystem 
+
+[INFO] 15:01:25:065 kernel.log/(3571:3571): Servidor creado 
+
+[INFO] 15:01:25:065 kernel.log/(3571:3571): Kernel listo para recibir al modulo cliente 
+
+[INFO] 15:02:13:283 kernel.log/(3571:3571): Iniciando proceso.. 
+
+[INFO] 15:24:01:110 kernel.log/(4440:4440): Archivo de configuracion cargado 
+
+[INFO] 15:24:01:115 kernel.log/(4440:4440): Iniciando colas.. 
+
+[INFO] 15:24:01:115 kernel.log/(4440:4440): Iniciando diccionarios.. 
+
+[INFO] 15:24:01:115 kernel.log/(4440:4440): Preparando planificacion.. 
+
+[INFO] 15:24:01:117 kernel.log/(4440:4440): Kernel conectado con cpu 
+
+[INFO] 15:24:01:118 kernel.log/(4440:4440): Kernel conectado con memoria 
+
+[INFO] 15:24:01:120 kernel.log/(4440:4440): Kernel conectado con filesystem 
+
+[INFO] 15:24:01:120 kernel.log/(4440:4440): Servidor creado 
+
+[INFO] 15:24:01:120 kernel.log/(4440:4440): Kernel listo para recibir al modulo cliente 
+
+[INFO] 15:25:36:249 kernel.log/(4440:4440): Iniciando proceso.. 
+
