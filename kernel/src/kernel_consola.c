@@ -1,8 +1,9 @@
-#include <kernel.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <readline/readline.h>
+#include "kernel.h"
+#include "stdlib.h"
+#include "stdio.h"
+#include "unistd.h"
+#include "readline/readline.h"
+#include "operaciones.h"
 
 
 //kernel.c la llama
@@ -25,9 +26,9 @@ void inicializar_consola_interactiva() {
 
 
 void consola_parsear_instruccion(char * leer_linea){
-
-  // INICIAR_PROCESO [PATH] [SIZE] [PRIORIDAD]
-  if (string_starts_with(leer_linea, "INICIAR_PROCESO")){
+  
+   // INICIAR_PROCESO [PATH] [SIZE] [PRIORIDAD]
+  if (string_contains(leer_linea,"INICIAR_PROCESO")){
   char* path;
   int tam_proceso_swap;
   int prioridad;
@@ -42,38 +43,42 @@ void consola_parsear_instruccion(char * leer_linea){
   tam_proceso_swap = atoi(linea_espaciada[2]);
   prioridad = atoi(linea_espaciada[3]);
 
-  printf("Proceso iniciado, path %s, size %d, prioridad %d",path, tam_proceso_swap, prioridad);
+  printf("Proceso iniciandose, path %s, size %d, prioridad %d",path, tam_proceso_swap, prioridad);
 	
   iniciar_proceso(path, tam_proceso_swap, prioridad);    
+
+  printf("Proceso iniciado");
 
   //liberar variables locales (ver si liberamos las demas que declaramos)
   free(linea_espaciada);
 
   }
   
-  printf("busco otra instruccion"); 
+
+  printf("Busco otra instruccion \n "); 
   
+
   //FINALIZAR_PROCESO [PID]
-  if (string_starts_with(leer_linea, "FINALIZAR_PROCESO")){
-  printf("reconocio finalizar"); 
+  if (string_contains(leer_linea,"FINALIZAR_PROCESO")){
+
   t_pcb* pcb;
+  printf("Creo el pcb \n");
   char** linea_espaciada;
   
+
   // ["FINALIZAR_PROCESO" "[PID]" ]
   linea_espaciada = string_n_split(leer_linea, 2, " ");
-  
-  //guarda en variables
-  pcb->pid = linea_espaciada[2];
-
-  printf("Proceso finalizandose con PID %d",pcb->pid);
-	
+  printf("Separo la linea \n");
+  //estas son las dos lineas que andan mal
+  //pcb->pid=atoi(linea_espaciada[2]);
+  //printf("Proceso finalizandose con PID %d",pcb->pid);
   //proceso_en_exit(pcb);
   
   //liberar variables locales (ver si liberamos las demas que declaramos)
   free(linea_espaciada);
-
+  
   }
-
+  
 }
 /*
 
