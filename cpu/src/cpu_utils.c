@@ -16,9 +16,6 @@ char *instruccion;
 //======================= Funciones Internas ==============================================================================
 static void enviar_handshake(int socket_cliente_memoria);
 static void recibir_handshake(int socket_cliente_memoria);
-//static void iniciar_registros(char **registros);
-//static void iniciar_registros(t_registros_cpu *registros_cpu);
-// de momento solo voy a tocar el iniciar_registros
 static void setear_registro(char *registro, int valor);
 static int sumar_registros(char *registro_destino, char *registro_origen);
 static int restar_registros(char *registro_destino, char *registro_origen);
@@ -118,10 +115,8 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
     t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
     void *stream = paquete->buffer->stream;
     log_info(cpu_logger, "Ya recibi paquete");
-    //se queda loopeando acá cuando corre :(x
+    
     t_contexto_ejecucion *contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
-    //si se queda loopeando acá, no estamos teniendo un problema con el malloc? pero me resulta raro si para crear proceso en el pcb el malloc lo hace sin drama y acá le pifea
-
 
     // el kernel nos va a pasar el pcb al momento de poner a ejecutar un proceso
     if (paquete->codigo_operacion == PCB)
@@ -136,18 +131,12 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
 
         log_info(cpu_logger, "Recibi un PCB del Kernel :)");
 
-        // una vez que recibimos el pcb inicializamos los registros de uso general de la cpu
-       /* iniciar_registros(contexto_ejecucion->registros.AX);
-        iniciar_registros(contexto_ejecucion->registros.BX);
-        iniciar_registros(contexto_ejecucion->registros.CX);
-        iniciar_registros(contexto_ejecucion->registros.DX);*/
-
+        
         // iniciamos el procedimiento para procesar cualquier instruccion
         ciclo_de_instruccion(socket_cliente_dispatch, socket_cliente_memoria, contexto_ejecucion);
     }
     else
     {
-
         // los sleep son como para que parezca que la cpu en serio esta pensando y tarda un poquito
         sleep(3);
         perror("No se recibio correctamente el PCB");
@@ -160,7 +149,6 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
 void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memoria, t_contexto_ejecucion *contexto_ejecucion)
 {
     bool seguir_ejecutando = true;
-    //int cant_instruccioness = string_array_size(instruccion); 
 
     while (seguir_ejecutando)
     {
@@ -181,14 +169,14 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
      /*
         //=============================================== DECODE =================================================================
         // vemos si la instruccion requiere de una traducción de dirección lógica a dirección física
-        /*
+        
         if(requiere_traduccion(instruccion))
         {
             log_info(cpu_logger,"%s requiere traduccion", instruccion);
             //traducir_a_direccion_fisica(instruccion);
         }
         
-
+*/
         //=============================================== EXECUTE =================================================================
 
         // toda esta parte la usamos para trabajar con registros (sumar,restar,poner)
@@ -205,6 +193,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro = datos[1];
             valor = atoi(datos[2]);
             setear_registro(registro, valor);
+            seguir_ejecutando = false;
             break;
         case (SUM):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
@@ -212,6 +201,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro_origen = datos[2];
             valor = sumar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
+            seguir_ejecutando = false;
             break;
         case (SUB):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
@@ -219,6 +209,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro_origen = datos[2];
             valor = restar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
+            seguir_ejecutando = false;
             break;
         case (INSTRUCCION_EXIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
@@ -226,7 +217,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             // eliminar_todas_las_entradas(contexto_ejecucion->pid);
             seguir_ejecutando = false;
             break;
-        } */
+        } 
     }
 }
 
@@ -264,17 +255,6 @@ void atender_interrupt(void *cliente)
 
 
 //================================================== REGISTROS =====================================================================
-/*static void iniciar_registros(t_registros_cpu *registros_cpu)
-{
-    registros_cpu->AX;
-    registros_cpu->BX;
-    registros_cpu->CX;
-    registros_cpu->DX; 
-     
-  
-}
-*/
-
 static void setear_registro(char *registros, int valor)
 {
     if (string_equals_ignore_case(registros, "AX"))
