@@ -193,6 +193,8 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro = datos[1];
             valor = atoi(datos[2]);
             setear_registro(registro, valor);
+            log_info(cpu_logger, "AX = %d", AX);
+
             seguir_ejecutando = false;
             break;
         case (SUM):

@@ -36,7 +36,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
 
     meter_en_cola(pcb, NEW,cola_NEW);
     mostrar_lista_pcb(cola_NEW,"NEW");
-
+    sem_post (&hay_proceso_nuevo);
 
     log_info(kernel_logger, "Se crea el proceso %d en NEW \n", pcb->pid);
 

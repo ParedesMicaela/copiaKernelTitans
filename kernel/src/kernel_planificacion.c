@@ -24,14 +24,16 @@ pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_exec;
 pthread_mutex_t mutex_exit;
 pthread_mutex_t mutex_new;
+pthread_mutex_t mutex_colas;
 
+sem_t hay_proceso_nuevo;
 sem_t grado_multiprogramacion;
 sem_t dispatchPermitido;
 //pthread_mutex_t mutexSocketMemoria; 
 //pthread_mutex_t mutexSocketFileSystem; los comento porque son terreno inexplorado por ahora
 sem_t semFRead;
 sem_t semFWrite;
-sem_t mutex_colas;
+//sem_t mutex_colas;
 sem_t hay_procesos_ready;
 
 sem_t mutex_pid;
@@ -60,10 +62,11 @@ void inicializar_semaforos(){
     pthread_mutex_init(&mutex_exec,NULL); 
     pthread_mutex_init(&mutex_exit,NULL); 
     pthread_mutex_init(&mutex_new,NULL); 
+    pthread_mutex_init(&mutex_colas,NULL); 
 
 
     sem_init(&grado_multiprogramacion, 0, 1);
-    sem_init (&(mutex_colas), 0, 1);
+    sem_init (&(hay_proceso_nuevo), 0, 1);
     sem_init (&(hay_procesos_ready), 0, 1);
     sem_init(&(mutex_pid),0,1);
 }
@@ -71,6 +74,8 @@ void inicializar_semaforos(){
 void planificador_largo_plazo()
 {
     while(1){
+
+        sem_wait (&hay_proceso_nuevo);
         //si el grado de multiprogramacion lo permite
         sem_wait (&grado_multiprogramacion);
 
@@ -172,11 +177,10 @@ void proceso_en_exit(t_pcb* proceso){
 
 t_pcb* obtener_siguiente_new()
 {
-
-    pthread_mutex_lock(&mutex_new);
     int size = list_size(cola_NEW);
 
     if (size > 0) {
+        pthread_mutex_lock(&mutex_new);
         t_pcb* proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, NEW), 0);
         pthread_mutex_unlock(&mutex_new);
 
@@ -344,11 +348,14 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO, t_list* cola)
         {
             if(pcb->pid == ((t_pcb*) list_get(cola, i))->pid)
             {
-                sem_wait(&(mutex_colas));
+                pthread_mutex_lock(&mutex_colas);
+                //sem_wait(&(mutex_colas));
                 /*y cuando los encontramos lo vamos a sacar porque va a cambiar de estado entonces ya
                 no lo quiero en esa cola*/
                 list_remove(cola, i);
-                sem_post(&(mutex_colas));
+                //sem_post(&(mutex_colas));
+                pthread_mutex_unlock(&mutex_colas);
+
             }
       }
 
@@ -360,17 +367,20 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO, t_list* cola)
     pcb->estado_pcb= ESTADO;
 
     //finalmente lo agregamos a la cola de nuestro nuevo estado
-    sem_wait(&(mutex_colas));
+    //sem_wait(&(mutex_colas));
+    pthread_mutex_lock(&mutex_colas);
     //list_add(dictionary_int_get(diccionario_colas, ESTADO), pcb);
     list_add(cola,pcb);
     log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual %s\n", pcb->pid,dictionary_int_get(diccionario_estados, estado_viejo),dictionary_int_get(diccionario_estados, ESTADO));
-    sem_post(&(mutex_colas));
+    //sem_post(&(mutex_colas));
+    pthread_mutex_unlock(&mutex_colas);
 }
 
 //esta funcion es para que nos muestre los pcb que estan en una cola, medio accesorio pero sirve
 void mostrar_lista_pcb(t_list* cola, char* nombre_cola){
 
-sem_wait(&mutex_colas);
+pthread_mutex_lock(&mutex_colas);
+//sem_wait(&mutex_colas);
 
     int tam_cola = list_size(cola);
 
@@ -396,8 +406,8 @@ sem_wait(&mutex_colas);
 	//mostramos la lista con los pids en la cola dada
 
 	log_info(kernel_logger, " Cola %s %s : [%s]\n",nombre_cola,config_valores_kernel.algoritmo_planificacion, pids);
-	sem_post(&mutex_colas);
-
+	//sem_post(&mutex_colas);
+pthread_mutex_unlock(&mutex_colas);
     free(pids);
 }
 

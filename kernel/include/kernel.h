@@ -27,6 +27,7 @@ extern int socket_cpu_interrupt;
 extern int socket_memoria;
 extern int socket_filesystem;
 extern sem_t mutex_pid;
+extern sem_t hay_proceso_nuevo;
 
 extern t_list* cola_NEW;
 //==============================================================================================================================
