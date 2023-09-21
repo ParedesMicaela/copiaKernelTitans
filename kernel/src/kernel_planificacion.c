@@ -338,17 +338,6 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO, t_list* cola)
 {
 	/*creamos una cola con el estado en el que esta el proceso usando la funcion int_get
     pasandole el estado del proceso (key) nos va a devolver la cola en la que esta*/
-    //t_list* cola = dictionary_int_get(diccionario_colas, pcb->estado_pcb);
-
-    int tam_cola = list_size(cola);
-
-    if(tam_cola == 0)
-    {
-        log_info(kernel_logger, "esta vacio esto");
-    }
-
-    pthread_mutex_lock(&mutex_new);
-
 
     //recorremos la cola y buscamos el pid del pcb
     for(int i=0;i<list_size(cola) ;i++)
@@ -362,8 +351,6 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO, t_list* cola)
                 sem_post(&(mutex_colas));
             }
       }
-
-    pthread_mutex_unlock(&mutex_new);
 
 
     //el estado viejo va a ser el estado original en que estaba el pcb
