@@ -5,6 +5,7 @@ int indice_pid = 0;
 
 pthread_mutex_t mutex_new;
 
+
 uint32_t AX;
 uint32_t BX;
 uint32_t CX;

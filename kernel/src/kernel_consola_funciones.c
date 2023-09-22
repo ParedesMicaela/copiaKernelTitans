@@ -3,8 +3,10 @@
 pthread_t largo_plazo;
 pthread_t corto_plazo;
 
-pthread_mutex_t mutex_new;
-sem_t mutex_colas;
+//semaforo
+sem_t mutex_otras_colas;
+
+
 
 //===============================================================================================================================
 
@@ -32,13 +34,47 @@ void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
 
 
 void consola_finalizar_proceso(int pid){
-  
-  /*
-  //CASO: ESTA EN EXEC Y MANDAMOS A EXIT
-  //CASO: ESTA EN BLOQUED Y MANDAMOS A EXIT
+    
+    printf("Entramos a finalizar proceso \n");
+    int tam_cola_BLOCKED = list_size(cola_BLOCKED);
+    int tam_cola_EXEC= list_size(cola_EXEC);
+    int bandera_cola = 0; // Si queda en 1, el pcb esta en blocked; si esta en 2, el pcb esta en exec.
 
-  */
+    //BUSQUEDA DE PCB
+
+    //recorremos la cola de bloqueados y buscamos el pid del pcb
+    for(int i=0;i<tam_cola_BLOCKED ;i++)
+        {
+            //encontramos el pcb con el pid que mandamos
+            if(pid == ((t_pcb*) list_get(tam_cola_BLOCKED, i))->pid)
+            {
+                t_pcb* pcb = ((t_pcb*) list_get(cola_BLOCKED, i)); // hacemos esto para llamarlo directamente pcb
+                bandera_cola = 1;
+                printf("Encontramos pcb en bloqueado\n");            
+            }
+        }
+
+    //si no, lo buscamos en la cola de ejecutandose
+    for(int i=0;i<tam_cola_EXEC ;i++)
+        {
+            //encontramos el pcb con el pid que mandamos
+            if(pid == ((t_pcb*) list_get(tam_cola_BLOCKED, i))->pid)
+            {
+                t_pcb* pcb = ((t_pcb*) list_get(cola_BLOCKED, i)); // hacemos esto para llamarlo directamente pcb
+                bandera_cola = 2; 
+                printf("Encontramos pcb ejecutandose \n");            
+            }
+        }
+    
+    //CAMBIO DE ESTADO DE PCB
+    switch(bandera_cola)
+    {
+        case 1: cambiar_estado_de_proceso_dado_un_pid(pid, EXIT, cola_BLOCKED, cola_EXIT); break;
+        case 2: cambiar_estado_de_proceso_dado_un_pid(pid, EXIT, cola_EXEC, cola_EXIT); break;
+        default: printf("Proceso equivocado, no se encontro. Intente nuevamente"); inicializar_consola_interactiva(); break;
+    }
 }
+
 
 void cambiar_estado_de_proceso_dado_un_pid(int pid, estado ESTADO_NUEVO, t_list* cola_origen, t_list* cola_destino) // recibimos pid de proceso, estado nuevo y cola origen del pcb y destino para cambiarlo
 {   
@@ -60,7 +96,7 @@ void cambiar_estado_de_proceso_dado_un_pid(int pid, estado ESTADO_NUEVO, t_list*
                 t_pcb* pcb = ((t_pcb*) list_get(cola_origen, i)); // hacemos esto para llamarlo directamente pcb
                 
                 //nadie nos rompe los quinotos con el semaforo
-                sem_wait(&(mutex_colas));
+                sem_wait(&(mutex_otras_colas));
 
                 //agregar el pcb a la cola destino que le mandamos
                 list_add(cola_destino,pcb);
@@ -72,7 +108,7 @@ void cambiar_estado_de_proceso_dado_un_pid(int pid, estado ESTADO_NUEVO, t_list*
                 eliminar_pcb(pcb);
                 list_remove(cola_origen, i);
 
-                sem_post(&(mutex_colas));            
+                sem_post(&(mutex_otras_colas));            
             }
         }
 

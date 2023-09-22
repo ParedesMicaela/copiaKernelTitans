@@ -21,11 +21,13 @@
 //================================================== Variables =====================================================================
 extern t_log* kernel_logger;
 extern t_config* config;
+
 extern int server_fd;
 extern int socket_cpu_dispatch;
 extern int socket_cpu_interrupt;
 extern int socket_memoria;
 extern int socket_filesystem;
+
 extern sem_t mutex_pid;
 extern sem_t hay_proceso_nuevo;
 
@@ -37,6 +39,10 @@ extern uint32_t DX;
 extern pthread_mutex_t mutex_new;
 
 extern t_list* cola_NEW;
+extern t_list* cola_READY;
+extern t_list* cola_BLOCKED;
+extern t_list* cola_EXEC;
+extern t_list* cola_EXIT;
 //==============================================================================================================================
 
 typedef struct 

@@ -60,10 +60,9 @@ void consola_parsear_instruccion(char * leer_linea){
 
   //FINALIZAR_PROCESO [PID]
   if (string_contains(leer_linea,"FINALIZAR_PROCESO")){
-  t_pcb* pcb;
+
   int pid;
   char** linea_espaciada;
-  
 
   // ["FINALIZAR_PROCESO" "[PID]" ]
   linea_espaciada = string_n_split(leer_linea, 2, " ");
@@ -71,7 +70,9 @@ void consola_parsear_instruccion(char * leer_linea){
   
   pid = atoi(linea_espaciada[2]);
 
+  printf("Intentamos entrar a finalizar proceso \n");
   consola_finalizar_proceso(pid);
+  
   //liberar variables locales (ver si liberamos las demas que declaramos)
   free(linea_espaciada);
   
