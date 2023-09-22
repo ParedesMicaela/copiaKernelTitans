@@ -3,6 +3,9 @@
 pthread_t largo_plazo;
 pthread_t corto_plazo;
 
+pthread_mutex_t mutex_new;
+sem_t mutex_colas;
+
 //===============================================================================================================================
 
 // nos van a decir la prioridad, el archivo de pseudocodigo a ejecutar y el tamanio de memoria swap que va a ejecutar
@@ -27,6 +30,54 @@ void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
     //proceso_en_exit(pcb);
 }
 
+
+void consola_finalizar_proceso(int pid){
+  
+  /*
+  //CASO: ESTA EN EXEC Y MANDAMOS A EXIT
+  //CASO: ESTA EN BLOQUED Y MANDAMOS A EXIT
+
+  */
+}
+
+void cambiar_estado_de_proceso_dado_un_pid(int pid, estado ESTADO_NUEVO, t_list* cola_origen, t_list* cola_destino) // recibimos pid de proceso, estado nuevo y cola origen del pcb y destino para cambiarlo
+{   
+    //int posicion_pcb; // guarda posicion del proceso, cuando se encuentra
+    //estado estado_anterior; // guarda el estado anterior del proceso
+    
+    //si la cola esta vacia 
+    int tam_cola_origen = list_size(cola_origen);
+    if(tam_cola_origen == 0) log_info(kernel_logger, "Esta vacia esta cola origen de procesos");
+    
+    pthread_mutex_lock(&mutex_new);
+
+    //recorremos la cola y buscamos el pid del pcb
+    for(int i=0;i<tam_cola_origen ;i++)
+        {
+            //encontramos el pcb con el pid que mandamos
+            if(pid == ((t_pcb*) list_get(cola_origen, i))->pid)
+            {
+                t_pcb* pcb = ((t_pcb*) list_get(cola_origen, i)); // hacemos esto para llamarlo directamente pcb
+                
+                //nadie nos rompe los quinotos con el semaforo
+                sem_wait(&(mutex_colas));
+
+                //agregar el pcb a la cola destino que le mandamos
+                list_add(cola_destino,pcb);
+
+                //FALTA VERIFICAR SI HAY QUE HACER ALGO MAS ANTES DE LIBERAR RECURSOS
+
+                //liberamos recursos del pcb en la cola anterior
+                //eliminamos de la lista en la que estaba
+                eliminar_pcb(pcb);
+                list_remove(cola_origen, i);
+
+                sem_post(&(mutex_colas));            
+            }
+        }
+
+    pthread_mutex_unlock(&mutex_new);
+}
 
 /*
 

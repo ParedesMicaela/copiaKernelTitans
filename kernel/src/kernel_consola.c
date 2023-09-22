@@ -60,36 +60,25 @@ void consola_parsear_instruccion(char * leer_linea){
 
   //FINALIZAR_PROCESO [PID]
   if (string_contains(leer_linea,"FINALIZAR_PROCESO")){
-
   t_pcb* pcb;
-  printf("Creo el pcb \n");
+  int pid;
   char** linea_espaciada;
   
 
   // ["FINALIZAR_PROCESO" "[PID]" ]
   linea_espaciada = string_n_split(leer_linea, 2, " ");
   printf("Separo la linea \n");
-  //estas son las dos lineas que andan mal
-  //pcb->pid=atoi(linea_espaciada[2]);
-  //printf("Proceso finalizandose con PID %d",pcb->pid);
-  //proceso_en_exit(pcb);
   
+  pid = atoi(linea_espaciada[2]);
+
+  consola_finalizar_proceso(pid);
   //liberar variables locales (ver si liberamos las demas que declaramos)
   free(linea_espaciada);
   
   }
   
 }
-/*
 
-
-Finalizar proceso // FINALIZAR_PROCESO [PID]
-
-*/
-
-void consola_finalizar_proceso(){
-  
-}
 
 void consola_iniciar_planificacion(){}
 void consola_detener_planificacion(){}
@@ -100,11 +89,6 @@ void consola_mostrar_proceso_estado(){}
 
 /*
 atrapar fallo de escritura en la consola
-*/
-
-
-/*
- como pingo inicializar una consola interactiva 
 */
 
 
