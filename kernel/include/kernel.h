@@ -29,6 +29,13 @@ extern int socket_filesystem;
 extern sem_t mutex_pid;
 extern sem_t hay_proceso_nuevo;
 
+extern uint32_t AX;
+extern uint32_t BX;
+extern uint32_t CX;
+extern uint32_t DX;
+
+extern pthread_mutex_t mutex_new;
+
 extern t_list* cola_NEW;
 //==============================================================================================================================
 

@@ -193,9 +193,8 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro = datos[1];
             valor = atoi(datos[2]);
             setear_registro(registro, valor);
-            log_info(cpu_logger, "AX = %d", AX);
-
-            seguir_ejecutando = false;
+            log_info(cpu_logger, "AX = %d, BX= %d", AX,BX);
+            contexto_ejecucion->program_counter += 1;
             break;
         case (SUM):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
@@ -203,7 +202,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro_origen = datos[2];
             valor = sumar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
-            seguir_ejecutando = false;
+            contexto_ejecucion->program_counter += 1;
             break;
         case (SUB):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
@@ -211,7 +210,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro_origen = datos[2];
             valor = restar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
-            seguir_ejecutando = false;
+            contexto_ejecucion->program_counter += 1;
             break;
         case (INSTRUCCION_EXIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
@@ -336,11 +335,6 @@ static int tipo_inst(char *instruccion)
 static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo)
 {
     // aca nosotros agregamos las modificaciones de los registros
-/*    (contexto_ejecucion->registros)[0] = string_itoa(AX);
-    (contexto_ejecucion->registros)[1] = string_itoa(BX);
-    (contexto_ejecucion->registros)[2] = string_itoa(CX);
-    (contexto_ejecucion->registros)[3] = string_itoa(DX);
-*/
     (contexto_ejecucion->registros_cpu.AX) = AX;
     (contexto_ejecucion->registros_cpu.BX) = BX;
     (contexto_ejecucion->registros_cpu.CX) = CX;

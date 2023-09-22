@@ -1,0 +1,107 @@
+[INFO] 19:48:06:519 kernel.log/(45652:45652): Archivo de configuracion cargado 
+
+[INFO] 19:48:06:519 kernel.log/(45652:45652): Iniciando colas.. 
+
+[INFO] 19:48:06:519 kernel.log/(45652:45652): Iniciando diccionarios.. 
+
+[INFO] 19:48:06:519 kernel.log/(45652:45652): Preparando planificacion.. 
+
+[INFO] 19:48:06:519 kernel.log/(45652:45652): Kernel conectado con cpu 
+
+[INFO] 19:48:06:519 kernel.log/(45652:45652): Kernel conectado con memoria 
+
+[INFO] 19:48:06:519 kernel.log/(45652:45652): Kernel conectado con filesystem 
+
+[INFO] 19:48:06:520 kernel.log/(45652:45652): Servidor creado 
+
+[INFO] 19:48:06:520 kernel.log/(45652:45652): Kernel listo para recibir al modulo cliente 
+
+[INFO] 19:48:06:520 kernel.log/(45652:45652): Iniciando proceso.. 
+
+[INFO] 19:48:06:520 kernel.log/(45652:45652): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 19:48:06:520 kernel.log/(45652:45652):  Cola NEW FIFO : [1]
+
+[INFO] 19:48:06:520 kernel.log/(45652:45652): Se crea el proceso 1 en NEW 
+
+[INFO] 19:48:06:520 kernel.log/(45652:45652): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 19:48:06:520 kernel.log/(45652:45652): Mandando a memoria el PATH: /home/utnso/path.txt
+[INFO] 19:48:06:520 kernel.log/(45652:45654): estoy en proceso ready
+
+[INFO] 19:48:06:520 kernel.log/(45652:45654): estoy por meterme a obtener algoritmo
+
+[INFO] 19:48:06:520 kernel.log/(45652:45654): El algoritmo de planificacion elegido es FIFO 
+
+[INFO] 19:48:06:520 kernel.log/(45652:45654): Inicio la planificacion FIFO 
+
+[INFO] 19:48:06:520 kernel.log/(45652:45654): esta vacia la cola READY
+[INFO] 19:48:06:520 kernel.log/(45652:45654):  Cola READY FIFO : []
+
+[INFO] 19:48:22:630 kernel.log/(45686:45686): Archivo de configuracion cargado 
+
+[INFO] 19:48:22:646 kernel.log/(45686:45686): Iniciando colas.. 
+
+[INFO] 19:48:22:648 kernel.log/(45686:45686): Iniciando diccionarios.. 
+
+[INFO] 19:48:22:650 kernel.log/(45686:45686): Preparando planificacion.. 
+
+[INFO] 19:48:22:655 kernel.log/(45686:45686): Kernel conectado con cpu 
+
+[INFO] 19:48:22:655 kernel.log/(45686:45686): Kernel conectado con memoria 
+
+[INFO] 19:48:22:660 kernel.log/(45686:45686): Kernel conectado con filesystem 
+
+[INFO] 19:48:22:670 kernel.log/(45686:45686): Servidor creado 
+
+[INFO] 19:48:22:670 kernel.log/(45686:45686): Kernel listo para recibir al modulo cliente 
+
+[INFO] 19:48:22:671 kernel.log/(45686:45686): Iniciando proceso.. 
+
+[INFO] 19:48:22:678 kernel.log/(45686:45686): PID: 1 - Estado Anterior: New - Estado Actual New
+
+[INFO] 19:48:22:680 kernel.log/(45686:45686):  Cola NEW FIFO : [1]
+
+[INFO] 19:48:22:680 kernel.log/(45686:45686): Se crea el proceso 1 en NEW 
+
+[INFO] 19:48:22:682 kernel.log/(45686:45686): Se manda mensaje a memoria para inicializar estructuras del proceso 
+
+[INFO] 19:48:22:683 kernel.log/(45686:45686): Mandando a memoria el PATH: /home/utnso/path.txt
+[INFO] 19:48:22:691 kernel.log/(45686:45688): PID[1] sale de NEW para planificacion 
+
+[INFO] 19:48:22:693 kernel.log/(45686:45688): PID: 1 - Estado Anterior: New - Estado Actual Ready
+
+[INFO] 19:48:22:693 kernel.log/(45686:45688):  Cola READY FIFO : [1]
+
+[INFO] 19:48:22:716 kernel.log/(45686:45689): estoy en proceso ready
+
+[INFO] 19:48:22:723 kernel.log/(45686:45689): estoy por meterme a obtener algoritmo
+
+[INFO] 19:48:22:723 kernel.log/(45686:45689): El algoritmo de planificacion elegido es FIFO 
+
+[INFO] 19:48:22:724 kernel.log/(45686:45689): Inicio la planificacion FIFO 
+
+[INFO] 19:48:22:724 kernel.log/(45686:45689):  Cola READY FIFO : [1]
+
+[INFO] 19:48:22:725 kernel.log/(45686:45689): PID[1] sale de READY por planificacion FIFO 
+
+[INFO] 19:48:22:725 kernel.log/(45686:45689): PID[1] ingresando a EXEC
+
+[INFO] 19:48:22:725 kernel.log/(45686:45689): PID: 1 - Estado Anterior: Ready - Estado Actual Exec
+
+[INFO] 19:48:22:728 kernel.log/(45686:45689): Se envio el PCB 1 a la CPU 
+
+[INFO] 19:48:22:729 kernel.log/(45686:45689): PCB enviado cpu para ejecucion
+[INFO] 19:48:22:731 kernel.log/(45686:45689): Recibi el pcb de la CPU con program counter = 1 
+
+[INFO] 19:48:22:732 kernel.log/(45686:45689): estoy en proceso ready
+
+[INFO] 19:48:22:732 kernel.log/(45686:45689): estoy por meterme a obtener algoritmo
+
+[INFO] 19:48:22:732 kernel.log/(45686:45689): El algoritmo de planificacion elegido es FIFO 
+
+[INFO] 19:48:22:732 kernel.log/(45686:45689): Inicio la planificacion FIFO 
+
+[INFO] 19:48:22:735 kernel.log/(45686:45689): esta vacia la cola READY
+[INFO] 19:48:22:735 kernel.log/(45686:45689):  Cola READY FIFO : []
+

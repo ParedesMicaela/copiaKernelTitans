@@ -1,0 +1,56 @@
+[INFO] 19:47:01:357 memoria.log/(45605:45605): Configuracion de memoria cargada correctamente
+
+[INFO] 19:47:01:357 memoria.log/(45605:45605): Inicializando memoria
+
+[INFO] 19:47:06:125 memoria.log/(45617:45617): Configuracion de memoria cargada correctamente
+
+[INFO] 19:47:06:125 memoria.log/(45617:45617): Inicializando memoria
+
+[INFO] 19:47:59:179 memoria.log/(45632:45632): Configuracion de memoria cargada correctamente
+
+[INFO] 19:47:59:179 memoria.log/(45632:45632): Inicializando memoria
+
+[INFO] 19:47:59:179 memoria.log/(45632:45632): Servidor creado
+
+[INFO] 19:47:59:179 memoria.log/(45632:45632): Memoria lista para recibir al modulo cliente 
+
+[INFO] 19:48:02:602 memoria.log/(45632:45632): Se conecto un cliente 
+
+[INFO] 19:48:02:602 memoria.log/(45632:45643): Me llego el handshake :)
+
+[INFO] 19:48:03:604 memoria.log/(45632:45643): Handshake enviado :)
+
+[INFO] 19:48:03:604 memoria.log/(45632:45643): Se envio el tamaño de pagina 16 bytes al CPU 
+
+[INFO] 19:48:06:520 memoria.log/(45632:45632): Se conecto un cliente 
+
+[INFO] 19:48:06:521 memoria.log/(45632:45656): PATH recibido: /home/utnso/path.txt
+[INFO] 19:48:06:521 memoria.log/(45632:45656): Instrucciones enviadas :)
+
+[INFO] 19:48:14:789 memoria.log/(45667:45667): Configuracion de memoria cargada correctamente
+
+[INFO] 19:48:14:790 memoria.log/(45667:45667): Inicializando memoria
+
+[INFO] 19:48:14:790 memoria.log/(45667:45667): Servidor creado
+
+[INFO] 19:48:14:790 memoria.log/(45667:45667): Memoria lista para recibir al modulo cliente 
+
+[INFO] 19:48:17:972 memoria.log/(45667:45667): Se conecto un cliente 
+
+[INFO] 19:48:17:972 memoria.log/(45667:45677): Me llego el handshake :)
+
+[INFO] 19:48:18:975 memoria.log/(45667:45677): Handshake enviado :)
+
+[INFO] 19:48:18:975 memoria.log/(45667:45677): Se envio el tamaño de pagina 16 bytes al CPU 
+
+[INFO] 19:48:22:655 memoria.log/(45667:45667): Se conecto un cliente 
+
+[INFO] 19:48:22:683 memoria.log/(45667:45687): PATH recibido: /home/utnso/path.txt
+[INFO] 19:48:22:683 memoria.log/(45667:45687): Instrucciones enviadas :)
+
+[INFO] 19:48:22:727 memoria.log/(45667:45677): Instrucciones enviadas :)
+
+[INFO] 19:48:22:728 memoria.log/(45667:45677): Instrucciones enviadas :)
+
+[INFO] 19:48:22:728 memoria.log/(45667:45677): Instrucciones enviadas :)
+

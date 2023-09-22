@@ -23,7 +23,6 @@ para acceder a las listas y sacarles el tamanio o agregar/eliminar procesos*/
 pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_exec;
 pthread_mutex_t mutex_exit;
-pthread_mutex_t mutex_new;
 pthread_mutex_t mutex_colas;
 
 sem_t hay_proceso_nuevo;
@@ -117,14 +116,17 @@ void proceso_en_ready()
         //lo metemos en la cola de ready y avisamos que lo metimos ahi
         log_info(kernel_logger, "PID[%d] ingresando a EXEC\n", siguiente_proceso->pid);
 
+        //metemos el proceso en la cola de execute
+        pthread_mutex_lock(&mutex_exec);
+        meter_en_cola(siguiente_proceso, EXEC, cola_EXEC);
+        pthread_mutex_unlock(&mutex_exec);
+
         proceso_en_execute(siguiente_proceso);
 
 }
 
 void proceso_en_execute(t_pcb* proceso_seleccionado)
 {
-    while(1)
-    {
 		//le enviamos el pcb a la cpu para que ejecute y recibimos el pcb resultado de su ejecucion
 		enviar_pcb_a_cpu(proceso_seleccionado);
 		log_info(kernel_logger, "PCB enviado cpu para ejecucion");
@@ -140,14 +142,12 @@ void proceso_en_execute(t_pcb* proceso_seleccionado)
 
         //y por ultimo, en cualquiera de los casos, vamos a sacar de exec al proceso que ya termino de ejecutar
         pthread_mutex_lock(&mutex_exec);
-		proceso_seleccionado = list_remove((t_list*)dictionary_int_get(diccionario_colas, EXEC), 0);
+		proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, EXEC), 0);
 		pthread_mutex_unlock(&mutex_exec);
 
-    }
 }
 
 void proceso_en_exit(t_pcb* proceso){
-	while(1) {
 
 	//sacamos el proceso de la lista de exit
   	pthread_mutex_lock(&mutex_exit);
@@ -171,7 +171,6 @@ void proceso_en_exit(t_pcb* proceso){
  	free(proceso);
  	sem_post(&grado_multiprogramacion);
 	}
-}
 
 //======================================================== Algoritmos ==================================================================
 
@@ -407,7 +406,7 @@ pthread_mutex_lock(&mutex_colas);
 
 	log_info(kernel_logger, " Cola %s %s : [%s]\n",nombre_cola,config_valores_kernel.algoritmo_planificacion, pids);
 	//sem_post(&mutex_colas);
-pthread_mutex_unlock(&mutex_colas);
+    pthread_mutex_unlock(&mutex_colas);
     free(pids);
 }
 

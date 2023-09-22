@@ -2,7 +2,14 @@
 
 //=============================================== Variables Globales =========================================================================================================
 int indice_pid = 0;
-//esto lo voy a usar para que nadie me joda el pid cuando lo modifico
+
+pthread_mutex_t mutex_new;
+
+uint32_t AX;
+uint32_t BX;
+uint32_t CX;
+uint32_t DX;
+
 
 //============================================================================================================================================================================
 //cada vez que la consola interactiva nos dice de crear un pcb, nos va a pasar la prioridad, el pid lo podemos poner nosotros
@@ -34,7 +41,10 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     pthread_mutex_init (mutex, NULL);
     pcb->mutex = mutex; */
 
+    pthread_mutex_lock(&mutex_new);
     meter_en_cola(pcb, NEW,cola_NEW);
+    pthread_mutex_unlock(&mutex_new);
+
     mostrar_lista_pcb(cola_NEW,"NEW");
     sem_post (&hay_proceso_nuevo);
 
@@ -86,18 +96,22 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     t_paquete* paquete = recibir_paquete(socket_cpu_dispatch);
     void* stream = paquete->buffer->stream;
     int program_counter =-1;
+    
 
     //si lo que recibimos es en efecto un pcb, lo abrimos
 	if(paquete->codigo_operacion == PCB)
 	{
 		//nosotros solamente vamos a sacar el contexto
         program_counter = sacar_entero_de_paquete(&stream);
-        //registros
+        AX = sacar_entero_sin_signo_de_paquete(&stream);
+        BX = sacar_entero_sin_signo_de_paquete(&stream);
+        CX = sacar_entero_sin_signo_de_paquete(&stream);
+        DX = sacar_entero_sin_signo_de_paquete(&stream);
         motivo_de_devolucion = sacar_cadena_de_paquete(&stream);
     }
     else{
         log_error(kernel_logger, "Falla al recibir PCB, se cierra el Kernel \n");
-        exit(1);
+        abort();
     }
 
 	//actualizamos el pc y los registros

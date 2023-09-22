@@ -1,0 +1,60 @@
+[INFO] 19:47:03:611 cpu.log/(45614:45614): Configuracion de CPU cargada
+[INFO] 19:47:03:612 cpu.log/(45614:45614): Archivo de configuracion cargado 
+
+[INFO] 19:47:03:612 cpu.log/(45614:45614): Conexion con memoria realizada 
+
+[INFO] 19:48:02:601 cpu.log/(45642:45642): Configuracion de CPU cargada
+[INFO] 19:48:02:601 cpu.log/(45642:45642): Archivo de configuracion cargado 
+
+[INFO] 19:48:02:602 cpu.log/(45642:45642): Conexion con memoria realizada 
+
+[INFO] 19:48:02:602 cpu.log/(45642:45642): Handshake enviado a memoria 
+
+[INFO] 19:48:03:604 cpu.log/(45642:45642): Tamanio de pagina 16 para realizar handshake :)
+[INFO] 19:48:03:604 cpu.log/(45642:45642): Servidores iniciados en CPU 
+
+[INFO] 19:48:06:520 cpu.log/(45642:45642): Se conectaron los clientes de dispatch e interrupt
+
+[INFO] 19:48:06:520 cpu.log/(45642:45642): Espero recibir paquete
+[INFO] 19:48:06:649 cpu.log/(45642:45642): Ya recibi paquete
+[INFO] 19:48:09:651 cpu.log/(45642:45642): Espero recibir paquete
+[INFO] 19:48:09:651 cpu.log/(45642:45642): Ya recibi paquete
+[INFO] 19:48:17:971 cpu.log/(45676:45676): Configuracion de CPU cargada
+[INFO] 19:48:17:971 cpu.log/(45676:45676): Archivo de configuracion cargado 
+
+[INFO] 19:48:17:972 cpu.log/(45676:45676): Conexion con memoria realizada 
+
+[INFO] 19:48:17:972 cpu.log/(45676:45676): Handshake enviado a memoria 
+
+[INFO] 19:48:18:975 cpu.log/(45676:45676): Tamanio de pagina 16 para realizar handshake :)
+[INFO] 19:48:18:975 cpu.log/(45676:45676): Servidores iniciados en CPU 
+
+[INFO] 19:48:22:655 cpu.log/(45676:45676): Se conectaron los clientes de dispatch e interrupt
+
+[INFO] 19:48:22:655 cpu.log/(45676:45676): Espero recibir paquete
+[INFO] 19:48:22:726 cpu.log/(45676:45676): Ya recibi paquete
+[INFO] 19:48:22:727 cpu.log/(45676:45676): Recibi un PCB del Kernel :)
+[INFO] 19:48:22:727 cpu.log/(45676:45676): AX = 0 BX = 0 CX = 0 DX = 0
+[INFO] 19:48:22:727 cpu.log/(45676:45676): Pidiendo instruccion a memoria
+
+[INFO] 19:48:22:727 cpu.log/(45676:45676): Recibi una instruccion de memoria
+
+[INFO] 19:48:22:727 cpu.log/(45676:45676): PID: 1 - Ejecutando: SET - AX - 1
+[INFO] 19:48:22:727 cpu.log/(45676:45676): AX = 1, BX= 0
+[INFO] 19:48:22:728 cpu.log/(45676:45676): AX = 0 BX = 0 CX = 0 DX = 0
+[INFO] 19:48:22:728 cpu.log/(45676:45676): Pidiendo instruccion a memoria
+
+[INFO] 19:48:22:728 cpu.log/(45676:45676): Recibi una instruccion de memoria
+
+[INFO] 19:48:22:728 cpu.log/(45676:45676): PID: 1 - Ejecutando: SET - BX - 4
+[INFO] 19:48:22:728 cpu.log/(45676:45676): AX = 1, BX= 4
+[INFO] 19:48:22:728 cpu.log/(45676:45676): AX = 0 BX = 0 CX = 0 DX = 0
+[INFO] 19:48:22:728 cpu.log/(45676:45676): Pidiendo instruccion a memoria
+
+[INFO] 19:48:22:728 cpu.log/(45676:45676): Recibi una instruccion de memoria
+
+[INFO] 19:48:22:728 cpu.log/(45676:45676): PID: 1 - Ejecutando: EXIT
+[INFO] 19:48:22:728 cpu.log/(45676:45676): devolvi el contexo ejecucion al kernel por motivo de: exit 
+
+[INFO] 19:48:22:728 cpu.log/(45676:45676): Espero recibir paquete
+[INFO] 19:48:23:083 cpu.log/(45676:45676): Ya recibi paquete
