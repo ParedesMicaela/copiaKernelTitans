@@ -193,3 +193,54 @@
 [INFO] 20:14:35:391 cpu.log/(47691:47691): Ya recibi paquete
 [INFO] 20:14:38:391 cpu.log/(47691:47691): Espero recibir paquete
 [INFO] 20:14:38:391 cpu.log/(47691:47691): Ya recibi paquete
+[INFO] 01:00:26:595 cpu.log/(2711:2711): Configuracion de CPU cargada
+[INFO] 01:00:26:639 cpu.log/(2711:2711): Archivo de configuracion cargado 
+
+[INFO] 01:00:26:663 cpu.log/(2711:2711): Conexion con memoria realizada 
+
+[INFO] 01:00:26:678 cpu.log/(2711:2711): Handshake enviado a memoria 
+
+[INFO] 01:00:27:727 cpu.log/(2711:2711): Tamanio de pagina 16 para realizar handshake :)
+[INFO] 01:00:27:761 cpu.log/(2711:2711): Servidores iniciados en CPU 
+
+[INFO] 01:00:33:701 cpu.log/(2711:2711): Se conectaron los clientes de dispatch e interrupt
+
+[INFO] 01:00:33:702 cpu.log/(2711:2711): Espero recibir paquete
+[INFO] 01:01:21:656 cpu.log/(2711:2711): Ya recibi paquete
+[INFO] 01:01:21:658 cpu.log/(2711:2711): Recibi un PCB del Kernel :)
+[INFO] 01:01:21:659 cpu.log/(2711:2711): AX = 0 BX = 0 CX = 0 DX = 0
+[INFO] 01:01:21:662 cpu.log/(2711:2711): Pidiendo instruccion a memoria
+
+[INFO] 01:01:21:675 cpu.log/(2711:2711): Recibi una instruccion de memoria
+
+[INFO] 01:01:21:681 cpu.log/(2711:2711): PID: 1 - Ejecutando: Set - AX - 1
+[INFO] 01:01:21:694 cpu.log/(2711:2711): devolvi el contexo ejecucion al kernel por motivo de: SET 
+
+[INFO] 01:01:21:695 cpu.log/(2711:2711): AX = 1 BX = 0 CX = 0 DX = 0
+[INFO] 01:01:21:696 cpu.log/(2711:2711): Pidiendo instruccion a memoria
+
+[INFO] 01:01:21:696 cpu.log/(2711:2711): Recibi una instruccion de memoria
+
+[INFO] 01:01:21:698 cpu.log/(2711:2711): PID: 1 - Ejecutando: Set - BX - 4
+[INFO] 01:01:21:699 cpu.log/(2711:2711): devolvi el contexo ejecucion al kernel por motivo de: SET 
+
+[INFO] 01:01:21:700 cpu.log/(2711:2711): AX = 1 BX = 4 CX = 0 DX = 0
+[INFO] 01:01:21:700 cpu.log/(2711:2711): Pidiendo instruccion a memoria
+
+[INFO] 01:01:21:701 cpu.log/(2711:2711): Recibi una instruccion de memoria
+
+[INFO] 01:01:21:701 cpu.log/(2711:2711): PID: 1 - Ejecutando: Sub - BX - AX
+[INFO] 01:01:21:721 cpu.log/(2711:2711): devolvi el contexo ejecucion al kernel por motivo de: SUB 
+
+[INFO] 01:01:21:727 cpu.log/(2711:2711): AX = 1 BX = 3 CX = 0 DX = 0
+[INFO] 01:01:21:728 cpu.log/(2711:2711): Pidiendo instruccion a memoria
+
+[INFO] 01:01:21:728 cpu.log/(2711:2711): Recibi una instruccion de memoria
+
+[INFO] 01:01:21:728 cpu.log/(2711:2711): PID: 1 - Ejecutando: Exit
+[INFO] 01:01:21:729 cpu.log/(2711:2711): devolvi el contexo ejecucion al kernel por motivo de: exit 
+
+[INFO] 01:01:21:729 cpu.log/(2711:2711): Espero recibir paquete
+[INFO] 01:01:22:469 cpu.log/(2711:2711): Ya recibi paquete
+[INFO] 01:01:25:509 cpu.log/(2711:2711): Espero recibir paquete
+[INFO] 01:01:25:523 cpu.log/(2711:2711): Ya recibi paquete

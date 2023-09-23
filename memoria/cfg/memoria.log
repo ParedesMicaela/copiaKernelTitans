@@ -25,3 +25,32 @@
 
 [INFO] 20:14:35:037 memoria.log/(47687:47692): Instrucciones enviadas :)
 
+[INFO] 01:00:20:887 memoria.log/(2708:2708): Configuracion de memoria cargada correctamente
+
+[INFO] 01:00:20:944 memoria.log/(2708:2708): Inicializando memoria
+
+[INFO] 01:00:21:003 memoria.log/(2708:2708): Servidor creado
+
+[INFO] 01:00:21:005 memoria.log/(2708:2708): Memoria lista para recibir al modulo cliente 
+
+[INFO] 01:00:26:658 memoria.log/(2708:2708): Se conecto un cliente 
+
+[INFO] 01:00:26:717 memoria.log/(2708:2712): Me llego el handshake :)
+
+[INFO] 01:00:27:737 memoria.log/(2708:2712): Handshake enviado :)
+
+[INFO] 01:00:27:738 memoria.log/(2708:2712): Se envio el tamaño de pagina 16 bytes al CPU 
+
+[INFO] 01:00:33:703 memoria.log/(2708:2708): Se conecto un cliente 
+
+[INFO] 01:01:21:463 memoria.log/(2708:2755): PATH recibido: /home/utnso/path.txt
+[INFO] 01:01:21:543 memoria.log/(2708:2755): Instrucciones enviadas :)
+
+[INFO] 01:01:21:660 memoria.log/(2708:2712): Instrucciones enviadas :)
+
+[INFO] 01:01:21:696 memoria.log/(2708:2712): Instrucciones enviadas :)
+
+[INFO] 01:01:21:700 memoria.log/(2708:2712): Instrucciones enviadas :)
+
+[INFO] 01:01:21:727 memoria.log/(2708:2712): Instrucciones enviadas :)
+

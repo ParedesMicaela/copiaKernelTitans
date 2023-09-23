@@ -193,25 +193,30 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro = datos[1];
             valor = atoi(datos[2]);
             setear_registro(registro, valor);
-            log_info(cpu_logger, "AX = %d, BX= %d", AX,BX);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SET");
             contexto_ejecucion->program_counter += 1;
             break;
+
         case (SUM):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro_destino = datos[1];
             registro_origen = datos[2];
             valor = sumar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SUM");
             contexto_ejecucion->program_counter += 1;
             break;
+
         case (SUB):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro_destino = datos[1];
             registro_origen = datos[2];
             valor = restar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SUB");
             contexto_ejecucion->program_counter += 1;
             break;
+
         case (INSTRUCCION_EXIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit");
