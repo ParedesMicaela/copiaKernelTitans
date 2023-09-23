@@ -3,7 +3,7 @@
 //=============================================== Variables Globales ========================================================
 t_dictionary_int* diccionario_colas;
 t_dictionary_int* diccionario_estados;
-t_dictionary* diccionario_tipo_instrucciones;
+//t_dictionary* diccionario_tipo_instrucciones;
 
 t_list* cola_NEW;
 t_list* cola_READY;
@@ -27,18 +27,18 @@ pthread_mutex_t mutex_colas;
 
 sem_t hay_proceso_nuevo;
 sem_t grado_multiprogramacion;
-sem_t dispatchPermitido;
+//sem_t dispatchPermitido;
 //pthread_mutex_t mutexSocketMemoria; 
 //pthread_mutex_t mutexSocketFileSystem; los comento porque son terreno inexplorado por ahora
-sem_t semFRead;
-sem_t semFWrite;
+//sem_t semFRead;
+//sem_t semFWrite;
 //sem_t mutex_colas;
 sem_t hay_procesos_ready;
 
 sem_t mutex_pid;
 
-bool fRead;
-bool fWrite;
+//bool fRead;
+//bool fWrite;
 
 //====================================================== Planificadores ========================================================
 void inicializar_planificador()
@@ -56,7 +56,6 @@ void inicializar_planificador()
 }
 
 void inicializar_semaforos(){   
-    int grado = config_get_int_value(config, "GRADO_MULTIPROGRAMACION_INI");
     pthread_mutex_init(&mutex_ready, NULL);
     pthread_mutex_init(&mutex_exec,NULL); 
     pthread_mutex_init(&mutex_exit,NULL); 
@@ -136,7 +135,9 @@ void proceso_en_execute(t_pcb* proceso_seleccionado)
         a hacer el caso en que lo haya devuelto por finalizacion, despues agregamos el resto*/
         char* devuelto_por = recibir_contexto(proceso_seleccionado);
 
+         printf("El motivo es: %s\n", devuelto_por); //hextamp
         if(string_equals_ignore_case(devuelto_por, "exit")){
+    
             proceso_en_exit(proceso_seleccionado);
 		}
 
@@ -176,16 +177,15 @@ void proceso_en_exit(t_pcb* proceso){
 
 t_pcb* obtener_siguiente_new()
 {
-    int size = list_size(cola_NEW);
+    //int size = list_size(cola_NEW);   if (size > 0) {}
 
-    if (size > 0) {
         pthread_mutex_lock(&mutex_new);
         t_pcb* proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, NEW), 0);
         pthread_mutex_unlock(&mutex_new);
 
         log_info(kernel_logger, "PID[%d] sale de NEW para planificacion \n", proceso_seleccionado->pid);
-        return proceso_seleccionado;
-    }
+
+     return proceso_seleccionado;
 }
 
 /*esta funcion la voy a poner para que me haga todo el calculo de que proceso deberia ir primero dependiendo
@@ -294,12 +294,13 @@ t_pcb* obtener_siguiente_PRIORIDADES()
 {
     /// recordar que es con desalojo
     printf("<3");
+    //return proceso_seleccionado;
 }
 
 t_pcb* obtener_siguiente_RR() // tener en cuenta como implementar con quantum
 {
-   ///
    printf("<3");
+   //return proceso_seleccionado;
 }
 
 //=================================================== Diccionarios y Colas ==================================================================
@@ -309,7 +310,7 @@ void inicializar_diccionarios()
 
     dictionary_int_put(diccionario_colas, NEW, cola_NEW);
     dictionary_int_put(diccionario_colas, READY, cola_READY);
-    dictionary_int_put(diccionario_colas, BLOCKED, cola_BLOCKED);
+    //dictionary_int_put(diccionario_colas, BLOCKED, cola_BLOCKED);
     dictionary_int_put(diccionario_colas, EXEC, cola_EXEC);
     dictionary_int_put(diccionario_colas, EXIT, cola_EXIT);
 
@@ -317,21 +318,21 @@ void inicializar_diccionarios()
 
     dictionary_int_put(diccionario_estados, NEW, "New");
     dictionary_int_put(diccionario_estados, READY, "Ready");
-    dictionary_int_put(diccionario_estados, BLOCKED, "Blocked");
+    //dictionary_int_put(diccionario_estados, BLOCKED, "Blocked");
     dictionary_int_put(diccionario_estados, EXEC, "Exec");
     dictionary_int_put(diccionario_estados, EXIT, "Exit");
 
-    diccionario_tipo_instrucciones = dictionary_create();
+    //diccionario_tipo_instrucciones = dictionary_create();
 
-    dictionary_put(diccionario_tipo_instrucciones, "SET", (void*)SET);
-    dictionary_put(diccionario_tipo_instrucciones, "EXIT", (void*)EXIT);
+    //dictionary_put(diccionario_tipo_instrucciones, "SET", (void*)SET);
+    //dictionary_put(diccionario_tipo_instrucciones, "EXIT", (void*)EXIT);
 }
 
 void inicializar_colas()
 {
     cola_NEW = list_create();
     cola_READY = list_create();
-    cola_BLOCKED = list_create();
+    //cola_BLOCKED = list_create();
     cola_EXEC = list_create();
     cola_EXIT = list_create();
 }
@@ -348,11 +349,9 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO, t_list* cola)
             if(pcb->pid == ((t_pcb*) list_get(cola, i))->pid)
             {
                 pthread_mutex_lock(&mutex_colas);
-                //sem_wait(&(mutex_colas));
                 /*y cuando los encontramos lo vamos a sacar porque va a cambiar de estado entonces ya
                 no lo quiero en esa cola*/
-                list_remove(cola, i);
-                //sem_post(&(mutex_colas));
+                list_remove(cola, i); //yendome del indice maximo de la lista
                 pthread_mutex_unlock(&mutex_colas);
 
             }
@@ -366,12 +365,10 @@ void meter_en_cola(t_pcb* pcb, estado ESTADO, t_list* cola)
     pcb->estado_pcb= ESTADO;
 
     //finalmente lo agregamos a la cola de nuestro nuevo estado
-    //sem_wait(&(mutex_colas));
     pthread_mutex_lock(&mutex_colas);
     //list_add(dictionary_int_get(diccionario_colas, ESTADO), pcb);
     list_add(cola,pcb);
     log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual %s\n", pcb->pid,dictionary_int_get(diccionario_estados, estado_viejo),dictionary_int_get(diccionario_estados, ESTADO));
-    //sem_post(&(mutex_colas));
     pthread_mutex_unlock(&mutex_colas);
 }
 
@@ -411,35 +408,17 @@ void mostrar_lista_pcb(t_list* cola, char* nombre_cola){
 
 
 
-// largo plazo
+
 
 /*
-
-Generarse la estructura PCB y asignar este PCB al estado NEW.
-
-
-En caso de que el grado máximo de multiprogramación lo permita
-    los procesos pasarán al estado READY
-    enviando un mensaje al módulo Memoria para que inicialice sus estructuras necesarias.
-
-La salida de NEW será mediante el algoritmo FIFO.
-
-
 Cuando se reciba un mensaje de CPU con motivo de finalizar el proceso
     se deberá pasar al mismo al estado EXIT
     liberar todos los recursos que tenga asignados
     dar aviso al módulo Memoria para que éste libere sus estructuras.
-
 */
 
 // corto plazo
 /*
-
-Los procesos que estén en estado READY serán planificados mediante uno de los siguientes algoritmos:
-    -FIFO
-    -Round Robin
-    -Prioridades (con desalojo)
-
 
 Una vez seleccionado el siguiente proceso a ejecutar:
     -se lo transicionará al estado EXEC

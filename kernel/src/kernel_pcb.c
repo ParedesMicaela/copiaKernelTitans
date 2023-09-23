@@ -17,7 +17,8 @@ uint32_t DX;
 t_pcb* crear_pcb(int prioridad, int tam_swap) 
 {
     //esto lo ponemos aca para no tener que hacerlo en la funcion iniciar_proceso si total lo vamos a hacer siempre
-    t_pcb* pcb = malloc(sizeof(pcb)); //nota de Martín: este malloc después se libera en cpu cuando termina el proceso junto al pcb (posible memory leak?)
+    t_pcb* pcb = malloc(sizeof(t_pcb)); //nota de Martín: este malloc después se libera en cpu cuando termina el proceso junto al pcb (posible memory leak?)
+    //Chquear si el sizeof está tomando correctamente, o lo debugeo printf del sizeof
 
     //el indice lo vamos a estar modificando cada vez que tengamos que crear un pcb entonces conviene ponerlo como variable global
     //cosa que todos sabemos cuanto vale y no repetimos pid
@@ -47,7 +48,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     pthread_mutex_unlock(&mutex_new);
 
     mostrar_lista_pcb(cola_NEW,"NEW");
-    sem_post (&hay_proceso_nuevo);
+   
 
     log_info(kernel_logger, "Se crea el proceso %d en NEW \n", pcb->pid);
 
@@ -61,6 +62,8 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
 
     enviar_paquete(paquete, socket_memoria);
     log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso \n");
+
+    sem_post (&hay_proceso_nuevo);
 
     return pcb;
 }

@@ -150,7 +150,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 {
     bool seguir_ejecutando = true;
 
-    while (seguir_ejecutando)
+    while (seguir_ejecutando) // definir con cuentas voy, definir con program counter
     {
 
         // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
@@ -193,7 +193,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro = datos[1];
             valor = atoi(datos[2]);
             setear_registro(registro, valor);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SET");
+            //devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SET");
             contexto_ejecucion->program_counter += 1;
             break;
 
@@ -203,7 +203,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro_origen = datos[2];
             valor = sumar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SUM");
+            //devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SUM");
             contexto_ejecucion->program_counter += 1;
             break;
 
@@ -213,7 +213,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro_origen = datos[2];
             valor = restar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SUB");
+            //devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SUB");
             contexto_ejecucion->program_counter += 1;
             break;
 

@@ -44,9 +44,9 @@ int main(void)
 
    log_info(kernel_logger, "Kernel listo para recibir al modulo cliente \n");
    
-   inicializar_consola_interactiva();
+   //inicializar_consola_interactiva();
 
-   //iniciar_proceso("/home/utnso/path.txt", 16, 1); 
+   iniciar_proceso("/home/utnso/path.txt", 16, 1); 
 
    void finalizar_kernel();
 

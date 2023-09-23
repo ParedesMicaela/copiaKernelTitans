@@ -111,6 +111,7 @@ char* sacar_cadena_de_paquete(void** stream)
 
 	memcpy(&tamanio_cadena, *stream, sizeof(int));
 	if(tamanio_cadena<0) printf("cadena de largo negativo falla en sacar cadena paquete  \n");
+	if(tamanio_cadena==0) printf("Me llego tamaño de cadena 0  \n");
 	*stream += sizeof(int);
 
 	cadena = malloc(tamanio_cadena);
