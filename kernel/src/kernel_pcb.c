@@ -88,7 +88,7 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 
     enviar_paquete(paquete, socket_cpu_dispatch);
     log_info(kernel_logger, "Se envio el PCB %d a la CPU \n", pcb_a_enviar->pid);
-
+    eliminar_paquete(paquete);
     return;
 }
 

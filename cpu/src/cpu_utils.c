@@ -115,6 +115,7 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
     t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
     void *stream = paquete->buffer->stream;
     log_info(cpu_logger, "Ya recibi paquete");
+    log_info(cpu_logger, "recibi %d\n",paquete->codigo_operacion);
     
     t_contexto_ejecucion *contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
 
@@ -154,7 +155,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
     {
 
         // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
-        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", contexto_ejecucion->registros_cpu.AX, contexto_ejecucion->registros_cpu.BX, contexto_ejecucion->registros_cpu.CX, contexto_ejecucion->registros_cpu.DX);
+        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
 
         //=============================================== FETCH =================================================================
         
@@ -353,8 +354,6 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
     t_paquete *paquete = crear_paquete(PCB);
 
     // le mandamos esto porque creo que es lo unico que se cambia pero vemos
-    agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
-    //comentar si no funca lo de arriba
     agregar_entero_a_paquete(paquete, contexto_ejecucion->program_counter);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.AX);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.BX);

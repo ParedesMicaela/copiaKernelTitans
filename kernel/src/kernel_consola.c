@@ -68,7 +68,7 @@ void consola_parsear_instruccion(char * leer_linea){
   linea_espaciada = string_n_split(leer_linea, 2, " ");
   printf("Separo la linea \n");
   
-  pid = atoi(linea_espaciada[2]);
+  pid = atoi(linea_espaciada[1]);
 
   printf("Intentamos entrar a finalizar proceso \n");
   consola_finalizar_proceso(pid);

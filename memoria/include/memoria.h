@@ -13,6 +13,7 @@
 #include "socket.h"
 #include "logconfig.h"
 #include "operaciones.h"
+#include <commons/bitarray.h>
 
 // DEFINICIONES 
 #define MAX_CHAR 60
@@ -22,6 +23,7 @@ extern t_log* memoria_logger;
 extern t_config* config;
 extern int socket_memoria;
 extern int server_fd;
+extern void* espacio_usuario;
 
 //ESTRUCTURAS
 typedef struct  
@@ -37,6 +39,14 @@ typedef struct
 	char* algoritmo_reemplazo;
 } arch_config;
 
+typedef struct 
+{
+	int pid;
+	int tam_swap;
+	t_list* paginas_en_memoria;
+} t_proceso_en_memoria;
+
+
 extern arch_config config_valores_memoria;
 
 // FUNCIONES//
@@ -45,5 +55,9 @@ void manejo_conexiones(void* );
 void cargar_configuracion(char* );
 void enviar_paquete_handshake(int );
 void enviar_paquete_instrucciones(int , char* , int );
+void crear_tablas_paginas_proceso(int, int );
+void liberar_espacio_usuario() ;
+char* leer_archivo_instrucciones(char* );
+
 
 #endif

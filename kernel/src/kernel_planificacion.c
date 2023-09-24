@@ -135,7 +135,6 @@ void proceso_en_execute(t_pcb* proceso_seleccionado)
         a hacer el caso en que lo haya devuelto por finalizacion, despues agregamos el resto*/
         char* devuelto_por = recibir_contexto(proceso_seleccionado);
 
-         printf("El motivo es: %s\n", devuelto_por); //hextamp
         if(string_equals_ignore_case(devuelto_por, "exit")){
     
             proceso_en_exit(proceso_seleccionado);
@@ -149,6 +148,10 @@ void proceso_en_execute(t_pcb* proceso_seleccionado)
 }
 
 void proceso_en_exit(t_pcb* proceso){
+
+    pthread_mutex_lock(&mutex_exit);
+    meter_en_cola(proceso,EXIT,cola_EXIT);
+    pthread_mutex_unlock(&mutex_exit);
 
 	//sacamos el proceso de la lista de exit
   	pthread_mutex_lock(&mutex_exit);
