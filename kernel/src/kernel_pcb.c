@@ -43,15 +43,14 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     pthread_mutex_init (mutex, NULL);
     pcb->mutex = mutex; */
 
+    log_info(kernel_logger, "Se crea el proceso %d en NEW \n", pcb->pid);
+
     pthread_mutex_lock(&mutex_new);
     meter_en_cola(pcb, NEW,cola_NEW);
     pthread_mutex_unlock(&mutex_new);
 
     mostrar_lista_pcb(cola_NEW,"NEW");
    
-
-    log_info(kernel_logger, "Se crea el proceso %d en NEW \n", pcb->pid);
-
     /*cada vez que creamos un proceso le tenemos que avisar a memoria que debe crear la estructura
     en memoria del proceso*/
     t_paquete* paquete = crear_paquete(CREACION_ESTRUCTURAS_MEMORIA);
@@ -62,6 +61,15 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
 
     enviar_paquete(paquete, socket_memoria);
     log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso \n");
+    eliminar_paquete(paquete);
+
+    int respuesta;
+    recv(socket_memoria, &respuesta,sizeof(int),0);
+
+    if (respuesta != 1)
+    {
+        log_error(kernel_logger, "No se pudieron crear estructuras en memoria");
+    }
 
     sem_post (&hay_proceso_nuevo);
 
@@ -131,7 +139,7 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 //eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)
 {
-    free(proceso->pid);
+    /*free(proceso->pid);
     //free(proceso->pid); ta tirando error al hacer el make, voy a ver que onda
 	eliminar_registros_pcb(proceso->registros_cpu);
 	free(proceso->prioridad);   
@@ -139,7 +147,7 @@ void eliminar_pcb(t_pcb* proceso)
 	//free(proceso->estado_pcb); acá también tira error con el make también
 	//eliminar_archivos_abiertos(proceso->archivosAbiertos);
 	//eliminar_mutex(proceso->mutex);
-
+*/
     free(proceso); //intuyo con que al hacerle free van a haber cosas del pcb que vuelan pero me hace ruido 
 }
 

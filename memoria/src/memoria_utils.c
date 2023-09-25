@@ -76,15 +76,22 @@ void manejo_conexiones(void* socket_cliente)
 		break;
 
 	case CREACION_ESTRUCTURAS_MEMORIA:
-	//esto no anda, hay que verlo
-		/*int pid_proceso = sacar_entero_de_paquete(&stream);
+		int pid_proceso = sacar_entero_de_paquete(&stream);
 		int tam_swap_pid = sacar_entero_de_paquete(&stream);
 
 		log_info(memoria_logger,"Recibi pedido de creacion de estructuras en memoria\n");
-		crear_tablas_paginas_proceso(pid_proceso, tam_swap_pid);
-        int ok_creacion = 1; 
-		enviar_datos(socket_cliente,&ok_creacion,sizeof(int));*/
+		//crear_tablas_paginas_proceso(pid_proceso, tam_swap_pid);
+        int ok_creacion = 1;
+        send(cliente, &ok_creacion, sizeof(int), 0);
+		log_info(memoria_logger,"Estructuras creadas en memoria kernel-kyunn\n");
+
 	case FINALIZAR_EN_MEMORIA:
+		int pid = sacar_entero_de_paquete(&stream);
+		log_info(memoria_logger,"Recibi pedido de creacion de estructuras en memoria\n");
+		//funcion finalizar
+        int ok_finalizacion = 1;
+        send(cliente, &ok_finalizacion, sizeof(int), 0);
+		log_info(memoria_logger,"Estructuras eliminadas en memoria kernel-kyunn\n");
 
 	default:
 		break;

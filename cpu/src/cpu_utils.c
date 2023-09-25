@@ -115,7 +115,7 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
     t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
     void *stream = paquete->buffer->stream;
     log_info(cpu_logger, "Ya recibi paquete");
-    log_info(cpu_logger, "recibi %d\n",paquete->codigo_operacion);
+    log_info(cpu_logger, "recibi %d de %d\n",paquete->codigo_operacion,socket_cliente_dispatch);
     
     t_contexto_ejecucion *contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
 
