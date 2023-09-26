@@ -38,6 +38,7 @@ int atender_clientes_memoria(int socket_servidor){
 
 void manejo_conexiones(void* socket_cliente)
 {
+	//es un casting a un entero para que la variable void se crea un entero y pueda trabajar con eso
 	int cliente = *(int*)socket_cliente;
 	while(1){
 	t_paquete* paquete = recibir_paquete(cliente);
