@@ -18,7 +18,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
 {
     //esto lo ponemos aca para no tener que hacerlo en la funcion iniciar_proceso si total lo vamos a hacer siempre
     t_pcb* pcb = malloc(sizeof(t_pcb)); //nota de Martín: este malloc después se libera en cpu cuando termina el proceso junto al pcb (posible memory leak?)
-    //el sizeof se hace durante la compilacion
+    //Chquear si el sizeof está tomando correctamente, o lo debugeo printf del sizeof
 
     //el indice lo vamos a estar modificando cada vez que tengamos que crear un pcb entonces conviene ponerlo como variable global
     //cosa que todos sabemos cuanto vale y no repetimos pid
@@ -52,7 +52,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     mostrar_lista_pcb(cola_NEW,"NEW");
    
     /*cada vez que creamos un proceso le tenemos que avisar a memoria que debe crear la estructura
-    en memoria del proceso*/
+    en memoria del proceso
     t_paquete* paquete = crear_paquete(CREACION_ESTRUCTURAS_MEMORIA);
 
     //a la memoria solamente le pasamos el pid y el tamanio que va a ocupar en swap, despues se encarga ella
@@ -70,7 +70,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     {
         log_error(kernel_logger, "No se pudieron crear estructuras en memoria");
     }
-
+*/
     sem_post (&hay_proceso_nuevo);
 
     return pcb;
