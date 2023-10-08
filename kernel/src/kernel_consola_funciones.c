@@ -21,7 +21,7 @@ void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
 
     // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
     enviar_path_a_memoria(path);
-	//para que reciba lo que sea le pasamos el void*, es como un puntero a nada pero sirve par aue reciba todo
+
 	pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);
 	pthread_create(&corto_plazo, NULL, (void* ) planificador_corto_plazo, NULL);
 
