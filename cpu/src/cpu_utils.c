@@ -136,12 +136,12 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         // iniciamos el procedimiento para procesar cualquier instruccion
         ciclo_de_instruccion(socket_cliente_dispatch, socket_cliente_memoria, contexto_ejecucion);
     }
-    else
+    if(paquete->codigo_operacion == -1)
     {
-        // los sleep son como para que parezca que la cpu en serio esta pensando y tarda un poquito
-        sleep(3);
-        perror("No se recibio correctamente el PCB");
+      sleep(3);
+       perror("No se recibio correctamente el PCB");  
     }
+
 }
 
 //================================================== Ciclo de Instruccion =====================================================================
