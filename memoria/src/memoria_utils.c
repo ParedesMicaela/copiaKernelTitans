@@ -38,7 +38,6 @@ int atender_clientes_memoria(int socket_servidor){
 
 void manejo_conexiones(void* socket_cliente)
 {
-	//es un casting a un entero para que la variable void se crea un entero y pueda trabajar con eso
 	int cliente = *(int*)socket_cliente;
 	while(1){
 	t_paquete* paquete = recibir_paquete(cliente);
@@ -75,7 +74,7 @@ void manejo_conexiones(void* socket_cliente)
 		int posicion_pedida = sacar_entero_de_paquete(&stream);
 		enviar_paquete_instrucciones(cliente, instrucciones_leidas,posicion_pedida);
 		break;
-
+/*
 	case CREACION_ESTRUCTURAS_MEMORIA:
 		int pid_proceso = sacar_entero_de_paquete(&stream);
 		int tam_swap_pid = sacar_entero_de_paquete(&stream);
@@ -93,7 +92,7 @@ void manejo_conexiones(void* socket_cliente)
         int ok_finalizacion = 1;
         send(cliente, &ok_finalizacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras eliminadas en memoria kernel-kyunn\n");
-
+*/
 	default:
 		break;
 	}
