@@ -30,6 +30,9 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     pcb->prioridad = prioridad;
 
     //cuando lo creamos el estado siempre es new
+
+    pcb->quantum  = 2000;
+
     pcb->estado_pcb = NEW;
     pcb->program_counter = 0;
     pcb->registros_cpu.AX = 0;

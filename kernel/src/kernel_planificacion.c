@@ -134,8 +134,12 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 
     if (string_equals_ignore_case(devuelto_por, "exit"))
     {
-
         proceso_en_exit(proceso_seleccionado);
+    }
+
+    if (string_equals_ignore_case(devuelto_por, "wait"))
+    {
+        asignacion_recursos(proceso_seleccionado);
     }
 
     // y por ultimo, en cualquiera de los casos, vamos a sacar de exec al proceso que ya termino de ejecutar
@@ -304,10 +308,48 @@ t_pcb *obtener_siguiente_PRIORIDADES()
     // return proceso_seleccionado;
 }
 
-t_pcb *obtener_siguiente_RR() // tener en cuenta como implementar con quantum
+t_pcb* obtener_siguiente_RR()
 {
-    printf("<3");
-    // return proceso_seleccionado;
+    int quantum = config_valores_kernel.quantum; // obtiene el quantum de la config del kernel
+
+    log_info(kernel_logger,"Inicio la planificación RR\n");
+
+    //meto lock y unlock del mutex de ready para poder sacar el primer proceso de la cola tranqui
+    pthread_mutex_lock(&mutex_ready);
+    t_pcb* proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
+    pthread_mutex_unlock(&mutex_ready);
+
+    log_info(kernel_logger,"PID[%d] sale de READY por planificación RR", proceso_seleccionado->pid);
+
+    //ahora acá se viene mi truquito
+
+    int tiempo_transcurrido = 0; //arranca en 0 porque todavía no empieza jeje
+    // simulo(a.k.a para los simuladores) la ejecución del tiempo mientras se va chequeando el quantum
+    while (tiempo_transcurrido < quantum)
+    {
+        usleep(1 * 1000); //con esto me estoy librando de la espera activa ya que usleep lo que hace es pausar la ejecución dentro del while
+
+        //si el proceso finaliza durante su ejecución es porque está en exit
+        if (proceso_seleccionado->estado_pcb == EXIT)
+        {
+            log_info(kernel_logger, "PID[%d] ha finalizado durante su quantum de RR\n", proceso_seleccionado->pid);
+            return proceso_seleccionado; 
+        }
+        tiempo_transcurrido++; //aumento el tiempo que pasa en 1 milisegundo
+    }
+    //ahora contemplo el caso en el que el tiempo que pasa sea igual al quantum, por lo que pasa de nuevo a la cola de READY(en última posición)
+    if (tiempo_transcurrido == quantum)
+    {
+        pthread_mutex_lock(&mutex_ready);
+        list_add(cola_READY, proceso_seleccionado);
+        pthread_mutex_unlock(&mutex_ready);
+
+        //ahora reinicio el quantum para el siguiente proceso :) uwu
+        proceso_seleccionado->quantum = config_valores_kernel.quantum; // Reinicia el quantum para el siguiente proceso.
+        log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
+    }
+
+    return proceso_seleccionado;
 }
 
 //=================================================== Diccionarios y Colas ==================================================================

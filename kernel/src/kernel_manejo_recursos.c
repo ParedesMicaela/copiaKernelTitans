@@ -1,3 +1,12 @@
+#include "kernel.h"
+
+void asignacion_recursos(t_pcb* proceso)
+{
+        
+}
+
+
+
 /*
 
 Archivo de configuración con 2 variables con la información inicial de los mismos:

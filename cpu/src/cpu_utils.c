@@ -185,6 +185,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         char *registro = NULL;
         char *registro_destino = NULL;
         char *registro_origen = NULL;
+        char *recurso = NULL;
         int valor = -1;
 
         switch (tipo_inst(datos[0]))
@@ -194,7 +195,6 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro = datos[1];
             valor = atoi(datos[2]);
             setear_registro(registro, valor);
-            //devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SET");
             contexto_ejecucion->program_counter += 1;
             break;
 
@@ -204,7 +204,6 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro_origen = datos[2];
             valor = sumar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
-            //devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SUM");
             contexto_ejecucion->program_counter += 1;
             break;
 
@@ -214,10 +213,21 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             registro_origen = datos[2];
             valor = restar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
-            //devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "SUB");
             contexto_ejecucion->program_counter += 1;
             break;
 
+        case (WAIT):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
+            recurso = datos[1];
+            pedir_recurso(recurso,socket_cliente_dispatch);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait");
+            break;
+
+        case (SIGNAL):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal");
+            break;
+            
         case (INSTRUCCION_EXIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit");
@@ -258,8 +268,6 @@ void atender_interrupt(void *cliente)
         }
     }
 }
-
-
 
 //================================================== REGISTROS =====================================================================
 static void setear_registro(char *registros, int valor)
@@ -346,7 +354,7 @@ static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion
     (contexto_ejecucion->registros_cpu.CX) = CX;
     (contexto_ejecucion->registros_cpu.DX) = DX;
     enviar_contexto(socket_cliente, contexto_ejecucion, motivo);
-    log_info(cpu_logger, "devolvi el contexo ejecucion al kernel por motivo de: %s \n", motivo);
+    log_info(cpu_logger, "Devolvi el contexo ejecucion al kernel por motivo de: %s \n", motivo);
 }
 
 static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo)
@@ -363,4 +371,10 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
     // agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_que_bloquear);
 
     enviar_paquete(paquete, socket_cliente);
+}
+
+//================================================== RECURSOS =====================================================================
+void pedir_recurso(char* recurso, int socket_cliente_dispatch)
+{
+
 }

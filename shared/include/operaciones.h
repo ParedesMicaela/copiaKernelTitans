@@ -53,6 +53,8 @@ typedef enum {
 	SET,
 	SUM,
 	SUB,
+	WAIT,
+	SIGNAL,
 	INSTRUCCION_EXIT
 } codigo_instrucciones;
 
@@ -90,7 +92,7 @@ typedef struct
 	int prioridad;
 	//en el estado vamos a ir viendo en que parte del ciclo de instruccion esta
 	estado estado_pcb;
-	
+	int quantum;
 	//t_dictionary *archivosAbiertos;
 	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
 	//pthread_mutex_t *mutex;
