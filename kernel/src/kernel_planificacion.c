@@ -64,8 +64,8 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_colas, NULL);
 
     sem_init(&grado_multiprogramacion, 0, 1);
-    sem_init(&(hay_proceso_nuevo), 0, 1);
-    sem_init(&(hay_procesos_ready), 0, 1);
+    sem_init(&(hay_proceso_nuevo), 0, 0);
+    sem_init(&(hay_procesos_ready), 0, 0);
     sem_init(&(mutex_pid), 0, 1);
 }
 
@@ -159,6 +159,7 @@ void proceso_en_exit(t_pcb *proceso)
     log_info(kernel_logger, "[EXIT]Sale de EXIT y Finaliza el  PCB de ID: %d\n", proceso->pid);
 
     // le mandamos esto a memoria para que destruya las estructuras
+    /*
     enviar_pcb_a_memoria(proceso, socket_memoria, FINALIZAR_EN_MEMORIA);
     log_info(kernel_logger, "Enviando a memoria liberar estructuras del proceso \n");
 
@@ -169,6 +170,7 @@ void proceso_en_exit(t_pcb *proceso)
     {
         log_error(kernel_logger, "No se pudieron eliminar estructuras en memoria del proceso PID[%d]\n", proceso->pid);
     }
+    */
     // si la respuesta que conseguimos de memoria es que se finalice la memoria, le avisamos a la consola que ya finaliza el proceso
     log_info(kernel_logger, "Respuesta memoria de estructuras liberadas del proceso recibida \n");
 
