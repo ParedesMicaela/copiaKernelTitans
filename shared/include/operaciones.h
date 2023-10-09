@@ -53,8 +53,18 @@ typedef enum {
 	SET,
 	SUM,
 	SUB,
+	JNZ,
+	SLEEP,
 	WAIT,
 	SIGNAL,
+	MOV_IN,
+	MOV_OUT,
+	F_OPEN,
+	F_CLOSE,
+	F_SEEK,
+	F_READ,
+	F_WRITE,
+	F_TRUNCATE,
 	INSTRUCCION_EXIT
 } codigo_instrucciones;
 
