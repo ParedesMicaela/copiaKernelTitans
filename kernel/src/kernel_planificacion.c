@@ -7,7 +7,6 @@ t_dictionary_int *diccionario_estados;
 
 t_list *cola_NEW;
 t_list *cola_READY;
-// creo que va a haber 2 colas de bloqueados, dice algo en el enunciado
 t_list *cola_BLOCKED;
 t_list *cola_EXEC;
 t_list *cola_EXIT;
@@ -59,6 +58,7 @@ void inicializar_semaforos()
 {
     pthread_mutex_init(&mutex_ready, NULL);
     pthread_mutex_init(&mutex_exec, NULL);
+    pthread_mutex_init(&mutex_blocked, NULL);
     pthread_mutex_init(&mutex_exit, NULL);
     pthread_mutex_init(&mutex_new, NULL);
     pthread_mutex_init(&mutex_colas, NULL);
@@ -98,6 +98,8 @@ void planificador_largo_plazo()
 
 void planificador_corto_plazo()
 {
+    crear_colas_bloqueo();
+
     while (1)
     {
         sem_wait(&hay_procesos_ready);
@@ -128,9 +130,12 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     enviar_pcb_a_cpu(proceso_seleccionado);
 
     /*despues la cpu nos va a devolver el contexto en caso de que haya finalizado el proceso
-    haya pedido un recurso (wait/signal), por desalojo o por page fault. Ahora para probar vamos
-    a hacer el caso en que lo haya devuelto por finalizacion, despues agregamos el resto*/
+    haya pedido un recurso (wait/signal), por desalojo o por page fault*/
     char *devuelto_por = recibir_contexto(proceso_seleccionado);
+
+    /*esta funcion es casi igual a la de arriba, la verdad que no quiero hacer cagada asi que la voy 
+    a separar cosa que si me llega algo relacionados con recursos, hago lo mismo pero con un recurso*/
+    char *recurso_pedido = recibir_peticion_recurso(proceso_seleccionado);
 
     if (string_equals_ignore_case(devuelto_por, "exit"))
     {
@@ -139,7 +144,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 
     if (string_equals_ignore_case(devuelto_por, "wait"))
     {
-        asignacion_recursos(proceso_seleccionado);
+        asignacion_recursos(proceso_seleccionado, recurso_pedido);
     }
 
     // y por ultimo, en cualquiera de los casos, vamos a sacar de exec al proceso que ya termino de ejecutar
@@ -179,7 +184,6 @@ void proceso_en_exit(t_pcb *proceso)
     log_info(kernel_logger, "Respuesta memoria de estructuras liberadas del proceso recibida \n");
 
     eliminar_pcb(proceso);
-    // free(proceso);
     sem_post(&grado_multiprogramacion);
 }
 
@@ -222,9 +226,6 @@ t_pcb *obtener_siguiente_ready()
     en ready, o no. Entonces para saber eso necesito saber cuantos procesos estan esperando en ready
     y cuantos procesos estan ejecutando justo ahora. Con eso puedo comparar con el grado de multi que tengo
     y ver si podemos meter un proceso mas.*/
-
-    // quiero saber el algoritmo con el que estoy trabajando
-
     algoritmo algoritmo_elegido = obtener_algoritmo();
 
     // obtenemos el tamaño de la cola de ejecutando, nuevamente pongo un semaforo
@@ -258,7 +259,6 @@ t_pcb *obtener_siguiente_ready()
 
 algoritmo obtener_algoritmo()
 {
-
     algoritmo switcher;
     char *algoritmo_actual = NULL;
     algoritmo_actual = config_valores_kernel.algoritmo_planificacion;
@@ -359,7 +359,7 @@ void inicializar_diccionarios()
 
     dictionary_int_put(diccionario_colas, NEW, cola_NEW);
     dictionary_int_put(diccionario_colas, READY, cola_READY);
-    // dictionary_int_put(diccionario_colas, BLOCKED, cola_BLOCKED);
+    dictionary_int_put(diccionario_colas, BLOCKED, cola_BLOCKED);
     dictionary_int_put(diccionario_colas, EXEC, cola_EXEC);
     dictionary_int_put(diccionario_colas, EXIT, cola_EXIT);
 
@@ -367,7 +367,7 @@ void inicializar_diccionarios()
 
     dictionary_int_put(diccionario_estados, NEW, "New");
     dictionary_int_put(diccionario_estados, READY, "Ready");
-    // dictionary_int_put(diccionario_estados, BLOCKED, "Blocked");
+    dictionary_int_put(diccionario_estados, BLOCKED, "Blocked");
     dictionary_int_put(diccionario_estados, EXEC, "Exec");
     dictionary_int_put(diccionario_estados, EXIT, "Exit");
 

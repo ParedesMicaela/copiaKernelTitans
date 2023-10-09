@@ -5,7 +5,6 @@ int indice_pid = 0;
 
 pthread_mutex_t mutex_new;
 
-
 uint32_t AX;
 uint32_t BX;
 uint32_t CX;
@@ -28,17 +27,14 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     pcb->pid = indice_pid;
     pcb->program_counter = 0;
     pcb->prioridad = prioridad;
-
-    //cuando lo creamos el estado siempre es new
-
     pcb->quantum  = 2000;
-
     pcb->estado_pcb = NEW;
     pcb->program_counter = 0;
     pcb->registros_cpu.AX = 0;
     pcb->registros_cpu.BX = 0;
     pcb->registros_cpu.CX = 0;
     pcb->registros_cpu.DX = 0;
+    pcb->recursos_asignados = string_get_string_as_array("[0,0,0]");
     //pcb->tabla_archivos_abiertos = diccionario;
     //pcb->archivosAbiertos = dictionary_create();
     /*
@@ -94,6 +90,7 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.CX);
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
     
+    
 
     //agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
 
@@ -103,26 +100,28 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     return;
 }
 
-//hay que ver bien esto porque le faltan cosas
- char* recibir_contexto(t_pcb* proceso)
+//hay que ver bien esto porque le faltan cosas y me tiene que poder devolver varias
+char* recibir_contexto(t_pcb* proceso)
  {
     //esta funcion lo que hace es recibir un paquete, si ese paquete es un pcb lo abre y nos dice el motivo por el cual se devolvio
     char* motivo_de_devolucion = NULL;
     t_paquete* paquete = recibir_paquete(socket_cpu_dispatch);
     void* stream = paquete->buffer->stream;
     int program_counter =-1;
+    char* recurso_pedido = NULL;
     
-
     //si lo que recibimos es en efecto un pcb, lo abrimos
 	if(paquete->codigo_operacion == PCB)
 	{
-		//nosotros solamente vamos a sacar el contexto
+		//nosotros solamente vamos a sacar el contexto y el motivo, que es lo que mas nos importa
         program_counter = sacar_entero_de_paquete(&stream);
         AX = sacar_entero_sin_signo_de_paquete(&stream);
         BX = sacar_entero_sin_signo_de_paquete(&stream);
         CX = sacar_entero_sin_signo_de_paquete(&stream);
         DX = sacar_entero_sin_signo_de_paquete(&stream);
         motivo_de_devolucion = sacar_cadena_de_paquete(&stream);
+        recurso_pedido = sacar_cadena_de_paquete(&stream);
+
     }
     else{
         log_error(kernel_logger, "Falla al recibir PCB, se cierra el Kernel \n");
@@ -135,9 +134,27 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 
     log_info(kernel_logger, "Recibi el pcb de la CPU con program counter = %d \n", program_counter);
 
-    //retornamos el motivo de devolucion para que ejecutar se encargue de manejarlo
+    /*la cpu nos va a devolver el contexto si hace exit, algo de recursos o sleep. Si en recurso_pedido
+    no me manda nada, es porque esta ejecutando exit o sleep. Entonces lo que voy a hacer aca es ver si
+    me mando algun pedido de recursos y en vez de retornar el motivo unicamente, ir a otra funcion que 
+    me diga el recurso y lo que quiere hacer el proceso con ese recurso.*/
+
+    //si no me piden hacer algo con recursos, solamente retorno el motivo de devolucion
+
+    //eliminar_paquete(paquete);
     return motivo_de_devolucion;
- }
+}
+
+char* recibir_peticion_recurso(t_pcb* proceso)
+{
+    t_paquete* paquete = recibir_paquete(socket_cpu_dispatch);
+    void* stream = paquete->buffer->stream;
+
+    char* recurso = sacar_cadena_de_paquete(&stream);
+
+    return recurso;
+}
+
 
 //eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)

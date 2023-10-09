@@ -21,8 +21,8 @@ static int sumar_registros(char *registro_destino, char *registro_origen);
 static int restar_registros(char *registro_destino, char *registro_origen);
 static int buscar_registro(char *registros);
 static int tipo_inst(char *instruccion);
-static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo);
-static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo);
+static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char* recurso);
+static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char* recurso);
 static void pedir_instruccion(int socket_cliente_memoria,int posicion);
 static void recibir_instruccion(int socket_cliente_memoria);
 
@@ -136,10 +136,10 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         // iniciamos el procedimiento para procesar cualquier instruccion
         ciclo_de_instruccion(socket_cliente_dispatch, socket_cliente_memoria, contexto_ejecucion);
     }
-    if(paquete->codigo_operacion == -1)
+    if(paquete->codigo_operacion != PCB)
     {
-      sleep(3);
        perror("No se recibio correctamente el PCB");  
+       return 0;
     }
 
 }
@@ -219,18 +219,18 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         case (WAIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
             recurso = datos[1];
-            pedir_recurso(recurso,socket_cliente_dispatch);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait");
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso);
+            seguir_ejecutando = false;
             break;
 
         case (SIGNAL):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal");
+            //devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal");
             break;
             
         case (INSTRUCCION_EXIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit");
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit","");
             // eliminar_todas_las_entradas(contexto_ejecucion->pid);
             seguir_ejecutando = false;
             break;
@@ -337,6 +337,9 @@ static int tipo_inst(char *instruccion)
     if (string_equals_ignore_case(instruccion, "SUB"))
         numero = SUB;
 
+    if (string_equals_ignore_case(instruccion, "WAIT"))
+        numero = WAIT;
+
     if (string_equals_ignore_case(instruccion, "EXIT"))
         numero = INSTRUCCION_EXIT;
 
@@ -345,19 +348,21 @@ static int tipo_inst(char *instruccion)
 
 //================================================== CONTEXTO =====================================================================
 
-// vamos a devolver el contexto al kernel en las instrucciones exit, sleep
-static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo)
+/*vamos a devolver el contexto al kernel en las instrucciones exit, sleep. Lo modifique para que podamos
+pedir recursos por aca tambien, en vez de hacer una funcion aparte. Si no pedimos un recurso entonces ponemos
+"" en el ultimo parametro y fuee. */
+static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char *recurso)
 {
     // aca nosotros agregamos las modificaciones de los registros
     (contexto_ejecucion->registros_cpu.AX) = AX;
     (contexto_ejecucion->registros_cpu.BX) = BX;
     (contexto_ejecucion->registros_cpu.CX) = CX;
     (contexto_ejecucion->registros_cpu.DX) = DX;
-    enviar_contexto(socket_cliente, contexto_ejecucion, motivo);
-    log_info(cpu_logger, "Devolvi el contexo ejecucion al kernel por motivo de: %s \n", motivo);
+    enviar_contexto(socket_cliente, contexto_ejecucion, motivo, recurso);
+    log_info(cpu_logger, "Devolvi el contexto ejecucion al kernel por motivo de: %s \n", motivo);
 }
 
-static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo)
+static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso)
 {
     t_paquete *paquete = crear_paquete(PCB);
 
@@ -368,13 +373,9 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.CX);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.DX);
     agregar_cadena_a_paquete(paquete, motivo);
+    agregar_cadena_a_paquete(paquete, recurso);
+
     // agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_que_bloquear);
 
     enviar_paquete(paquete, socket_cliente);
-}
-
-//================================================== RECURSOS =====================================================================
-void pedir_recurso(char* recurso, int socket_cliente_dispatch)
-{
-
 }
