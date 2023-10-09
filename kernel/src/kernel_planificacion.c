@@ -62,6 +62,8 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_exit, NULL);
     pthread_mutex_init(&mutex_new, NULL);
     pthread_mutex_init(&mutex_colas, NULL);
+    pthread_mutex_init(&mutex_recursos, NULL);
+
 
     sem_init(&grado_multiprogramacion, 0, 1);
     sem_init(&(hay_proceso_nuevo), 0, 0);
@@ -133,10 +135,6 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     haya pedido un recurso (wait/signal), por desalojo o por page fault*/
     char *devuelto_por = recibir_contexto(proceso_seleccionado);
 
-    /*esta funcion es casi igual a la de arriba, la verdad que no quiero hacer cagada asi que la voy 
-    a separar cosa que si me llega algo relacionados con recursos, hago lo mismo pero con un recurso*/
-    char *recurso_pedido = recibir_peticion_recurso(proceso_seleccionado);
-
     if (string_equals_ignore_case(devuelto_por, "exit"))
     {
         proceso_en_exit(proceso_seleccionado);
@@ -144,8 +142,10 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 
     if (string_equals_ignore_case(devuelto_por, "wait"))
     {
-        asignacion_recursos(proceso_seleccionado, recurso_pedido);
+        asignacion_recursos(proceso_seleccionado);
     }
+
+    free(instancias_del_recurso);
 
     // y por ultimo, en cualquiera de los casos, vamos a sacar de exec al proceso que ya termino de ejecutar
     pthread_mutex_lock(&mutex_exec);

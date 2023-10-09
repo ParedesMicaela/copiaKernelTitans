@@ -1,35 +1,47 @@
 #include "kernel.h"
 
 pthread_mutex_t mutex_blocked;
+pthread_mutex_t mutex_recursos;
+
+
 t_list *lista_recursos;
 int *instancias_del_recurso;
 char **recursos;
 
 //===========================================================================================================================================
-void asignacion_recursos(t_pcb* proceso, char* recurso)
+void asignacion_recursos(t_pcb* proceso)
 {
+    char* recurso = proceso->recurso_pedido;
+    int instancias = 0;
+
     int indice_pedido = indice_recurso(recurso);
 
-    if (indice_recurso == -1)
+    if (indice_pedido == -1)
     {
         //si el recurso no existe, mando el proceso a exit
+        proceso->recurso_pedido = NULL;
         proceso_en_exit(proceso);
         return;
     }
 
     //actualizo la cantidad de instancias para el recurso que me pidio el proceso
-    int instancias = instancias_del_recurso[indice_pedido];
+    proceso->recurso_pedido = NULL;
+
+    pthread_mutex_lock(&mutex_recursos);
+    instancias = instancias_del_recurso[indice_pedido];
     instancias--;
     instancias_del_recurso[indice_pedido]=instancias;
+    pthread_mutex_unlock(&mutex_recursos);
 
-    log_info(kernel_logger,"PID: <%d> - Wait: <%s> - Instancias: <%d>",proceso->pid, recurso, instancias); 
+//hay condicion de carrera en recuresos
+    log_info(kernel_logger,"PID: %d - Wait: %s - Instancias: %d\n",proceso->pid, recurso, instancias); 
 
     if(instancias < 0){
         //si no hay instancias de ese recurso, tengo que bloquear el proceso
 
-        pthread_mutex_lock(&mutex_new);
+        pthread_mutex_lock(&mutex_blocked);
         meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
-        pthread_mutex_unlock(&mutex_new);
+        pthread_mutex_unlock(&mutex_blocked);
 
         /*tambien tengo que agregarlo a la cola de bloqueados de ese recurso, entonces voy a agarrar la cola
         del indice del recurso que me piden. Como la lista_recursos es una lista de punteros a otras colas,
@@ -39,7 +51,7 @@ void asignacion_recursos(t_pcb* proceso, char* recurso)
 
         //y agregamos a la cola que agarre, el proceso que pidio ese recurso
         list_add(cola_bloqueados_recurso, (void *)proceso);  
-        log_info(kernel_logger,"PID: <%d> - Bloqueado por: %s", proceso->pid, recurso); 
+        log_info(kernel_logger,"PID: <%d> - Bloqueado por: %s\n", proceso->pid, recurso); 
     } 
     else {
 
@@ -47,12 +59,46 @@ void asignacion_recursos(t_pcb* proceso, char* recurso)
         lo que garantiza que cada elemento de la lista tenga su propia copia y que modificar una
         copia no afecte a otras. Si agregas directamente el puntero a una cadena a una lista, estarias 
         compartiendo la misma cadena en diferentes partes del programa y esta feo eso.*/
-        list_add(proceso->recursos_asignados, (void*)string_duplicate (recurso)); 
+        //list_add(proceso->recursos_asignados, (void*)string_duplicate (recurso)); 
 
+        add_string_to_array(&(proceso->recursos_asignados), recurso);
+
+       // free_string_array(&(proceso->recursos_asignados));
         //despues vamos a mandar el proceso a execute para que siga su camino
         proceso_en_execute(proceso);
     }
 }
+
+void add_string_to_array(char*** array, const char* new_string) {
+    // Encuentra la longitud actual del arreglo
+    size_t current_length = 0;
+    if (*array != NULL) {
+        while ((*array)[current_length] != NULL) {
+            current_length++;
+        }
+    }
+
+    // Incrementa el tamaño del arreglo en 1
+    *array = realloc(*array, (current_length + 2) * sizeof(char*));
+
+    // Copia el nuevo string al final del arreglo
+    (*array)[current_length] = strdup(new_string);
+
+    // Marca el final del arreglo con NULL
+    (*array)[current_length + 1] = NULL;
+}
+
+// Función para liberar la memoria utilizada por el arreglo char**
+void free_string_array(char*** array) {
+    if (*array != NULL) {
+        for (size_t i = 0; (*array)[i] != NULL; i++) {
+            free((*array)[i]);
+        }
+        free(*array);
+        *array = NULL;
+    }
+}
+
 
 //en un principio iba a ser un bool pero me sirve mas que me diga el indice donde esta el recurso que busco
 int indice_recurso (char* recurso_buscado){
@@ -103,7 +149,7 @@ void crear_colas_bloqueo()
         //agrego la cola de bloqueo a la lista de recursos
         list_add(lista_recursos, cola_bloqueo);
     }
-    free(instancias_del_recurso);
+
 }
 
 

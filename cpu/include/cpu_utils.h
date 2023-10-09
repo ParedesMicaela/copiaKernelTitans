@@ -51,6 +51,7 @@ typedef struct
     int program_counter;
     int prioridad;
  	t_registros_cpu registros_cpu;
+   char** recursos_asignados;
    
 }t_contexto_ejecucion;
 

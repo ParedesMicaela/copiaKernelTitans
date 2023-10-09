@@ -93,7 +93,11 @@ typedef struct
 	//en el estado vamos a ir viendo en que parte del ciclo de instruccion esta
 	estado estado_pcb;
 	int quantum;
-	t_list* recursos_asignados;
+	char** recursos_asignados;
+	char* recurso_pedido; /*el proceso me va a pedir un recurso a la vez, entonces puedo hacer esta variable
+	que empiece en NULL y despues si me pide un recurso, lo pongo aca y luego lo vacio nuevamente para que pueda pedir mas.
+	Capaz nos sirve para el deadlock despues*/
+	
 	//t_dictionary *archivosAbiertos;
 	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
 	//pthread_mutex_t *mutex;

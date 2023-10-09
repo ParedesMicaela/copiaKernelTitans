@@ -35,6 +35,9 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     pcb->registros_cpu.CX = 0;
     pcb->registros_cpu.DX = 0;
     pcb->recursos_asignados = string_get_string_as_array("[0,0,0]");
+    pcb->recurso_pedido = NULL;
+
+
     //pcb->tabla_archivos_abiertos = diccionario;
     //pcb->archivosAbiertos = dictionary_create();
     /*
@@ -89,8 +92,9 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.BX);
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.CX);
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
-    
-    
+
+    agregar_array_cadenas_a_paquete(paquete, pcb_a_enviar->recursos_asignados);
+    //agregar_cadena_a_paquete(paquete, pcb_a_enviar->recurso_pedido);
 
     //agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
 
@@ -130,9 +134,11 @@ char* recibir_contexto(t_pcb* proceso)
 
 	//actualizamos el pc y los registros
 	proceso->program_counter = program_counter;
+    proceso->recurso_pedido = recurso_pedido;
+
 	//proceso->registros_cpu = registros;
 
-    log_info(kernel_logger, "Recibi el pcb de la CPU con program counter = %d \n", program_counter);
+    log_info(kernel_logger, "Recibi el pcb de la CPU con program counter = %d\n", program_counter);
 
     /*la cpu nos va a devolver el contexto si hace exit, algo de recursos o sleep. Si en recurso_pedido
     no me manda nada, es porque esta ejecutando exit o sleep. Entonces lo que voy a hacer aca es ver si
@@ -140,21 +146,8 @@ char* recibir_contexto(t_pcb* proceso)
     me diga el recurso y lo que quiere hacer el proceso con ese recurso.*/
 
     //si no me piden hacer algo con recursos, solamente retorno el motivo de devolucion
-
-    //eliminar_paquete(paquete);
     return motivo_de_devolucion;
 }
-
-char* recibir_peticion_recurso(t_pcb* proceso)
-{
-    t_paquete* paquete = recibir_paquete(socket_cpu_dispatch);
-    void* stream = paquete->buffer->stream;
-
-    char* recurso = sacar_cadena_de_paquete(&stream);
-
-    return recurso;
-}
-
 
 //eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)

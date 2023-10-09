@@ -129,6 +129,7 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         contexto_ejecucion->registros_cpu.BX = sacar_entero_sin_signo_de_paquete(&stream);
         contexto_ejecucion->registros_cpu.CX = sacar_entero_sin_signo_de_paquete(&stream);
         contexto_ejecucion->registros_cpu.DX = sacar_entero_sin_signo_de_paquete(&stream);
+        contexto_ejecucion->recursos_asignados = sacar_array_cadenas_de_paquete(&stream);
 
         log_info(cpu_logger, "Recibi un PCB del Kernel :)");
 
@@ -217,7 +218,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             break;
 
         case (WAIT):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso = datos[1];
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso);
             seguir_ejecutando = false;

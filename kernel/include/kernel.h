@@ -38,6 +38,7 @@ extern uint32_t DX;
 
 extern pthread_mutex_t mutex_new;
 extern pthread_mutex_t mutex_blocked;
+extern pthread_mutex_t mutex_recursos;
 
 
 extern t_list *cola_NEW;
@@ -114,7 +115,7 @@ char *recibir_contexto(t_pcb *);
 
 //================================================ Recursos =====================================================================================================================
 int indice_recurso (char* );
-void asignacion_recursos(t_pcb* , char* );
+void asignacion_recursos(t_pcb* );
 char* recibir_peticion_recurso(t_pcb* );
 
 //================================================ Destruir ==================================================================================================================
