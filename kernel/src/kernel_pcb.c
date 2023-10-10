@@ -36,9 +36,14 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
 
     /*para inicializar el t_recurso le tengo que asignar memoria porque es un puntero a la estructura
     asi como hice para t_pcb*/
-    pcb->recursos_asignados = malloc(sizeof(t_recurso));
-    pcb->recursos_asignados->nombre_recurso[0] = "0"; 
-    pcb->recursos_asignados->instancias_recurso = 0;
+    int cantidad_recursos = 3;  // Suponiendo que hay 3 recursos
+    pcb->recursos_asignados = malloc(cantidad_recursos * sizeof(t_recurso));
+
+// Inicialización de cada recurso
+    for (int i = 0; i < cantidad_recursos; ++i) {
+        strcpy(pcb->recursos_asignados[i].nombre_recurso, "Recurso");  // Puedes asignar el nombre que desees
+        pcb->recursos_asignados[i].instancias_recurso = 0;
+    }
 
     pcb->recurso_pedido = NULL;
     pcb->sleep = 0;
@@ -99,8 +104,18 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.CX);
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
 
-    agregar_cadena_a_paquete(paquete, pcb_a_enviar->recursos_asignados->nombre_recurso);
-    agregar_entero_a_paquete(paquete, pcb_a_enviar->recursos_asignados->instancias_recurso);
+    // Asumiendo que cantidad_recursos es la cantidad de recursos en pcb_a_enviar->recursos_asignados
+    int cantidad_recursos = 3;  // Ajusta según tus necesidades
+
+    // Iterar sobre cada recurso y agregarlo al paquete
+    for (int i = 0; i < cantidad_recursos; ++i) {
+        agregar_cadena_a_paquete(paquete, pcb_a_enviar->recursos_asignados[i].nombre_recurso);
+        agregar_entero_a_paquete(paquete, pcb_a_enviar->recursos_asignados[i].instancias_recurso);
+    }
+
+
+    //agregar_cadena_a_paquete(paquete, pcb_a_enviar->recursos_asignados->nombre_recurso);
+    //agregar_entero_a_paquete(paquete, pcb_a_enviar->recursos_asignados->instancias_recurso);
 
     //agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
 
@@ -161,7 +176,7 @@ char* recibir_contexto(t_pcb* proceso)
 //eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)
 {
-    eliminar_registros_pcb(proceso->regustros_cpu);
+    eliminar_registros_pcb(proceso->registros_cpu);
     //eliminar_recursos_asignados(proceso->recursos_asignados);
     free(proceso); 
 }

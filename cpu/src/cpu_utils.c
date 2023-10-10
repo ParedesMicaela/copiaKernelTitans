@@ -119,7 +119,7 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
     log_info(cpu_logger, "recibi %d\n",paquete->codigo_operacion);
     
     t_contexto_ejecucion* contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
-    contexto_ejecucion->recursos_asignados = malloc(sizeof(t_recursos_asignados));
+    contexto_ejecucion->recursos_asignados = malloc(3 *sizeof(t_recursos_asignados));
 
     // el kernel nos va a pasar el pcb al momento de poner a ejecutar un proceso
     if (paquete->codigo_operacion == PCB)
@@ -131,8 +131,16 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         contexto_ejecucion->registros_cpu.BX = sacar_entero_sin_signo_de_paquete(&stream);
         contexto_ejecucion->registros_cpu.CX = sacar_entero_sin_signo_de_paquete(&stream);
         contexto_ejecucion->registros_cpu.DX = sacar_entero_sin_signo_de_paquete(&stream);
-        strcpy(contexto_ejecucion->recursos_asignados->nombre_recurso, sacar_cadena_de_paquete(&stream));
-        contexto_ejecucion->recursos_asignados->instancias_recurso= sacar_entero_de_paquete(&stream);
+        //strcpy(contexto_ejecucion->recursos_asignados->nombre_recurso, sacar_cadena_de_paquete(&stream));
+        //contexto_ejecucion->recursos_asignados->instancias_recurso= sacar_entero_de_paquete(&stream);
+
+        // Iterar sobre cada recurso y recibir la información del paquete
+        for (int i = 0; i < 3; ++i) {
+            strcpy(contexto_ejecucion->recursos_asignados[i].nombre_recurso,sacar_cadena_de_paquete(&stream)); 
+            contexto_ejecucion->recursos_asignados[i].instancias_recurso = sacar_entero_de_paquete(&stream);
+        }
+
+
 
         log_info(cpu_logger, "Recibi un PCB del Kernel :)");
 
@@ -159,8 +167,12 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
     {
 
         // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
-        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
+        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d\n", AX, BX, CX, DX);
         //mostrar_recursos_asignados(contexto_ejecucion);
+
+        for (int i = 0; i < 3; ++i) {
+            log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d\n",contexto_ejecucion->recursos_asignados[i].nombre_recurso, contexto_ejecucion->recursos_asignados[i].instancias_recurso);
+        }
 
         //=============================================== FETCH =================================================================
         
