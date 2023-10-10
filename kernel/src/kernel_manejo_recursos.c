@@ -53,11 +53,12 @@ void asignacion_recursos(t_pcb* proceso)
         
         /*aca hice como dijo lean porque al final era mas facil. Solamente pongo el nombre del recurso
         que acabo de asignar en mi estructura de t_recurso y le sumo una instancia a la cantidad de
-        instancias que tiene el proceso de ese recurso. La misma logica de arriba pero con el proceso*/
-        strcpy(proceso->recursos_asignados->nombre_recurso, recurso);
-        int cantidad_instancias_proceso = proceso->recursos_asignados->instancias_recurso;
-        cantidad_instancias_proceso++;
-        proceso->recursos_asignados->instancias_recurso = cantidad_instancias_proceso;
+        instancias que tiene el proceso de ese recurso. El truco aca es manejarse con indices porque
+        sino termino sumando una instancia siempre al mismo. Si pongo el indice del recurso del que 
+        estamos hablando, cambia la cosa*/
+
+        strcpy(proceso->recursos_asignados[indice_pedido].nombre_recurso, recurso);
+        proceso->recursos_asignados[indice_pedido].instancias_recurso++;
 
         //despues vamos a mandar el proceso a execute para que siga su camino
         proceso_en_execute(proceso);

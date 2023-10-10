@@ -142,7 +142,7 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
 
 
 
-        log_info(cpu_logger, "Recibi un PCB del Kernel :)");
+        log_info(cpu_logger, "Recibi un PCB del Kernel :)\n");
 
         
         // iniciamos el procedimiento para procesar cualquier instruccion
@@ -167,11 +167,11 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
     {
 
         // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
-        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d\n", AX, BX, CX, DX);
+        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
         //mostrar_recursos_asignados(contexto_ejecucion);
 
         for (int i = 0; i < 3; ++i) {
-            log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d\n",contexto_ejecucion->recursos_asignados[i].nombre_recurso, contexto_ejecucion->recursos_asignados[i].instancias_recurso);
+            log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d",contexto_ejecucion->recursos_asignados[i].nombre_recurso, contexto_ejecucion->recursos_asignados[i].instancias_recurso);
         }
 
         //=============================================== FETCH =================================================================
@@ -215,7 +215,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         switch (tipo_inst(datos[0]))
         {
         case (SET):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[1];
             valor = atoi(datos[2]);
             setear_registro(registro, valor);
@@ -223,7 +223,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             break;
 
         case (SUM):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro_destino = datos[1];
             registro_origen = datos[2];
             valor = sumar_registros(registro_destino, registro_origen);
@@ -232,7 +232,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             break;
 
         case (SUB):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro_destino = datos[1];
             registro_origen = datos[2];
             valor = restar_registros(registro_destino, registro_origen);
@@ -241,7 +241,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             break;
 
         case(JNZ): 
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[1];
             num_instruccion = atoi(datos[2]);
             if (registro != 0) {
@@ -251,7 +251,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             contexto_ejecucion->program_counter += 1;
 
         case(SLEEP):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s ", contexto_ejecucion->pid, datos[0], datos[1]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             tiempo = atoi(datos[1]);
             contexto_ejecucion->program_counter += 1;
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "", tiempo); 
@@ -259,7 +259,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             break;
 
         case (WAIT):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s", contexto_ejecucion->pid, datos[0], datos[1]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso = datos[1];
             contexto_ejecucion->program_counter += 1;
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso, 0);
@@ -267,7 +267,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             break;
 
         case (SIGNAL):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s", contexto_ejecucion->pid, datos[0], datos[1]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso = datos[1];
             contexto_ejecucion->program_counter += 1;
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal", recurso, 0);
@@ -275,62 +275,62 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             break;
 
         case(MOV_IN):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[1];
             direccion_logica = atoi(datos[2]);
             contexto_ejecucion->program_counter += 1;
             break;
         
         case(MOV_OUT):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[2];
             direccion_logica = atoi(datos[1]);
             contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_OPEN):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             modo_apertura = datos[2];
             contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_CLOSE):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s ", contexto_ejecucion->pid, datos[0], datos[1]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             nombre_archivo = datos[1];
             contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_SEEK):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             posicion = atoi(datos[2]);
             contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_READ):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             direccion_logica = atoi(datos[2]);
             contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_WRITE):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             direccion_logica = atoi(datos[2]);
             contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_TRUNCATE):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             tamanio = atoi(datos[2]);
             contexto_ejecucion->program_counter += 1;
             break;
         
         case (INSTRUCCION_EXIT):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit","", 0);
             // eliminar_todas_las_entradas(contexto_ejecucion->pid);
             seguir_ejecutando = false;
