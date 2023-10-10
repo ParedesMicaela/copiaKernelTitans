@@ -113,6 +113,7 @@ char* recibir_contexto(t_pcb* proceso)
     void* stream = paquete->buffer->stream;
     int program_counter =-1;
     char* recurso_pedido = NULL;
+    int sleep_pedido = 0;
     
     //si lo que recibimos es en efecto un pcb, lo abrimos
 	if(paquete->codigo_operacion == PCB)
@@ -125,6 +126,7 @@ char* recibir_contexto(t_pcb* proceso)
         DX = sacar_entero_sin_signo_de_paquete(&stream);
         motivo_de_devolucion = sacar_cadena_de_paquete(&stream);
         recurso_pedido = sacar_cadena_de_paquete(&stream);
+        sleep_pedido = sacar_entero_de_paquete(&stream);
 
     }
     else{
@@ -135,6 +137,7 @@ char* recibir_contexto(t_pcb* proceso)
 	//actualizamos el pc y los registros
 	proceso->program_counter = program_counter;
     proceso->recurso_pedido = recurso_pedido;
+    proceso->sleep = sleep_pedido;
 
 	//proceso->registros_cpu = registros;
 

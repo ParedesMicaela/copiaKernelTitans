@@ -233,6 +233,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
                  contexto_ejecucion->program_counter = num_instruccion;
             }
             break;
+            contexto_ejecucion->program_counter += 1;
 
         case(SLEEP):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s ", contexto_ejecucion->pid, datos[0], datos[1]);
@@ -240,12 +241,14 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "", tiempo); 
             //mandar_tiempo(socket_cliente_dispatch, tiempo); //Revisar si le debería llegar separado
             seguir_ejecutando = false; 
+            contexto_ejecucion->program_counter += 1;
             break;
 
         case (WAIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso = datos[1];
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso, 0);
+            contexto_ejecucion->program_counter += 1;
             seguir_ejecutando = false;
             break;
 
@@ -253,6 +256,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso = datos[1];
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal", recurso, 0);
+            contexto_ejecucion->program_counter += 1;            
             seguir_ejecutando = false;
             break;
 
@@ -260,47 +264,55 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[1];
             direccion_logica = atoi(datos[2]);
+            contexto_ejecucion->program_counter += 1;
             break;
         
         case(MOV_OUT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[2];
             direccion_logica = atoi(datos[1]);
+            contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_OPEN):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             modo_apertura = datos[2];
+            contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_CLOSE):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s ", contexto_ejecucion->pid, datos[0], datos[1]);
             nombre_archivo = datos[1];
+            contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_SEEK):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             posicion = atoi(datos[2]);
+            contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_READ):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             direccion_logica = atoi(datos[2]);
+            contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_WRITE):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             direccion_logica = atoi(datos[2]);
+            contexto_ejecucion->program_counter += 1;
             break;
 
         case(F_TRUNCATE):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             tamanio = atoi(datos[2]);
+            contexto_ejecucion->program_counter += 1;
             break;
         
         case (INSTRUCCION_EXIT):

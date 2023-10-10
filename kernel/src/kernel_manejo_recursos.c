@@ -8,9 +8,10 @@ t_list *lista_recursos;
 int *instancias_del_recurso;
 char **recursos;
 
-//===========================================================================================================================================
+//====================================================== WAIT/SIGNAL =====================================================================================
 void asignacion_recursos(t_pcb* proceso)
 {
+    //descubri que era mas facil si lo pasaba directamente por aca
     char* recurso = proceso->recurso_pedido;
     int instancias = 0;
 
@@ -20,25 +21,26 @@ void asignacion_recursos(t_pcb* proceso)
     {
         //si el recurso no existe, mando el proceso a exit
         proceso->recurso_pedido = NULL;
+        log_error(kernel_logger, "El recurso solicitado no existe\n");
         proceso_en_exit(proceso);
         return;
     }
 
-    //actualizo la cantidad de instancias para el recurso que me pidio el proceso
+    //actualizo la cantidad de instancias para el recurso que me pidio el proceso y lo borro de recurso_pedido
     proceso->recurso_pedido = NULL;
 
+    //si o si lo tenia que poner con mutex porque sino habia condicion de carrera
     pthread_mutex_lock(&mutex_recursos);
     instancias = instancias_del_recurso[indice_pedido];
     instancias--;
     instancias_del_recurso[indice_pedido]=instancias;
     pthread_mutex_unlock(&mutex_recursos);
 
-//hay condicion de carrera en recuresos
     log_info(kernel_logger,"PID: %d - Wait: %s - Instancias: %d\n",proceso->pid, recurso, instancias); 
 
     if(instancias < 0){
-        //si no hay instancias de ese recurso, tengo que bloquear el proceso
 
+        //si no hay instancias de ese recurso, tengo que bloquear el proceso
         pthread_mutex_lock(&mutex_blocked);
         meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
         pthread_mutex_unlock(&mutex_blocked);
@@ -64,6 +66,7 @@ void asignacion_recursos(t_pcb* proceso)
         add_string_to_array(&(proceso->recursos_asignados), recurso);
 
        // free_string_array(&(proceso->recursos_asignados));
+
         //despues vamos a mandar el proceso a execute para que siga su camino
         proceso_en_execute(proceso);
     }
@@ -99,7 +102,60 @@ void free_string_array(char*** array) {
     }
 }
 
+void liberacion_recursos(t_pcb* proceso)
+{
+    //voy a robar vilmente lo que hice arriba y lo voy a copiar aca, porque por suerte no estamos en pdep
+    char* recurso = proceso->recurso_pedido;
+    int instancias = 0;
 
+    int indice_pedido = indice_recurso(recurso);
+
+    if (indice_pedido == -1)
+    {
+        //si el recurso no existe, mando el proceso a exit
+        proceso->recurso_pedido = NULL;
+        log_error(kernel_logger, "El recurso solicitado no existe\n");
+        proceso_en_exit(proceso);
+        return;
+    }
+
+    //actualizo la cantidad de instancias para el recurso que me pidio el proceso y lo borro de recurso_pedido
+    proceso->recurso_pedido = NULL;
+
+    //si o si lo tenia que poner con mutex porque sino habia condicion de carrera
+    pthread_mutex_lock(&mutex_recursos);
+    instancias = instancias_del_recurso[indice_pedido];
+    instancias++;
+    instancias_del_recurso[indice_pedido]=instancias;
+    pthread_mutex_unlock(&mutex_recursos);
+
+    log_info(kernel_logger,"PID: %d - Signal: %s - Instancias: %d\n",proceso->pid, recurso, instancias); 
+
+    /*aca vemos que pasa si hay procesos esperando a que ese recurso se libere. Si esta en negativo, es que
+    hay un proceso esperando en la cola de bloqueado*/
+    if(instancias <= 0){
+        
+        t_list* cola_bloqueados_recurso = (t_list *)list_get(recursos, indice_pedido);
+
+        /*esta funcion ya la habre hecho como 10 veces en lo que vamos de codigo, no hace falta presentacion
+        esta cola se va a desbloquear por FIFO, para no perder la costumbre. Nos llega por parametro la cola
+        del recurso y de ahi vamos a sacar nuestro proceso*/
+        t_pcb* pcb_desbloqueado = obtener_bloqueado_por_recurso(cola_bloqueados_recurso);
+
+        //si lo hacemos con una lista al final va a ser asi
+        //list_add(pcb_desbloqueado->recursos_asignados, (void*)string_duplicate (recurso));
+
+        /*una vez que lo desbloqueamos porque justo se libero el recurso que este proceso estaba buscando,
+        vamos a mandar a nuestro amigo a ready porque no se puede mandar solo a exec. Que nuestro plani
+        decida si quiere mandarlo a ejecutar, para algo lo cree.*/
+        proceso_en_ready(pcb_desbloqueado);
+    }
+
+    //por ultimo mandamos el proceso a exec para que siga su camino
+    proceso_en_execute(proceso);
+}
+
+//==================================================== Accesorios =====================================================
 //en un principio iba a ser un bool pero me sirve mas que me diga el indice donde esta el recurso que busco
 int indice_recurso (char* recurso_buscado){
 
@@ -110,6 +166,12 @@ int indice_recurso (char* recurso_buscado){
         if (!strcmp(recurso_buscado, config_valores_kernel.recursos[i]))
             return i;
     return -1;
+}
+
+t_pcb* obtener_bloqueado_por_recurso(t_list* cola_recurso)
+{
+    //saco el primero de la cola que me llega por parametro
+    return (t_pcb *)list_remove(cola_recurso, 0);
 }
 
 void crear_colas_bloqueo()
@@ -149,7 +211,6 @@ void crear_colas_bloqueo()
         //agrego la cola de bloqueo a la lista de recursos
         list_add(lista_recursos, cola_bloqueo);
     }
-
 }
 
 

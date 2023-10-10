@@ -64,7 +64,6 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_colas, NULL);
     pthread_mutex_init(&mutex_recursos, NULL);
 
-
     sem_init(&grado_multiprogramacion, 0, 1);
     sem_init(&(hay_proceso_nuevo), 0, 0);
     sem_init(&(hay_procesos_ready), 0, 0);
@@ -111,6 +110,8 @@ void planificador_corto_plazo()
 }
 
 //======================================================== Estados ==================================================================
+
+// aca agarramos el proceso que nos devuelve obtener_siguiente_ready y lo mandamos a ejecutar
 void proceso_en_ready()
 {
     // creamos un proceso, que va a ser el elegido por obtener_siguiente_ready
@@ -143,6 +144,16 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     if (string_equals_ignore_case(devuelto_por, "wait"))
     {
         asignacion_recursos(proceso_seleccionado);
+    }
+
+    if (string_equals_ignore_case(devuelto_por, "signal"))
+    {
+        liberacion_recursos(proceso_seleccionado);
+    }
+
+    if (string_equals_ignore_case(devuelto_por, "sleep"))
+    {
+        usleep(proceso_seleccionado->sleep);
     }
 
     free(instancias_del_recurso);
@@ -191,8 +202,6 @@ void proceso_en_exit(t_pcb *proceso)
 
 t_pcb *obtener_siguiente_new()
 {
-    // int size = list_size(cola_NEW);   if (size > 0) {}
-
     pthread_mutex_lock(&mutex_new);
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, NEW), 0);
     pthread_mutex_unlock(&mutex_new);
@@ -284,11 +293,28 @@ algoritmo obtener_algoritmo()
     return switcher;
 }
 
+//agarramos el siguiente de la cola de bloqueados y lo metemos el proceso seleccionado a ready
+t_pcb* obtener_siguiente_blocked()
+{
+    pthread_mutex_lock(&mutex_blocked);
+    t_pcb* proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, BLOCKED), 0);
+    pthread_mutex_unlock(&mutex_blocked);
+
+    //aca ya de una lo mandamos a ready porque sabemos que en el diagrama va directo a ready
+    pthread_mutex_lock(&mutex_ready);
+    meter_en_cola(proceso_seleccionado, READY, cola_READY);
+    pthread_mutex_unlock(&mutex_ready);
+
+    log_info(kernel_logger, "PID[%d] sale de BLOCKED para meterse en READY\n", proceso_seleccionado->pid);
+
+    return proceso_seleccionado;
+}
+
 t_pcb *obtener_siguiente_FIFO()
 {
     log_info(kernel_logger, "Inicio la planificacion FIFO \n");
 
-    // mostramos los que estan en ready
+    //mostramos los que estan en ready
     mostrar_lista_pcb(cola_READY, "READY");
 
     /*voy a seleccionar el primer proceso que esta en ready usando esta funcion porque me retorna el proceso
@@ -308,43 +334,43 @@ t_pcb *obtener_siguiente_PRIORIDADES()
     // return proceso_seleccionado;
 }
 
-t_pcb* obtener_siguiente_RR()
+t_pcb *obtener_siguiente_RR()
 {
     int quantum = config_valores_kernel.quantum; // obtiene el quantum de la config del kernel
 
-    log_info(kernel_logger,"Inicio la planificación RR\n");
+    log_info(kernel_logger, "Inicio la planificación RR\n");
 
-    //meto lock y unlock del mutex de ready para poder sacar el primer proceso de la cola tranqui
+    // meto lock y unlock del mutex de ready para poder sacar el primer proceso de la cola tranqui
     pthread_mutex_lock(&mutex_ready);
-    t_pcb* proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
+    t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
     pthread_mutex_unlock(&mutex_ready);
 
-    log_info(kernel_logger,"PID[%d] sale de READY por planificación RR", proceso_seleccionado->pid);
+    log_info(kernel_logger, "PID[%d] sale de READY por planificación RR", proceso_seleccionado->pid);
 
-    //ahora acá se viene mi truquito
+    // ahora acá se viene mi truquito
 
-    int tiempo_transcurrido = 0; //arranca en 0 porque todavía no empieza jeje
+    int tiempo_transcurrido = 0; // arranca en 0 porque todavía no empieza jeje
     // simulo(a.k.a para los simuladores) la ejecución del tiempo mientras se va chequeando el quantum
     while (tiempo_transcurrido < quantum)
     {
-        usleep(1 * 1000); //con esto me estoy librando de la espera activa ya que usleep lo que hace es pausar la ejecución dentro del while
+        usleep(1 * 1000); // con esto me estoy librando de la espera activa ya que usleep lo que hace es pausar la ejecución dentro del while
 
-        //si el proceso finaliza durante su ejecución es porque está en exit
+        // si el proceso finaliza durante su ejecución es porque está en exit
         if (proceso_seleccionado->estado_pcb == EXIT)
         {
             log_info(kernel_logger, "PID[%d] ha finalizado durante su quantum de RR\n", proceso_seleccionado->pid);
-            return proceso_seleccionado; 
+            return proceso_seleccionado;
         }
-        tiempo_transcurrido++; //aumento el tiempo que pasa en 1 milisegundo
+        tiempo_transcurrido++; // aumento el tiempo que pasa en 1 milisegundo
     }
-    //ahora contemplo el caso en el que el tiempo que pasa sea igual al quantum, por lo que pasa de nuevo a la cola de READY(en última posición)
+    // ahora contemplo el caso en el que el tiempo que pasa sea igual al quantum, por lo que pasa de nuevo a la cola de READY(en última posición)
     if (tiempo_transcurrido == quantum)
     {
         pthread_mutex_lock(&mutex_ready);
         list_add(cola_READY, proceso_seleccionado);
         pthread_mutex_unlock(&mutex_ready);
 
-        //ahora reinicio el quantum para el siguiente proceso :) uwu
+        // ahora reinicio el quantum para el siguiente proceso :) uwu
         proceso_seleccionado->quantum = config_valores_kernel.quantum; // Reinicia el quantum para el siguiente proceso.
         log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
     }
