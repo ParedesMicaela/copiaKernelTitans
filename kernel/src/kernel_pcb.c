@@ -176,21 +176,17 @@ char* recibir_contexto(t_pcb* proceso)
 //eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)
 {
-    //eliminar_registros_pcb(proceso->registros_cpu);
     eliminar_recursos_asignados(proceso);
     free(proceso); 
 }
 
-void eliminar_recursos_asignados(t_pcb* proceso)
-{
-    t_recurso* recursos_asignados = proceso->recursos_asignados;
+void eliminar_recursos_asignados(t_pcb* proceso) {
 
-    for (int i = 0; i < 3; ++i) {
-        free(recursos_asignados[i].nombre_recurso);
+    free(proceso->recursos_asignados);
+
+    if (proceso->recurso_pedido != NULL) {
+        free(proceso->recurso_pedido);
     }
-
-    free(recursos_asignados);
-
 }
 
 void eliminar_registros_pcb (t_registros_cpu registros_cpu)

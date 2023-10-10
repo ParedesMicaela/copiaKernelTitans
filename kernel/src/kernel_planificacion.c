@@ -156,14 +156,14 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         usleep(proceso_seleccionado->sleep);
     }
 
-    // y por ultimo, en cualquiera de los casos, vamos a sacar de exec al proceso que ya termino de ejecutar
-    pthread_mutex_lock(&mutex_exec);
-    proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, EXEC), 0);
-    pthread_mutex_unlock(&mutex_exec);
 }
 
 void proceso_en_exit(t_pcb *proceso)
 {
+
+    pthread_mutex_lock(&mutex_exec);
+    proceso = list_remove(dictionary_int_get(diccionario_colas, EXEC), 0);
+    pthread_mutex_unlock(&mutex_exec);
 
     pthread_mutex_lock(&mutex_exit);
     meter_en_cola(proceso, EXIT, cola_EXIT);
