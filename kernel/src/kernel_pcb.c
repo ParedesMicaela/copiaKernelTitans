@@ -26,16 +26,22 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
     sem_post(&(mutex_pid)); 
     pcb->pid = indice_pid;
     pcb->program_counter = 0;
-    pcb->prioridad = prioridad;
-    pcb->quantum  = 2000;
-    pcb->estado_pcb = NEW;
-    pcb->program_counter = 0;
     pcb->registros_cpu.AX = 0;
     pcb->registros_cpu.BX = 0;
     pcb->registros_cpu.CX = 0;
     pcb->registros_cpu.DX = 0;
-    pcb->recursos_asignados = string_get_string_as_array("[0,0,0]");
+    pcb->prioridad = prioridad;
+    pcb->estado_pcb = NEW;
+    pcb->quantum  = 2000;
+
+    /*para inicializar el t_recurso le tengo que asignar memoria porque es un puntero a la estructura
+    asi como hice para t_pcb*/
+    pcb->recursos_asignados = malloc(sizeof(t_recurso));
+    pcb->recursos_asignados->nombre_recurso[0] = "0"; 
+    pcb->recursos_asignados->instancias_recurso = 0;
+
     pcb->recurso_pedido = NULL;
+    pcb->sleep = 0;
 
 
     //pcb->tabla_archivos_abiertos = diccionario;
@@ -93,8 +99,8 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.CX);
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
 
-    agregar_array_cadenas_a_paquete(paquete, pcb_a_enviar->recursos_asignados);
-    //agregar_cadena_a_paquete(paquete, pcb_a_enviar->recurso_pedido);
+    agregar_cadena_a_paquete(paquete, pcb_a_enviar->recursos_asignados->nombre_recurso);
+    agregar_entero_a_paquete(paquete, pcb_a_enviar->recursos_asignados->instancias_recurso);
 
     //agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
 
@@ -155,16 +161,9 @@ char* recibir_contexto(t_pcb* proceso)
 //eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)
 {
-    /*free(proceso->pid);
-    //free(proceso->pid); ta tirando error al hacer el make, voy a ver que onda
-	eliminar_registros_pcb(proceso->registros_cpu);
-	free(proceso->prioridad);   
-	//free(proceso->estado_pcb); tira error 
-	//free(proceso->estado_pcb); acá también tira error con el make también
-	//eliminar_archivos_abiertos(proceso->archivosAbiertos);
-	//eliminar_mutex(proceso->mutex);
-*/
-    free(proceso); //intuyo con que al hacerle free van a haber cosas del pcb que vuelan pero me hace ruido 
+    eliminar_registros_pcb(proceso->regustros_cpu);
+    //eliminar_recursos_asignados(proceso->recursos_asignados);
+    free(proceso); 
 }
 
 void eliminar_registros_pcb (t_registros_cpu registros_cpu)

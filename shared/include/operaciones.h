@@ -92,7 +92,16 @@ typedef struct registros_cpu
 	uint32_t BX;
 	uint32_t CX;
 	uint32_t DX;
+	
 } t_registros_cpu;
+
+//vamos a hacer una estructura recurso, ahi guardo el nombre y la cantidad del recurso y puedo tener los 3 aca
+typedef struct 
+{
+	char nombre_recurso [50];
+	int instancias_recurso;
+
+}t_recurso;
 
 typedef struct
 {
@@ -103,7 +112,7 @@ typedef struct
 	//en el estado vamos a ir viendo en que parte del ciclo de instruccion esta
 	estado estado_pcb;
 	int quantum;
-	char** recursos_asignados;
+	t_recurso* recursos_asignados;
 	char* recurso_pedido; /*el proceso me va a pedir un recurso a la vez, entonces puedo hacer esta variable
 	que empiece en NULL y despues si me pide un recurso, lo pongo aca y luego lo vacio nuevamente para que pueda pedir mas.
 	Capaz nos sirve para el deadlock despues*/
@@ -114,6 +123,7 @@ typedef struct
 	//pthread_mutex_t *mutex;
 	//aca NO vamos a poner las cosas con las que se relaciona el proceso en memoria (tam paginas por ejemplo)
 	//vamos a ponerlo en memoria pero despues
+
 }t_pcb; //declaro el pcb
 
 //======================================================= Operaciones ======================================================================================================
@@ -134,6 +144,7 @@ void agregar_cadena_a_paquete(t_paquete* , char* );
 void agregar_array_cadenas_a_paquete(t_paquete* , char** );
 void agregar_a_paquete(t_paquete* , void* , int );
 void* serializar_paquete(t_paquete* , int );
+void free_array (char ** );
 t_paquete* recibir_paquete(int );
 char* sacar_cadena_de_paquete(void** );
 int sacar_entero_de_paquete(void** );

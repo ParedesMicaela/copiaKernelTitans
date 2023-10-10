@@ -40,65 +40,27 @@ void asignacion_recursos(t_pcb* proceso)
 
     if(instancias < 0){
 
-        //si no hay instancias de ese recurso, tengo que bloquear el proceso
-        pthread_mutex_lock(&mutex_blocked);
-        meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
-        pthread_mutex_unlock(&mutex_blocked);
-
-        /*tambien tengo que agregarlo a la cola de bloqueados de ese recurso, entonces voy a agarrar la cola
-        del indice del recurso que me piden. Como la lista_recursos es una lista de punteros a otras colas,
-        lo que voy a hacer es buscar dentro de esa lista, el indice del recurso que me pasan por parametro
-        y agarrar la cola del recurso al que nos estamos refiriendo*/
+        /*voy a agarrar la cola del indice del recurso que me piden. Como la lista_recursos es una lista 
+        de punteros a otras colas, lo que voy a hacer es buscar dentro de esa lista, el indice del recurso 
+        que me pasan por parametro y agarrar la cola del recurso al que nos estamos refiriendo*/
         t_list *cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
 
         //y agregamos a la cola que agarre, el proceso que pidio ese recurso
         list_add(cola_bloqueados_recurso, (void *)proceso);  
-        log_info(kernel_logger,"PID: <%d> - Bloqueado por: %s\n", proceso->pid, recurso); 
+        log_info(kernel_logger,"PID: %d - Bloqueado por: %s\n", proceso->pid, recurso); 
     } 
     else {
-
-        /*importantisimo esto: le pongo duplicate para crear una copia independiente de la cadena,
-        lo que garantiza que cada elemento de la lista tenga su propia copia y que modificar una
-        copia no afecte a otras. Si agregas directamente el puntero a una cadena a una lista, estarias 
-        compartiendo la misma cadena en diferentes partes del programa y esta feo eso.*/
-        //list_add(proceso->recursos_asignados, (void*)string_duplicate (recurso)); 
-
-        add_string_to_array(&(proceso->recursos_asignados), recurso);
-
-       // free_string_array(&(proceso->recursos_asignados));
+        
+        /*aca hice como dijo lean porque al final era mas facil. Solamente pongo el nombre del recurso
+        que acabo de asignar en mi estructura de t_recurso y le sumo una instancia a la cantidad de
+        instancias que tiene el proceso de ese recurso. La misma logica de arriba pero con el proceso*/
+        strcpy(proceso->recursos_asignados->nombre_recurso, recurso);
+        int cantidad_instancias_proceso = proceso->recursos_asignados->instancias_recurso;
+        cantidad_instancias_proceso++;
+        proceso->recursos_asignados->instancias_recurso = cantidad_instancias_proceso;
 
         //despues vamos a mandar el proceso a execute para que siga su camino
         proceso_en_execute(proceso);
-    }
-}
-
-void add_string_to_array(char*** array, const char* new_string) {
-    // Encuentra la longitud actual del arreglo
-    size_t current_length = 0;
-    if (*array != NULL) {
-        while ((*array)[current_length] != NULL) {
-            current_length++;
-        }
-    }
-
-    // Incrementa el tamaño del arreglo en 1
-    *array = realloc(*array, (current_length + 2) * sizeof(char*));
-
-    // Copia el nuevo string al final del arreglo
-    (*array)[current_length] = strdup(new_string);
-
-    // Marca el final del arreglo con NULL
-    (*array)[current_length + 1] = NULL;
-}
-
-// Función para liberar la memoria utilizada por el arreglo char**
-void free_string_array(char*** array) {
-    if (*array != NULL) {
-        for (size_t i = 0; (*array)[i] != NULL; i++) {
-            free((*array)[i]);
-        }
-        free(*array);
-        *array = NULL;
     }
 }
 
@@ -142,13 +104,23 @@ void liberacion_recursos(t_pcb* proceso)
         del recurso y de ahi vamos a sacar nuestro proceso*/
         t_pcb* pcb_desbloqueado = obtener_bloqueado_por_recurso(cola_bloqueados_recurso);
 
-        //si lo hacemos con una lista al final va a ser asi
-        //list_add(pcb_desbloqueado->recursos_asignados, (void*)string_duplicate (recurso));
-
         /*una vez que lo desbloqueamos porque justo se libero el recurso que este proceso estaba buscando,
         vamos a mandar a nuestro amigo a ready porque no se puede mandar solo a exec. Que nuestro plani
-        decida si quiere mandarlo a ejecutar, para algo lo cree.*/
+        decida si quiere mandarlo a ejecutar, para algo lo cree*/
         proceso_en_ready(pcb_desbloqueado);
+    }
+
+    /*ahora voy a tener que hacer lo mismo pero al revez para sacar el recurso. Pero si tiene mas de una
+    instancia de ese recurso, entonces significa que no lo voy a tener que borrar del todo porque todavia 
+    tiene asignada al menos una instancia del mismo..*/
+    int cantidad_instancias_proceso = proceso->recursos_asignados->instancias_recurso;
+    cantidad_instancias_proceso--;
+    proceso->recursos_asignados->instancias_recurso = cantidad_instancias_proceso;
+
+    /*si ya no le queda ninguna instancia entonces lo volamos, si tiene al menos una instancia, lo dejamos*/
+    if(cantidad_instancias_proceso == 0)
+    {
+        proceso->recursos_asignados->nombre_recurso[0] = '\0';
     }
 
     //por ultimo mandamos el proceso a exec para que siga su camino
@@ -164,7 +136,9 @@ int indice_recurso (char* recurso_buscado){
     int tamanio = string_array_size(config_valores_kernel.recursos);
     for (int i = 0; i < tamanio; i++)
         if (!strcmp(recurso_buscado, config_valores_kernel.recursos[i]))
+        {
             return i;
+        }
     return -1;
 }
 
@@ -190,9 +164,7 @@ void crear_colas_bloqueo()
 
     //saco la cantidad de elementos que tengo en mi array de recursos
     int tamanio = string_array_size(recursos);
-    
     instancias_del_recurso = malloc(tamanio * sizeof(int));
-
 
     //por cada recurso del array de recursos que tengo, voy a hacer una cola de bloqueo
     for (int i = 0; i < tamanio; i++)
@@ -211,6 +183,8 @@ void crear_colas_bloqueo()
         //agrego la cola de bloqueo a la lista de recursos
         list_add(lista_recursos, cola_bloqueo);
     }
+
+    free_array(cant_recursos);
 }
 
 

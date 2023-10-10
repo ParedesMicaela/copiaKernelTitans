@@ -156,8 +156,6 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         usleep(proceso_seleccionado->sleep);
     }
 
-    free(instancias_del_recurso);
-
     // y por ultimo, en cualquiera de los casos, vamos a sacar de exec al proceso que ya termino de ejecutar
     pthread_mutex_lock(&mutex_exec);
     proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, EXEC), 0);
@@ -293,7 +291,7 @@ algoritmo obtener_algoritmo()
     return switcher;
 }
 
-//agarramos el siguiente de la cola de bloqueados y lo metemos el proceso seleccionado a ready
+//agarramos el siguiente de la cola de bloqueados y metemos el proceso seleccionado a la cola ready
 t_pcb* obtener_siguiente_blocked()
 {
     pthread_mutex_lock(&mutex_blocked);

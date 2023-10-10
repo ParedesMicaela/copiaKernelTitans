@@ -176,6 +176,14 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 	return magic;
 }
 
+//============================================== Liberar memoria ===================================================
+void free_array (char ** array){
+	int tamanio = string_array_size(array);
+	for (int i = 0; i<tamanio; i++) free(array[i]);
+	free(array);
+}
+
+
 /*/================================================== BUFFER =====================================================================
 void* recibir_buffer(int* size, int socket_cliente) {
      void * buffer;

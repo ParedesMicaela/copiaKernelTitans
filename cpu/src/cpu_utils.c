@@ -94,7 +94,7 @@ static void recibir_instruccion(int socket_cliente_memoria)
     }
     else
     {
-        perror("No me enviaste las instrucciones\n");
+        log_error(cpu_logger,"Falla al recibir las instrucciones\n");
         abort();
     }
 }
@@ -116,9 +116,10 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
     t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
     void *stream = paquete->buffer->stream;
     log_info(cpu_logger, "Ya recibi paquete");
-    log_info(cpu_logger, "recibi %d de %d\n",paquete->codigo_operacion,socket_cliente_dispatch);
+    log_info(cpu_logger, "recibi %d\n",paquete->codigo_operacion);
     
-    t_contexto_ejecucion *contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
+    t_contexto_ejecucion* contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
+    contexto_ejecucion->recursos_asignados = malloc(sizeof(t_recursos_asignados));
 
     // el kernel nos va a pasar el pcb al momento de poner a ejecutar un proceso
     if (paquete->codigo_operacion == PCB)
@@ -130,7 +131,8 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         contexto_ejecucion->registros_cpu.BX = sacar_entero_sin_signo_de_paquete(&stream);
         contexto_ejecucion->registros_cpu.CX = sacar_entero_sin_signo_de_paquete(&stream);
         contexto_ejecucion->registros_cpu.DX = sacar_entero_sin_signo_de_paquete(&stream);
-        contexto_ejecucion->recursos_asignados = sacar_array_cadenas_de_paquete(&stream);
+        strcpy(contexto_ejecucion->recursos_asignados->nombre_recurso, sacar_cadena_de_paquete(&stream));
+        contexto_ejecucion->recursos_asignados->instancias_recurso= sacar_entero_de_paquete(&stream);
 
         log_info(cpu_logger, "Recibi un PCB del Kernel :)");
 
@@ -158,6 +160,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 
         // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
         log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
+        //mostrar_recursos_asignados(contexto_ejecucion);
 
         //=============================================== FETCH =================================================================
         
@@ -238,25 +241,24 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         case(SLEEP):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s ", contexto_ejecucion->pid, datos[0], datos[1]);
             tiempo = atoi(datos[1]);
+            contexto_ejecucion->program_counter += 1;
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "", tiempo); 
             //mandar_tiempo(socket_cliente_dispatch, tiempo); //Revisar si le debería llegar separado
-            seguir_ejecutando = false; 
-            contexto_ejecucion->program_counter += 1;
             break;
 
         case (WAIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso = datos[1];
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso, 0);
             contexto_ejecucion->program_counter += 1;
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso, 0);
             seguir_ejecutando = false;
             break;
 
         case (SIGNAL):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso = datos[1];
+            contexto_ejecucion->program_counter += 1;
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal", recurso, 0);
-            contexto_ejecucion->program_counter += 1;            
             seguir_ejecutando = false;
             break;
 
@@ -324,7 +326,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         } 
 
         //CHECK INTERRUPT
-        printf("num_interrupcion =  %d  \n", interrupcion); 
+        //printf("num_interrupcion =  %d  \n", interrupcion); 
         if(seguir_ejecutando && hay_interrupcion())
         {
             printf("detectamos interrupcion");
@@ -342,9 +344,9 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 //================================================== Interrupt =====================================================================
 
 // este canal se va a usar para mensajes de interrupcion
-void atender_interrupt(void *cliente)
+void atender_interrupt(void *socket_servidor_interrupt)
 {
-    int conexion = *(int *)cliente;
+    int conexion = *(int *)socket_servidor_interrupt;
 
     while (1)
     {
@@ -527,3 +529,18 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
 
     enviar_paquete(paquete, socket_cliente);
 }
+
+void mostrar_recursos_asignados(t_contexto_ejecucion* proceso) {
+    if (proceso->recursos_asignados != NULL) {
+        t_recursos_asignados* recursos = proceso->recursos_asignados;
+
+        for (int i = 0; i < 3; ++i) {
+            if (strlen(recursos[i].nombre_recurso) > 0) {
+                log_info(cpu_logger, "Recurso: %s - Cantidad: %d\n", recursos[i].nombre_recurso, recursos[i].instancias_recurso);
+            }
+        }
+    } else {
+        log_info(cpu_logger, "No hay recursos asignados\n");
+    }
+}
+
