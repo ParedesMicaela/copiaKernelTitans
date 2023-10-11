@@ -135,13 +135,18 @@ void eliminar_mutex(pthread_mutex_t *);
 
 //================================================ Consola ==================================================================================================================
 void inicializar_consola_interactiva();
+void parse_iniciar_proceso(char *linea);
+void parse_finalizar_proceso(char *linea);
+void parse_detener_planificacion (char* linea);
+void parse_iniciar_planificacion (char* linea);
+void parse_multiprogramacion(char *linea);
+void parse_proceso_estado (char* linea);
 void consola_parsear_instruccion(char *leer_linea);
-void consola_iniciar_proceso();
-// void consola_finalizar_proceso();
-// no hace falta porque esta el proceso_en_exit
-void consola_iniciar_planificacion();
+void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad);
+void consola_finalizar_proceso(int pid);
 void consola_detener_planificacion();
-void consola_modificar_multiprogramacion();
-void consola_mostrar_proceso_estado();
+void consola_iniciar_planificacion();
+void consola_modificar_multiprogramacion(int);
+void consola_proceso_estado();
 
 #endif
