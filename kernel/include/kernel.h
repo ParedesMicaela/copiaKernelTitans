@@ -1,5 +1,8 @@
 #ifndef KERNEL_H_
 #define KERNEL_H_
+#ifndef PAGE_FAULT
+#define PAGE_FAULT "page_fault"
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -94,6 +97,7 @@ void meter_en_cola(t_pcb *pcb, estado, t_list *);
 t_pcb *obtener_siguiente_ready();
 void proceso_en_execute(t_pcb *);
 void proceso_en_ready();
+void proceso_en_blocked(t_pcb *);
 void proceso_en_exit(t_pcb *);
 t_pcb* obtener_siguiente_blocked();
 t_pcb* obtener_bloqueado_por_recurso(t_list* );
@@ -110,6 +114,7 @@ void enviar_path_a_memoria(char *);
 void enviar_pcb_a_memoria(t_pcb *, int, op_code);
 op_code esperar_respuesta_memoria(int);
 
+void atender_page_fault(t_pcb *);
 //================================================== PCB =====================================================================================================================
 t_pcb *crear_pcb(int, int); // como 2do parametro había un uint32_t que tiraba error ya que time_swap(en el .c) estaba como int
 void enviar_pcb_a_cpu(t_pcb *);

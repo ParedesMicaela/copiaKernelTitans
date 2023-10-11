@@ -75,3 +75,8 @@ op_code esperar_respuesta_memoria(int socket_memoria) {
  	recibir_datos(socket_memoria,&respuesta,sizeof(op_code));
  	return respuesta;
  }
+
+void atender_page_fault(t_pcb *proceso)
+{
+    //de momento vacío, será más interesante en el checkpoint 4
+}

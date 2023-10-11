@@ -156,6 +156,11 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         usleep(proceso_seleccionado->sleep);
     }
 
+    if (string_equals_ignore_case(devuelto_por, "page_fault"))
+    {
+        //si tenemos page_fault, hay que bloquear el proceso
+        void proceso_en_blocked(proceso_seleccionado);
+    }
 }
 
 void proceso_en_exit(t_pcb *proceso)
@@ -194,6 +199,34 @@ void proceso_en_exit(t_pcb *proceso)
 
     eliminar_pcb(proceso);
     sem_post(&grado_multiprogramacion);
+}
+
+void proceso_en_blocked(t_pcb *proceso) //nota: no uso obtener_siguiente_blocked ya que de blocked directamente se va ready, para el page fault tengo que trabajar un poco más esa parte
+{
+    //el motivo de bloqueo debe ser para page_fault
+    if (proceso->motivo_bloqueo == PAGE_FAULT)
+    {
+    // Movemos el proceso a la cola de BLOCKED
+    pthread_mutex_lock(&mutex_blocked);
+    meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
+    pthread_mutex_unlock(&mutex_blocked);
+
+    log_info(kernel_logger, "PID[%d] bloqueado por page fault\n");
+    /*Mover al proceso al estado Bloqueado. Este estado bloqueado será 
+    independiente de todos los demás ya que solo afecta al proceso 
+    y no compromete recursos compartidos.*/
+    atender_page_fault(proceso);
+    //liberacion_recursos(proceso); ver bien esto porque me hace ruido
+    //entonces al proceso bloqueado le debo liberar los recursos
+    //si bloqueo un proceso debo aumentar el grado de multiprogramación
+    //sem_post(&grado_multiprogramacion); lo mismo que a liberar recursos
+
+
+    //en el .4 se menciona que se coloca al proceso en ready después de solucionar el page fault
+    /*pthread_mutex_lock(&mutex_ready);
+    meter_en_cola(proceso, READY, cola_READY);
+    pthread_mutex_unlock(&mutex_ready);*/
+    } //más adelante vamos a agregar los otros casos por los que se puede bloquear
 }
 
 //======================================================== Algoritmos ==================================================================

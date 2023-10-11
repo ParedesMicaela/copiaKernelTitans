@@ -76,7 +76,7 @@ static void recibir_handshake(int socket_cliente_memoria)
     }
     else
     {
-        log_error(,cpu_logger,"No me enviaste el tam_pagina :( \n");
+        log_error(cpu_logger,"No me enviaste el tam_pagina :( \n");
         abort();
     }
 }
@@ -162,7 +162,17 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
 void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memoria, t_contexto_ejecucion *contexto_ejecucion)
 {
     bool seguir_ejecutando = true;
-
+/*
+    //implementación para el page_fault (checkpoint 4)
+    //antes de seguir_ejecutando me fijo si hay page fault
+    if (hay_page_fault()) 
+    {
+        log_info(cpu_logger, "Oh no hermano, tenemos Page Fault: PID %d - Número de página %d", contexto_ejecucion->pid, obtener_numero_pagina(instruccion));
+        devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0);
+        //como tengo page fault notificó al kernel y no puedo seguir ejecutando el proceso hasta manejar el page fault
+        seguir_ejecutando = false;
+    }
+*/
     while (seguir_ejecutando) // definir con cuentas voy, definir con program counter
     {
 
@@ -352,7 +362,18 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 
 }
     
+//================================================== PAGE FAULT ===================================================================
+// verifica si se ha producido un page fault esto recién para el checkpoint 4
+/*bool hay_page_fault() {
+    //desallorar la lógica para el page fault
+    //return (interrupcion == PAGE_FAULT); // suponiendo que PAGE_FAULT es un valor que nos va a indicar page fault.
+}
 
+// nos va a decir el n° de página por el que se generó el page fault
+int obtener_numero_pagina(char *instruccion) {
+    
+}
+*/
 //================================================== Interrupt =====================================================================
 
 // este canal se va a usar para mensajes de interrupcion

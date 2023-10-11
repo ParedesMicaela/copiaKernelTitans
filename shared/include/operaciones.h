@@ -117,7 +117,7 @@ typedef struct
 	que empiece en NULL y despues si me pide un recurso, lo pongo aca y luego lo vacio nuevamente para que pueda pedir mas.
 	Capaz nos sirve para el deadlock despues*/
 	int sleep;
-	
+	int motivo_bloqueo;
 	//t_dictionary *archivosAbiertos;
 	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
 	//pthread_mutex_t *mutex;
