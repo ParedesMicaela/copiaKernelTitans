@@ -10,6 +10,8 @@ int socket_memoria;
 int socket_filesystem;
 arch_config_kernel config_valores_kernel;
 pthread_t consola;
+pthread_t largo_plazo;
+pthread_t corto_plazo;
 
 //========================================================================================================================================
 int main(void)
@@ -42,10 +44,19 @@ int main(void)
    log_info(kernel_logger, "Servidor creado \n");
 
    log_info(kernel_logger, "Kernel listo para recibir al modulo cliente \n");
-   
-   pthread_create(&consola, NULL, (void* ) inicializar_consola_interactiva, NULL);
 
+    inicializar_planificador();
+    
+    pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);
+    pthread_create(&corto_plazo, NULL, (void* ) planificador_corto_plazo, NULL);
+    pthread_create(&consola, NULL, (void* ) inicializar_consola_interactiva, NULL);
+   
+   using_history(); // Inicializar la historia de comando
+
+   pthread_join(largo_plazo,NULL);
+   pthread_join(corto_plazo,NULL);
    pthread_join(consola, NULL);
 
    return EXIT_SUCCESS;
 }
+
