@@ -1,8 +1,4 @@
 #include "kernel.h"
-
-pthread_t largo_plazo;
-pthread_t corto_plazo;
-
 //semaforo
 sem_t mutex_otras_colas;
 
@@ -13,31 +9,58 @@ sem_t mutex_otras_colas;
 // nos van a decir la prioridad, el archivo de pseudocodigo a ejecutar y el tamanio de memoria swap que va a ejecutar
 void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
 {
-    log_info(kernel_logger, "Iniciando proceso.. \n");
+    log_info(kernel_logger, "Iniciando proceso \n");
 
-    // nos llega de la consola interactiva que tenemos que iniciar un proceso
-    // inicializamos el proceso con su pcb respectivo
-    t_pcb* pcb = crear_pcb(prioridad, tam_proceso_swap);
+    //Creamos un PCB, que comienza en NEW
+    crear_pcb(prioridad, tam_proceso_swap);
 
     // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
     enviar_path_a_memoria(path);
 
 }
 
-void iniciar_planificacion() {
+void consola_detener_planificacion() {
+    log_info(kernel_logger, "Deteniendo planificacion \n");
 
-    inicializar_planificador();
-    
-    pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);
-	pthread_create(&corto_plazo, NULL, (void* ) planificador_corto_plazo, NULL);
+    //signal(detener_planificador_largo_plazo)
 
-    pthread_join(largo_plazo,NULL);
-    pthread_join(corto_plazo,NULL);
+    //Recorrer la lista de Exec
+    // Si hay alguno esperar a que termine su ejecucion
+    //signal(detener_planificador_corto_plazo)
 }
 
+void consola_iniciar_planificacion() {
+/*
+  if(detener_planificador_largo_plazo == 1 && detener_planificador_corto_plazo == 1 ) {
+        signal(continuar)
+  }
+  else {
+    log_info(kernel_logger, "No estaba pausada la planificacion \n")
+  }
+  */
+}
+
+void consola_modificar_multiprogramacion(int valor) {
+    if (valor <= config_valores_kernel.grado_multiprogramacion_ini) {
+        log_info(kernel_logger, "NO se puede modificador el grado de multiprogramacion \n"); //Revisar despues si es asi
+    }
+    else {
+        config_valores_kernel.grado_multiprogramacion_ini = valor;
+        log_info(kernel_logger, "Se modifico el grado de multipromacion a: %d \n", valor);
+    }
+
+}
+
+void consola_proceso_estado() {
+    mostrar_lista_pcb(cola_NEW, "NEW");
+    mostrar_lista_pcb(cola_READY, "READY");
+    mostrar_lista_pcb(cola_BLOCKED, "BLOCKED");
+    mostrar_lista_pcb(cola_EXEC, "EXEC");
+    mostrar_lista_pcb(cola_EXIT, "EXIT");
+}
 
 void consola_finalizar_proceso(int pid){
-    
+
     printf("Entramos a finalizar proceso \n");
     int tam_cola_BLOCKED = list_size(cola_BLOCKED);
     int tam_cola_EXEC= list_size(cola_EXEC);
