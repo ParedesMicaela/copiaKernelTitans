@@ -10,20 +10,18 @@ void inicializar_consola_interactiva() {
   while(1) {
     leer_linea = readline(">");  // Lee una línea de la consola
     if (leer_linea) {
+      add_history(leer_linea); // Asi podemos usar flechas
       consola_parsear_instruccion(leer_linea);  // Llama a la función para parsear la instrucción
       free(leer_linea);  // Libera la memoria asignada para la línea
-    } else {
-      // Maneja la falla de lectura de la línea o sale del bucle en ciertas condiciones
-      break;
-    }
+    } 
   }
 }
 
-void parse_iniciar_proceso(char *line) {
+void parse_iniciar_proceso(char *linea) {
   char path[256];  // Suponiendo una longitud máxima de ruta de 255 caracteres
   int tam_proceso_swap;
   int prioridad;
-  char **linea_espaciada = string_n_split(line, 4, " ");  // Divide la línea en tokens
+  char **linea_espaciada = string_n_split(linea, 4, " ");  // Divide la línea en tokens
   
   if (linea_espaciada && linea_espaciada[1] && linea_espaciada[2] && linea_espaciada[3]) {
     if (sscanf(linea_espaciada[1], "\"%255[^\"]\"", path) == 1 &&
@@ -38,60 +36,105 @@ void parse_iniciar_proceso(char *line) {
   }
 }
 
-void parse_finalizar_proceso(char *line) {
-  char **linea_espaciada = string_n_split(line, 2, " ");  // Divide la línea en tokens
+void parse_finalizar_proceso(char *linea) {
+  char **linea_espaciada = string_n_split(linea, 2, " ");  // Divide la línea en tokens
   
   if (linea_espaciada && linea_espaciada[1]) {
     int pid;
     if (sscanf(linea_espaciada[1], "%d", &pid) == 1) {
       // Extrae el PID y lo asigna a la variable
-      printf("Intentamos entrar a finalizar proceso\n");
+      printf(" Finalizamos proceso el proceso %d \n", pid);
       consola_finalizar_proceso(pid);
     }
     free(linea_espaciada);  // Libera la memoria asignada para los tokens
   }
 }
 
-void consola_parsear_instruccion(char *leer_linea) {
-  if (string_contains(leer_linea, "INICIAR_PROCESO")) {
-    parse_iniciar_proceso(leer_linea);  // Llama a la función para parsear la instrucción de inicio de proceso
-  } else if (string_contains(leer_linea, "FINALIZAR_PROCESO")) {
-    parse_finalizar_proceso(leer_linea);  // Llama a la función para parsear la instrucción de finalización de proceso
-  } else {
-    printf("Comando desconocido: %s\n", leer_linea);  // Imprime un mensaje de error cuando se encuentra un comando desconocido
+void parse_detener_planificacion (char* linea) {
+  char **linea_espaciada = string_n_split(linea, 1, " ");  // Divide la línea en tokens
+
+  if (linea_espaciada) {
+     printf("Intentamos entrar a finalizar proceso\n");
+     consola_detener_planificacion();
   }
-  printf("Busco otra instrucción\n");
+  free(linea_espaciada);  // Libera la memoria asignada para los tokens
+}
+
+void parse_iniciar_planificacion (char* linea) {
+  char **linea_espaciada = string_n_split(linea, 1, " ");  // Divide la línea en tokens
+
+  if (linea_espaciada) {
+     printf("Intentamos entrar a finalizar proceso\n");
+     consola_iniciar_planificacion();
+  }
+  free(linea_espaciada);  // Libera la memoria asignada para los tokens
+}
+
+void parse_multiprogramacion(char *linea) {
+  char **linea_espaciada = string_n_split(linea, 2, " ");  // Divide la línea en tokens
+  
+  if (linea_espaciada && linea_espaciada[1]) {
+    int valor;
+    if (sscanf(linea_espaciada[1], "%d", &valor) == 1) {
+      // Extrae el valor y lo asigna a la variable
+      printf(" Finalizamos proceso el proceso %d \n", valor);
+      consola_modificar_multiprogramacion(valor);
+    }
+    free(linea_espaciada);  // Libera la memoria asignada para los tokens
+  }
 }
 
 
+void parse_proceso_estado (char* linea) {
+  char **linea_espaciada = string_n_split(linea, 1, " ");  // Divide la línea en tokens
 
+  if (linea_espaciada) {
+     printf("Intentamos entrar a finalizar proceso\n");
+     consola_proceso_estado();
+  }
+  free(linea_espaciada);  // Libera la memoria asignada para los tokens
+}
 
+void consola_parsear_instruccion(char *leer_linea) {
+  int comando = -1;
 
-void consola_iniciar_planificacion(){}
-void consola_detener_planificacion(){}
-void consola_modificar_multiprogramacion(){}
-void consola_mostrar_proceso_estado(){}
+  if (string_contains(leer_linea, "INICIAR_PROCESO")) {
+    comando = 0;
+  } else if (string_contains(leer_linea, "FINALIZAR_PROCESO")) {
+    comando = 1;
+  } else if (string_contains(leer_linea, "DETENER_PLANIFICACION")) {
+    comando = 2;
+  } else if (string_contains(leer_linea, "INICIAR_PLANIFICACION")) {
+    comando = 3;
+  } else if (string_contains(leer_linea, "MULTIPROGRAMACION")) {
+    comando = 4;
+  } else if (string_contains(leer_linea, "PROCESO_ESTADO")) {
+    comando = 5;
+  }
 
+  switch (comando) {
+    case 0:
+      parse_iniciar_proceso(leer_linea);
+      break;
+    case 1:
+      parse_finalizar_proceso(leer_linea);
+      break;
+    case 2:
+      parse_detener_planificacion(leer_linea);
+      break;
+    case 3:
+      parse_iniciar_planificacion(leer_linea);
+      break;
+    case 4:
+      parse_multiprogramacion(leer_linea);
+      break;
+    case 5:
+      parse_proceso_estado(leer_linea);
+      break;
+    default:
+      printf("Comando desconocido: %s\n", leer_linea);
+      break;
+  }
 
-
-/*
-atrapar fallo de escritura en la consola
-*/
-
-
-//inicializar proceso
-//INICIAR_PROCESO(PATH,SIZE,PRIORIDAD);
-
-/*
--Ejecuta un nuevo proceso en base a un archivo dentro del file system de linux
--Creación del proceso (PCB) y dejará el mismo en el estado NEW.
-*/
-
-//finalizar proceso
-//FINALIZAR_PROCESO(PID);
-
-/*
--Finalizar un proceso que se encuentre dentro del sistema.
--Realiza las mismas operaciones como si el proceso llegara a EXIT por sus caminos habituales
--deberá liberar recursos, archivos y memoria.
-*/
+  printf("Busco otra instrucción\n");
+}
