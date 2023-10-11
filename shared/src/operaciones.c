@@ -49,8 +49,7 @@ t_paquete* recibir_paquete(int conexion)
 	else{
     	recv(conexion, &(paquete->buffer->size),sizeof(paquete->buffer->size),MSG_WAITALL);
     	paquete->buffer->stream = malloc(paquete->buffer->size);
-    	recv(conexion, paquete->buffer->stream, paquete->buffer->size,MSG_WAITALL);
-
+    	recv(conexion, paquete->buffer->stream, paquete->buffer->size,MSG_WAITALL);		
 		return paquete;
 	}
 }

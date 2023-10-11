@@ -162,7 +162,7 @@ char* recibir_contexto(t_pcb* proceso)
 
 	//proceso->registros_cpu = registros;
 
-    log_info(kernel_logger, "Recibi el pcb de la CPU con program counter = %d\n", program_counter);
+    log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
 
     /*la cpu nos va a devolver el contexto si hace exit, algo de recursos o sleep. Si en recurso_pedido
     no me manda nada, es porque esta ejecutando exit o sleep. Entonces lo que voy a hacer aca es ver si

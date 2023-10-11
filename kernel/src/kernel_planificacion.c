@@ -446,6 +446,7 @@ void meter_en_cola(t_pcb *pcb, estado ESTADO, t_list *cola)
 // esta funcion es para que nos muestre los pcb que estan en una cola, medio accesorio pero sirve
 void mostrar_lista_pcb(t_list *cola, char *nombre_cola)
 {
+    char *string_pid = NULL;
     int tam_cola = list_size(cola);
 
     if (tam_cola == 0)
@@ -461,7 +462,7 @@ void mostrar_lista_pcb(t_list *cola, char *nombre_cola)
         pthread_mutex_lock(&mutex_colas);
 
         // creamos el string_pid donde vamos a poner el pid de cada proceso que se va leyendo de la cola
-        char *string_pid = string_itoa(((t_pcb *)list_get(cola, i))->pid);
+        string_pid = string_itoa(((t_pcb *)list_get(cola, i))->pid);
 
         pthread_mutex_unlock(&mutex_colas);
 
@@ -476,6 +477,10 @@ void mostrar_lista_pcb(t_list *cola, char *nombre_cola)
     // mostramos la lista con los pids en la cola dada
 
     log_info(kernel_logger, "Cola %s %s : [%s]\n", nombre_cola, config_valores_kernel.algoritmo_planificacion, pids);
+    
+    /*correccion de memory leak: cuando haces string_itoa, se asigna memoria para el string 
+    convertido y hay que liberarla*/
+    free(string_pid);
     free(pids);
 }
 

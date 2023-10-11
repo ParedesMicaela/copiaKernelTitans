@@ -76,7 +76,7 @@ static void recibir_handshake(int socket_cliente_memoria)
     }
     else
     {
-        perror("No me enviaste el tam_pagina :( \n");
+        log_error(,cpu_logger,"No me enviaste el tam_pagina :( \n");
         abort();
     }
 }
