@@ -5,80 +5,66 @@
 #include "readline/readline.h"
 #include "operaciones.h"
 
-
-//kernel.c la llama
-//suponemos que con el readline ya te salta la consola intectiva, falta revisar
 void inicializar_consola_interactiva() {
-  //leer una linea por consola prueba
   char* leer_linea;
-  while(1){
-    //esto lee la linea
-    leer_linea = readline(">");
-    // ver como termina la consola, porque capaz con un Ctrl+C y yafu u otra cosa
-    
-    //aca vamos a ver que pingo puso adentro la linea
-    //para saber que hacer (inicializar o finalizar) (falta agregar mas a futuro obviamente)
-    consola_parsear_instruccion(leer_linea);
-  
+  while(1) {
+    leer_linea = readline(">");  // Lee una línea de la consola
+    if (leer_linea) {
+      consola_parsear_instruccion(leer_linea);  // Llama a la función para parsear la instrucción
+      free(leer_linea);  // Libera la memoria asignada para la línea
+    } else {
+      // Maneja la falla de lectura de la línea o sale del bucle en ciertas condiciones
+      break;
+    }
   }
-  free(leer_linea);
 }
 
-
-void consola_parsear_instruccion(char * leer_linea){
-  
-   // INICIAR_PROCESO [PATH] [SIZE] [PRIORIDAD]
-  if (string_contains(leer_linea,"INICIAR_PROCESO")){
-  char* path;
+void parse_iniciar_proceso(char *line) {
+  char path[256];  // Suponiendo una longitud máxima de ruta de 255 caracteres
   int tam_proceso_swap;
   int prioridad;
-  char** linea_espaciada;
+  char **linea_espaciada = string_n_split(line, 4, " ");  // Divide la línea en tokens
   
-  //agarra y divide por espacio, genera una lista de strings
-  // ["INICIAR_PROCESO", "[PATH]", "[SIZE]", "[PRIORIDAD]", NULL]
-  linea_espaciada = string_n_split(leer_linea, 4, " ");
-  
-  //guarda en variables
-  path = linea_espaciada[1];
-  tam_proceso_swap = atoi(linea_espaciada[2]);
-  prioridad = atoi(linea_espaciada[3]);
-
-  printf("Proceso iniciandose, path %s, size %d, prioridad %d",path, tam_proceso_swap, prioridad);
-	
-  iniciar_proceso(path, tam_proceso_swap, prioridad);    
-
-  printf("Proceso iniciado");
-
-  //liberar variables locales (ver si liberamos las demas que declaramos)
-  free(linea_espaciada);
-
+  if (linea_espaciada && linea_espaciada[1] && linea_espaciada[2] && linea_espaciada[3]) {
+    if (sscanf(linea_espaciada[1], "\"%255[^\"]\"", path) == 1 &&
+        sscanf(linea_espaciada[2], "%d", &tam_proceso_swap) == 1 &&
+        sscanf(linea_espaciada[3], "%d", &prioridad) == 1) {
+      // Extrae la ruta, el tamaño y la prioridad, y los asigna a las variables
+      printf("Proceso iniciandose, path %s, size %d, prioridad %d\n", path, tam_proceso_swap, prioridad);
+      iniciar_proceso(path, tam_proceso_swap, prioridad);
+      printf("Proceso iniciado\n");
+    }
+    free(linea_espaciada);  // Libera la memoria asignada para los tokens
   }
-  
-
-  printf("Busco otra instruccion \n "); 
-  
-
-  //FINALIZAR_PROCESO [PID]
-  if (string_contains(leer_linea,"FINALIZAR_PROCESO")){
-
-  int pid;
-  char** linea_espaciada;
-
-  // ["FINALIZAR_PROCESO" "[PID]" ]
-  linea_espaciada = string_n_split(leer_linea, 2, " ");
-  printf("Separo la linea \n");
-  
-  pid = atoi(linea_espaciada[1]);
-
-  printf("Intentamos entrar a finalizar proceso \n");
-  consola_finalizar_proceso(pid);
-  
-  //liberar variables locales (ver si liberamos las demas que declaramos)
-  free(linea_espaciada);
-  
-  }
-  
 }
+
+void parse_finalizar_proceso(char *line) {
+  char **linea_espaciada = string_n_split(line, 2, " ");  // Divide la línea en tokens
+  
+  if (linea_espaciada && linea_espaciada[1]) {
+    int pid;
+    if (sscanf(linea_espaciada[1], "%d", &pid) == 1) {
+      // Extrae el PID y lo asigna a la variable
+      printf("Intentamos entrar a finalizar proceso\n");
+      consola_finalizar_proceso(pid);
+    }
+    free(linea_espaciada);  // Libera la memoria asignada para los tokens
+  }
+}
+
+void consola_parsear_instruccion(char *leer_linea) {
+  if (string_contains(leer_linea, "INICIAR_PROCESO")) {
+    parse_iniciar_proceso(leer_linea);  // Llama a la función para parsear la instrucción de inicio de proceso
+  } else if (string_contains(leer_linea, "FINALIZAR_PROCESO")) {
+    parse_finalizar_proceso(leer_linea);  // Llama a la función para parsear la instrucción de finalización de proceso
+  } else {
+    printf("Comando desconocido: %s\n", leer_linea);  // Imprime un mensaje de error cuando se encuentra un comando desconocido
+  }
+  printf("Busco otra instrucción\n");
+}
+
+
+
 
 
 void consola_iniciar_planificacion(){}

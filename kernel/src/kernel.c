@@ -9,6 +9,7 @@ int socket_cpu_interrupt;
 int socket_memoria;
 int socket_filesystem;
 arch_config_kernel config_valores_kernel;
+pthread_t consola;
 
 //========================================================================================================================================
 int main(void)
@@ -18,8 +19,6 @@ int main(void)
 	cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/kernel/cfg/kernel.config");
 
 	log_info(kernel_logger, "Archivo de configuracion cargado \n");
-
-    inicializar_planificador();
     
     //conexion con CPU
     socket_cpu_dispatch = crear_conexion(config_valores_kernel.ip_cpu, config_valores_kernel.puerto_cpu_dispatch);
@@ -44,11 +43,9 @@ int main(void)
 
    log_info(kernel_logger, "Kernel listo para recibir al modulo cliente \n");
    
-   //inicializar_consola_interactiva();
+   pthread_create(&consola, NULL, (void* ) inicializar_consola_interactiva, NULL);
 
-   iniciar_proceso("/home/utnso/path.txt", 16, 1); 
-
-   void finalizar_kernel();
+   pthread_join(consola, NULL);
 
    return EXIT_SUCCESS;
 }
