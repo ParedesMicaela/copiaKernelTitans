@@ -64,7 +64,7 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_colas, NULL);
     pthread_mutex_init(&mutex_recursos, NULL);
 
-    sem_init(&grado_multiprogramacion, 0, 1);
+    sem_init(&grado_multiprogramacion, 0, config_valores_kernel.grado_multiprogramacion_ini);
     sem_init(&(hay_proceso_nuevo), 0, 0);
     sem_init(&(hay_procesos_ready), 0, 0);
     sem_init(&(mutex_pid), 0, 1);
