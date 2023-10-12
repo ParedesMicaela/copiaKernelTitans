@@ -21,7 +21,7 @@ void parse_iniciar_proceso(char *linea) {
   char path[256];  // Suponiendo una longitud máxima de ruta de 255 caracteres
   int tam_proceso_swap;
   int prioridad;
-  char **linea_espaciada = string_n_split(linea, 4, " ");  // Divide la línea en tokens
+  char **linea_espaciada = string_split(linea," ");  // Divide la línea en tokens
   
   if (linea_espaciada && linea_espaciada[1] && linea_espaciada[2] && linea_espaciada[3]) {
     if (sscanf(linea_espaciada[1], "\"%255[^\"]\"", path) == 1 &&
@@ -32,12 +32,13 @@ void parse_iniciar_proceso(char *linea) {
       iniciar_proceso(path, tam_proceso_swap, prioridad);
       printf("Proceso iniciado\n");
     }
-    free(linea_espaciada);  // Libera la memoria asignada para los tokens
+    string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
+    free(linea_espaciada);  // Libera la memoria asignada al array
   }
 }
 
 void parse_finalizar_proceso(char *linea) {
-  char **linea_espaciada = string_n_split(linea, 2, " ");  // Divide la línea en tokens
+  char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
   
   if (linea_espaciada && linea_espaciada[1]) {
     int pid;
@@ -46,53 +47,57 @@ void parse_finalizar_proceso(char *linea) {
       printf(" Finalizamos proceso el proceso %d \n", pid);
       consola_finalizar_proceso(pid);
     }
-    free(linea_espaciada);  // Libera la memoria asignada para los tokens
+    string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
+    free(linea_espaciada);  // Libera la memoria asignada al array
   }
 }
 
 void parse_detener_planificacion (char* linea) {
-  char **linea_espaciada = string_n_split(linea, 1, " ");  // Divide la línea en tokens
+  char **linea_espaciada = string_split(linea," ");  // Divide la línea en tokens
 
   if (linea_espaciada) {
-     printf("Intentamos entrar a finalizar proceso\n");
+     printf("Deteniendo planificaion \n");
      consola_detener_planificacion();
   }
-  free(linea_espaciada);  // Libera la memoria asignada para los tokens
+   string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
+   free(linea_espaciada);  // Libera la memoria asignada al array
 }
 
 void parse_iniciar_planificacion (char* linea) {
-  char **linea_espaciada = string_n_split(linea, 1, " ");  // Divide la línea en tokens
+  char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
 
   if (linea_espaciada) {
-     printf("Intentamos entrar a finalizar proceso\n");
+     printf("Reanudando planificacion\n");
      consola_iniciar_planificacion();
   }
-  free(linea_espaciada);  // Libera la memoria asignada para los tokens
+   string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
+   free(linea_espaciada);  // Libera la memoria asignada al array
 }
 
 void parse_multiprogramacion(char *linea) {
-  char **linea_espaciada = string_n_split(linea, 2, " ");  // Divide la línea en tokens
+  char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
   
   if (linea_espaciada && linea_espaciada[1]) {
     int valor;
     if (sscanf(linea_espaciada[1], "%d", &valor) == 1) {
       // Extrae el valor y lo asigna a la variable
-      printf(" Finalizamos proceso el proceso %d \n", valor);
       consola_modificar_multiprogramacion(valor);
     }
-    free(linea_espaciada);  // Libera la memoria asignada para los tokens
+    string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
+    free(linea_espaciada);  // Libera la memoria asignada al array
   }
 }
 
 
 void parse_proceso_estado (char* linea) {
-  char **linea_espaciada = string_n_split(linea, 1, " ");  // Divide la línea en tokens
+  char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
 
   if (linea_espaciada) {
-     printf("Intentamos entrar a finalizar proceso\n");
+     printf("Listamos los estados de los procesos\n");
      consola_proceso_estado();
   }
-  free(linea_espaciada);  // Libera la memoria asignada para los tokens
+   string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
+   free(linea_espaciada);  // Libera la memoria asignada al array
 }
 
 void consola_parsear_instruccion(char *leer_linea) {

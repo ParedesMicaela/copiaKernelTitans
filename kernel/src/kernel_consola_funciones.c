@@ -22,22 +22,24 @@ void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
 void consola_detener_planificacion() {
     log_info(kernel_logger, "Deteniendo planificacion \n");
 
-    //signal(detener_planificador_largo_plazo)
-
-    //Recorrer la lista de Exec
-    // Si hay alguno esperar a que termine su ejecucion
-    //signal(detener_planificador_corto_plazo)
+    pthread_mutex_lock(&mutex_corriendo);
+    corriendo = 0;  //Bandera en Pausa
+    pthread_mutex_unlock(&mutex_corriendo);
 }
 
 void consola_iniciar_planificacion() {
-/*
-  if(detener_planificador_largo_plazo == 1 && detener_planificador_corto_plazo == 1 ) {
-        signal(continuar)
+
+  if(corriendo == 0) {
+       log_info(kernel_logger, "Reanudando planificacion \n");
+        pthread_mutex_lock(&mutex_corriendo);
+        pthread_cond_broadcast(&cond_corriendo);  
+        corriendo = 1;  // Bandera sigue
+        pthread_mutex_unlock(&mutex_corriendo);
   }
   else {
-    log_info(kernel_logger, "No estaba pausada la planificacion \n")
+    log_info(kernel_logger, "No estaba pausada la planificacion \n");
   }
-  */
+  
 }
 
 void consola_modificar_multiprogramacion(int valor) {

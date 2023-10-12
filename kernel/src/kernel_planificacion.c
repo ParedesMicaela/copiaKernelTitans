@@ -11,10 +11,6 @@ t_list *cola_BLOCKED;
 t_list *cola_EXEC;
 t_list *cola_EXIT;
 
-pthread_t thread_ready;
-pthread_t thread_exec;
-pthread_t thread_blocked;
-
 // semáforos en planificación (inserte emoji de calavera)
 
 /*estos los estoy usando en la parte de hilos para los procesos en ready, exec  y exit del corto plazo
@@ -23,21 +19,30 @@ pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_exec;
 pthread_mutex_t mutex_exit;
 pthread_mutex_t mutex_colas;
+pthread_mutex_t mutex_corriendo;
+pthread_cond_t cond_corriendo;
 
 sem_t hay_proceso_nuevo;
 sem_t grado_multiprogramacion;
+//sem_t sigue_corriendo_corto;
+//sem_t sigue_corriendo_largo;
+sem_t hay_procesos_ready;
+sem_t mutex_pid;
+
 // sem_t dispatchPermitido;
 // pthread_mutex_t mutexSocketMemoria;
 // pthread_mutex_t mutexSocketFileSystem; los comento porque son terreno inexplorado por ahora
 // sem_t semFRead;
 // sem_t semFWrite;
 // sem_t mutex_colas;
-sem_t hay_procesos_ready;
 
-sem_t mutex_pid;
+
+
 
 // bool fRead;
 // bool fWrite;
+
+int corriendo = 1;
 
 //====================================================== Planificadores ========================================================
 void inicializar_planificador()
@@ -63,10 +68,14 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_new, NULL);
     pthread_mutex_init(&mutex_colas, NULL);
     pthread_mutex_init(&mutex_recursos, NULL);
+    pthread_mutex_init(&mutex_corriendo , NULL);
+    pthread_mutex_init(&cond_corriendo , NULL);
 
     sem_init(&grado_multiprogramacion, 0, config_valores_kernel.grado_multiprogramacion_ini);
     sem_init(&(hay_proceso_nuevo), 0, 0);
     sem_init(&(hay_procesos_ready), 0, 0);
+    //sem_init(&(sigue_corriendo_corto), 0, 0);
+    //sem_init(&(sigue_corriendo_largo), 0, 0);
     sem_init(&(mutex_pid), 0, 1);
 }
 
@@ -82,6 +91,8 @@ void planificador_largo_plazo()
         // elegimos el que va a pasar a ready, o sea el primero porque es FIFO
         t_pcb *proceso_nuevo = obtener_siguiente_new();
 
+         usleep(5);
+
         // metemos el proceso en la cola de ready
         pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso_nuevo, READY, cola_READY);
@@ -89,12 +100,21 @@ void planificador_largo_plazo()
 
         mostrar_lista_pcb(cola_READY, "READY");
 
-        /*le avisamos al corto plazo que puede empezar a planificar. Aca solamente vamos a poner el proceso
+        pthread_mutex_lock(&mutex_corriendo);
+        while (corriendo == 0) { // Sea 0
+           
+            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
+        }
+        pthread_mutex_unlock(&mutex_corriendo);
+
+         /*le avisamos al corto plazo que puede empezar a planificar. Aca solamente vamos a poner el proceso
         en la cola de ready pero no vamos a elegir cual va a ejecutar el de corto plazo porque no hacemos eso
         y le estamos robando el trabajo. Solamente vamos a poner el proceso en la cola de ready si el grado de
         multiprogramacion lo permite y despues que se arregle el corto plazo*/
         sem_post(&hay_procesos_ready);
     }
+
+    
 }
 
 void planificador_corto_plazo()
@@ -105,7 +125,15 @@ void planificador_corto_plazo()
     {
         sem_wait(&hay_procesos_ready);
 
+        pthread_mutex_lock(&mutex_corriendo);
+        while (corriendo == 0) {
+            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
+        }
+        pthread_mutex_unlock(&mutex_corriendo);
+
+        sleep(5);
         proceso_en_ready();
+
     }
 }
 
@@ -159,7 +187,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     if (string_equals_ignore_case(devuelto_por, "page_fault"))
     {
         //si tenemos page_fault, hay que bloquear el proceso
-        void proceso_en_blocked(proceso_seleccionado);
+         proceso_en_blocked(proceso_seleccionado);
     }
 }
 
@@ -438,7 +466,7 @@ void inicializar_colas()
 {
     cola_NEW = list_create();
     cola_READY = list_create();
-    // cola_BLOCKED = list_create();
+    cola_BLOCKED = list_create();
     cola_EXEC = list_create();
     cola_EXIT = list_create();
 }
@@ -480,40 +508,37 @@ void meter_en_cola(t_pcb *pcb, estado ESTADO, t_list *cola)
 void mostrar_lista_pcb(t_list *cola, char *nombre_cola)
 {
     char *string_pid = NULL;
-    int tam_cola = list_size(cola);
-
-    if (tam_cola == 0)
-    {
-        log_info(kernel_logger, "esta vacia la cola %s", nombre_cola);
-    }
-    // creamos un string vacio llamado pid y recorremos la cola que le pasamos por parametro
-
     char *pids = string_new();
-    for (int i = 0; i < list_size(cola); i++)
-    {
 
-        pthread_mutex_lock(&mutex_colas);
+    pthread_mutex_lock(&mutex_colas);
+    int tam_cola = list_size(cola);
+    pthread_mutex_unlock(&mutex_colas);
 
-        // creamos el string_pid donde vamos a poner el pid de cada proceso que se va leyendo de la cola
-        string_pid = string_itoa(((t_pcb *)list_get(cola, i))->pid);
+     if (tam_cola == 0) {
+        log_info(kernel_logger, "esta vacia la cola %s", nombre_cola);
+     } 
+      else { 
+        for (int i = 0; i < tam_cola; i++) {
+            pthread_mutex_lock(&mutex_colas);
 
-        pthread_mutex_unlock(&mutex_colas);
+            //Acceso al elemento en el indice i, guardo en pcb local
+            t_pcb *pcb = list_get(cola, i);
+            string_pid = string_itoa(pcb->pid);
 
-        // unimos cada valor almacenado en string_pid en el char de pids
-        string_append(&pids, string_pid);
+            pthread_mutex_unlock(&mutex_colas);
 
-        // separamos todos los pids con una coma
-        if (i < list_size(cola) - 1)
-            string_append(&pids, ", ");
+            // Junto los pids
+            string_append(&pids, string_pid);
+
+            // Separo los PIDs con comas
+            if (i < tam_cola - 1)
+                string_append(&pids, ", ");
+        }
+         // mostramos la lista con los pids en la cola dada
+        log_info(kernel_logger, "Cola %s %s : [%s]\n", nombre_cola, config_valores_kernel.algoritmo_planificacion, pids);
+        free(string_pid);
     }
-
-    // mostramos la lista con los pids en la cola dada
-
-    log_info(kernel_logger, "Cola %s %s : [%s]\n", nombre_cola, config_valores_kernel.algoritmo_planificacion, pids);
-    
-    /*correccion de memory leak: cuando haces string_itoa, se asigna memoria para el string 
-    convertido y hay que liberarla*/
-    free(string_pid);
+   
     free(pids);
 }
 

@@ -63,6 +63,7 @@ static void enviar_handshake(int socket_cliente_memoria)
     t_paquete *paquete = crear_paquete(HANDSHAKE);
     agregar_entero_a_paquete(paquete, 1);
     enviar_paquete(paquete, socket_cliente_memoria);
+    eliminar_paquete(paquete);
 }
 
 static void recibir_handshake(int socket_cliente_memoria)
@@ -79,6 +80,8 @@ static void recibir_handshake(int socket_cliente_memoria)
         log_error(cpu_logger,"No me enviaste el tam_pagina :( \n");
         abort();
     }
+    eliminar_paquete(paquete);
+
 }
 
 //================================================== Instrucciones =====================================================================
@@ -97,6 +100,7 @@ static void recibir_instruccion(int socket_cliente_memoria)
         log_error(cpu_logger,"Falla al recibir las instrucciones\n");
         abort();
     }
+    eliminar_paquete(paquete);
 }
 
 static void pedir_instruccion(int socket_cliente_memoria,int posicion)
@@ -131,13 +135,14 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         contexto_ejecucion->registros_cpu.BX = sacar_entero_sin_signo_de_paquete(&stream);
         contexto_ejecucion->registros_cpu.CX = sacar_entero_sin_signo_de_paquete(&stream);
         contexto_ejecucion->registros_cpu.DX = sacar_entero_sin_signo_de_paquete(&stream);
-        //strcpy(contexto_ejecucion->recursos_asignados->nombre_recurso, sacar_cadena_de_paquete(&stream));
-        //contexto_ejecucion->recursos_asignados->instancias_recurso= sacar_entero_de_paquete(&stream);
 
         // Iterar sobre cada recurso y recibir la información del paquete
         for (int i = 0; i < 3; ++i) {
-            strcpy(contexto_ejecucion->recursos_asignados[i].nombre_recurso,sacar_cadena_de_paquete(&stream)); 
+
+            char* nombre = sacar_cadena_de_paquete(&stream);
+            strcpy(contexto_ejecucion->recursos_asignados[i].nombre_recurso,nombre); 
             contexto_ejecucion->recursos_asignados[i].instancias_recurso = sacar_entero_de_paquete(&stream);
+            free(nombre);
         }
 
 
@@ -154,6 +159,8 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
        abort();
     }
 
+    free(contexto_ejecucion);
+    eliminar_paquete(paquete);
 }
 
 //================================================== Ciclo de Instruccion =====================================================================
@@ -209,6 +216,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 
         // toda esta parte la usamos para trabajar con registros (sumar,restar,poner)
         char **datos = string_split(instruccion, " ");
+        free(instruccion);
         char *registro = NULL;
         char *registro_destino = NULL;
         char *registro_origen = NULL;
@@ -358,7 +366,11 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "interrupcion", "", 0);
             seguir_ejecutando = false;
         } 
+
+        string_array_destroy(datos);
     }
+
+    free(contexto_ejecucion->recursos_asignados);
 
 }
     

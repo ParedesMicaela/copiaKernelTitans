@@ -15,12 +15,9 @@ uint32_t DX;
 //cada vez que la consola interactiva nos dice de crear un pcb, nos va a pasar la prioridad, el pid lo podemos poner nosotros
 t_pcb* crear_pcb(int prioridad, int tam_swap) 
 {
-    //esto lo ponemos aca para no tener que hacerlo en la funcion iniciar_proceso si total lo vamos a hacer siempre
-    t_pcb* pcb = malloc(sizeof(t_pcb)); //nota de Martín: este malloc después se libera en cpu cuando termina el proceso junto al pcb (posible memory leak?)
-    //Chquear si el sizeof está tomando correctamente, o lo debugeo printf del sizeof
+    //Nota Diego: Actualmente se puede hacer malloc de t_pcb pq todo es estatico
+    t_pcb* pcb = malloc(sizeof(t_pcb)); 
 
-    //el indice lo vamos a estar modificando cada vez que tengamos que crear un pcb entonces conviene ponerlo como variable global
-    //cosa que todos sabemos cuanto vale y no repetimos pid
     sem_wait(&(mutex_pid));
     indice_pid ++;
     sem_post(&(mutex_pid)); 
@@ -170,6 +167,7 @@ char* recibir_contexto(t_pcb* proceso)
     me diga el recurso y lo que quiere hacer el proceso con ese recurso.*/
 
     //si no me piden hacer algo con recursos, solamente retorno el motivo de devolucion
+    eliminar_paquete(paquete);
     return motivo_de_devolucion;
 }
 

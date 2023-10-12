@@ -63,6 +63,7 @@ void asignacion_recursos(t_pcb* proceso)
         //despues vamos a mandar el proceso a execute para que siga su camino
         proceso_en_execute(proceso);
     }
+    free(recurso);
 }
 
 void liberacion_recursos(t_pcb* proceso)
@@ -126,6 +127,7 @@ void liberacion_recursos(t_pcb* proceso)
 
     //por ultimo mandamos el proceso a exec para que siga su camino
     proceso_en_execute(proceso);
+    free(recurso);
 }
 
 //==================================================== Accesorios =====================================================

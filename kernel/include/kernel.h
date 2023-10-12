@@ -33,6 +33,8 @@ extern int socket_filesystem;
 
 extern sem_t mutex_pid;
 extern sem_t hay_proceso_nuevo;
+//extern sem_t sigue_corriendo_corto;
+//extern sem_t sigue_corriendo_largo;
 
 extern uint32_t AX;
 extern uint32_t BX;
@@ -42,6 +44,8 @@ extern uint32_t DX;
 extern pthread_mutex_t mutex_new;
 extern pthread_mutex_t mutex_blocked;
 extern pthread_mutex_t mutex_recursos;
+extern pthread_mutex_t mutex_corriendo;
+extern pthread_cond_t cond_corriendo;
 
 
 extern t_list *cola_NEW;
@@ -54,7 +58,7 @@ extern t_list *lista_recursos;
 extern int *instancias_del_recurso;
 extern char **recursos;
 
-
+extern int corriendo;
 //==============================================================================================================================
 
 typedef struct
@@ -124,6 +128,7 @@ char *recibir_contexto(t_pcb *);
 int indice_recurso (char* );
 void asignacion_recursos(t_pcb* );
 char* recibir_peticion_recurso(t_pcb* );
+void liberacion_recursos(t_pcb* );
 
 //================================================ Destruir ==================================================================================================================
 void finalizar_kernel();
