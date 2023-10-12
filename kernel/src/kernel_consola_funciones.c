@@ -22,14 +22,17 @@ void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
 void consola_detener_planificacion() {
     log_info(kernel_logger, "Deteniendo planificacion \n");
 
+    if(corriendo){
     pthread_mutex_lock(&mutex_corriendo);
     corriendo = 0;  //Bandera en Pausa
     pthread_mutex_unlock(&mutex_corriendo);
+    }
+    else log_info (kernel_logger,"Ya esta detenida flaco");
 }
 
 void consola_iniciar_planificacion() {
 
-  if(corriendo == 0) {
+  if(!corriendo) {
        log_info(kernel_logger, "Reanudando planificacion \n");
         pthread_mutex_lock(&mutex_corriendo);
         pthread_cond_broadcast(&cond_corriendo);  
