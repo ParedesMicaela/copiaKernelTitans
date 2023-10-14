@@ -39,6 +39,7 @@ int atender_clientes_memoria(int socket_servidor){
 void manejo_conexiones(void* socket_cliente)
 {
 	int cliente = *(int*)socket_cliente;
+	int posicion_pedida = 0;
 	while(1){
 	t_paquete* paquete = recibir_paquete(cliente);
     void* stream = paquete->buffer->stream;
@@ -65,14 +66,15 @@ void manejo_conexiones(void* socket_cliente)
 		config_valores_memoria.path_instrucciones = path_recibido;
 
 		log_info(memoria_logger, "PATH recibido: %s", path_recibido);
+		break;
 
 	case MANDAR_INSTRUCCIONES:
 		//leemos el archivo de pseudo codigo del path de la config  y lo metemos en una cadena TODO JUNTO
 		char* instrucciones_leidas = leer_archivo_instrucciones(config_valores_memoria.path_instrucciones);
 
 		//necesito sacar del paquete la posicion de program_counter
-		int posicion_pedida = sacar_entero_de_paquete(&stream);
-		enviar_paquete_instrucciones(cliente, instrucciones_leidas,posicion_pedida);
+		posicion_pedida = sacar_entero_de_paquete(&stream);
+		enviar_paquete_instrucciones(cliente, instrucciones_leidas, posicion_pedida);
 		break;
 /*
 	case CREACION_ESTRUCTURAS_MEMORIA:
@@ -84,6 +86,7 @@ void manejo_conexiones(void* socket_cliente)
         int ok_creacion = 1;
         send(cliente, &ok_creacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras creadas en memoria kernel-kyunn\n");
+		break;
 
 	case FINALIZAR_EN_MEMORIA:
 		int pid = sacar_entero_de_paquete(&stream);
@@ -92,11 +95,13 @@ void manejo_conexiones(void* socket_cliente)
         int ok_finalizacion = 1;
         send(cliente, &ok_finalizacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras eliminadas en memoria kernel-kyunn\n");
+		break;
 */
 	default:
 		break;
 	}
-}
+	eliminar_paquete(paquete);
+	}
 }
 
 

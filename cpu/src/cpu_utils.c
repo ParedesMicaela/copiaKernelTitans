@@ -571,8 +571,8 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
     agregar_entero_a_paquete(paquete, tiempo);
 
     // agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_que_bloquear);
-
     enviar_paquete(paquete, socket_cliente);
+    eliminar_paquete(paquete);
 }
 
 void mostrar_recursos_asignados(t_contexto_ejecucion* proceso) {
