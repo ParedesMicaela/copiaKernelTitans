@@ -30,15 +30,28 @@ typedef struct
     char* path_fcb;
     int cant_bloques_total;
     int cant_bloques_swap;
+    int tam_bloque;
     int retardo_acceso_bloque;
     int retardo_acceso_fat;
 
 } arch_config;
+
+typedef struct 
+{
+    char* nombre_archivo; //Puede ser  char nombre_archivo[256]
+    int tamanio_archivo; //Puede ser size_t
+    int bloque_inicial;
+} fcb;
+
+extern fcb config_valores_fcb;
 
 extern arch_config config_valores_filesystem;
 
 void cargar_configuracion(char*);
 void*conexion_inicial_memoria();
 void atender_clientes_filesystem(void* ); //lo cambie a un void, era int(int, int)
+void levantar_archivo_bloque(size_t tamanio_swap, size_t tamanio_fat);
+void levantar_fat(size_t tamanio_fat);
+void levantar_fcb();
 
 #endif
