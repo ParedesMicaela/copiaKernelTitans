@@ -42,6 +42,7 @@ extern uint32_t CX;
 extern uint32_t DX;
 
 extern pthread_mutex_t mutex_new;
+extern pthread_mutex_t mutex_ready;
 extern pthread_mutex_t mutex_blocked;
 extern pthread_mutex_t mutex_recursos;
 extern pthread_mutex_t mutex_corriendo;

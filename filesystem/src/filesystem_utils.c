@@ -32,16 +32,22 @@ void cargar_configuracion(char* path) {
 void atender_clientes_filesystem(void* conexion) {
     int cliente_fd = *(int*)conexion;
 
-    int cod_op = recibir_operacion(cliente_fd);
-    log_info(filesystem_logger,"codigo op: %d", cod_op);
-    switch (cod_op)
-        {
+    t_paquete* paquete = recibir_paquete(conexion);
+    switch(paquete->codigo_operacion)
+    {
+        case :
+
+        break;
+        
         case -1:
             log_error(filesystem_logger, "Fallo la comunicacion. Abortando \n");
+        break;
+
         default:
             log_warning(filesystem_logger, "Operacion desconocida \n");
         break;
-        }
+    }
+    eliminar_paquete(paquete);
 }
 
 

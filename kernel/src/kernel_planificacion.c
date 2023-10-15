@@ -88,17 +88,15 @@ void planificador_largo_plazo()
         // si el grado de multiprogramacion lo permite
         sem_wait(&grado_multiprogramacion);
 
-        // elegimos el que va a pasar a ready, o sea el primero porque es FIFO
-        t_pcb *proceso_nuevo = obtener_siguiente_new();
-
-        usleep(5);
-
         pthread_mutex_lock(&mutex_corriendo);
         while (corriendo == 0) { // Sea 0
            
             pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
         }
         pthread_mutex_unlock(&mutex_corriendo);
+
+        // elegimos el que va a pasar a ready, o sea el primero porque es FIFO
+        t_pcb *proceso_nuevo = obtener_siguiente_new();
 
         // metemos el proceso en la cola de ready
         pthread_mutex_lock(&mutex_ready);
@@ -138,7 +136,6 @@ void planificador_corto_plazo()
         }
         pthread_mutex_unlock(&mutex_corriendo);
 
-        sleep(5);
         proceso_en_ready();
 
     }
@@ -240,7 +237,7 @@ void proceso_en_exit(t_pcb *proceso)
     log_info(kernel_logger, "[EXIT]Sale de EXIT y Finaliza el  PCB de ID: %d\n", proceso->pid);
 
     // le mandamos esto a memoria para que destruya las estructuras
-    /*
+    
     enviar_pcb_a_memoria(proceso, socket_memoria, FINALIZAR_EN_MEMORIA);
     log_info(kernel_logger, "Enviando a memoria liberar estructuras del proceso \n");
 
@@ -251,7 +248,7 @@ void proceso_en_exit(t_pcb *proceso)
     {
         log_error(kernel_logger, "No se pudieron eliminar estructuras en memoria del proceso PID[%d]\n", proceso->pid);
     }
-    */
+    
     // si la respuesta que conseguimos de memoria es que se finalice la memoria, le avisamos a la consola que ya finaliza el proceso
     log_info(kernel_logger, "Respuesta memoria de estructuras liberadas del proceso recibida \n");
 
@@ -416,11 +413,46 @@ t_pcb *obtener_siguiente_FIFO()
     return proceso_seleccionado;
 }
 
-t_pcb *obtener_siguiente_PRIORIDADES()
+t_pcb* obtener_siguiente_PRIORIDADES()
 {
-    /// recordar que es con desalojo
-    printf("<3");
-    // return proceso_seleccionado;
+    log_info(kernel_logger, "Inicio la planificacion PRIODIDADES \n");
+
+	pthread_mutex_lock(&mutex_ready);
+	t_pcb* proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
+	pthread_mutex_unlock(&mutex_ready);
+
+    if (proceso_seleccionado->estado_pcb == EXIT) 
+        {
+            log_info(kernel_logger, "PID[%d] ha finalizado\n", proceso_seleccionado->pid);
+            return proceso_seleccionado; 
+        }
+    else if (  
+        //ante cada entrada a la cola de ready fijarse si tiene mas prioridad, y en ese caso, ejecutarlo
+        proceso_seleccionado->estado_pcb == EXEC 
+        && 
+        proceso_seleccionado->prioridad > list_get_minimum(cola_READY, proceso_seleccionado->prioridad)//no se si seta bien este list_get_minimum
+            )
+        {
+            //cambiar proceso actual de menor priodidad a la cola de ready
+            //(por ahora no se si esta bien mandarlo asi nomas, porque este proceso esta desalojado
+            //y capaz deberiamos directamente volver a ejecutarlo apenas termine el nuevo)
+            proceso_seleccionado->estado_pcb = READY;
+            list_add(cola_READY,proceso_seleccionado);
+
+             //ponemos proceso nuevo, con mas prioridad, como el seleccionado
+             //revisar si esta bien
+             pthread_mutex_lock(&mutex_ready);
+             t_pcb* proceso_seleccionado_prioritario = list_remove(list_get_minimum(cola_READY, proceso_seleccionado->prioridad),0);
+             pthread_mutex_unlock(&mutex_ready);
+             return proceso_seleccionado_prioritario;     
+        }   
+
+
+
+    //meto lock y unlock del mutex de ready para poder sacar el proceso de la cola de ready con mas priodidad
+
+
+    //cuando termines vol
 }
 
 t_pcb *obtener_siguiente_RR()

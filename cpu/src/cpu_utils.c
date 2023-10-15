@@ -551,11 +551,6 @@ static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion
     enviar_contexto(socket_cliente, contexto_ejecucion, motivo, recurso, tiempo);
     log_info(cpu_logger, "Devolvi el contexto ejecucion al kernel por motivo de: %s \n", motivo);
 
-    //esto es solamente para que quede lindo
-    if(strcmp(motivo, "exit")
-    {
-        log_info(cpu_logger, "========================================================================================\n");
-    }
 }
 
 static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo)

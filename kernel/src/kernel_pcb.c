@@ -62,7 +62,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap, char* path)
     mostrar_lista_pcb(cola_NEW,"NEW");
    
     /*cada vez que creamos un proceso le tenemos que avisar a memoria que debe crear la estructura
-    en memoria del proceso
+    en memoria del proceso*/
     t_paquete* paquete = crear_paquete(CREACION_ESTRUCTURAS_MEMORIA);
 
     //a la memoria solamente le pasamos el pid y el tamanio que va a ocupar en swap, despues se encarga ella
@@ -80,7 +80,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap, char* path)
     {
         log_error(kernel_logger, "No se pudieron crear estructuras en memoria");
     }
-*/
+
     sem_post (&hay_proceso_nuevo);
 
     return pcb;

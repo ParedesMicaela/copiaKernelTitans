@@ -6,7 +6,6 @@ pthread_mutex_t mutex_recursos;
 
 t_list *lista_recursos;
 int *instancias_del_recurso;
-char **recursos;
 
 //====================================================== WAIT/SIGNAL =====================================================================================
 void asignacion_recursos(t_pcb* proceso)
@@ -99,7 +98,7 @@ void liberacion_recursos(t_pcb* proceso)
     hay un proceso esperando en la cola de bloqueado*/
     if(instancias <= 0){
         
-        t_list* cola_bloqueados_recurso = (t_list *)list_get(recursos, indice_pedido);
+        t_list* cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
 
         /*esta funcion ya la habre hecho como 10 veces en lo que vamos de codigo, no hace falta presentacion
         esta cola se va a desbloquear por FIFO, para no perder la costumbre. Nos llega por parametro la cola
@@ -109,7 +108,9 @@ void liberacion_recursos(t_pcb* proceso)
         /*una vez que lo desbloqueamos porque justo se libero el recurso que este proceso estaba buscando,
         vamos a mandar a nuestro amigo a ready porque no se puede mandar solo a exec. Que nuestro plani
         decida si quiere mandarlo a ejecutar, para algo lo cree*/
-        proceso_en_ready(pcb_desbloqueado);
+        pthread_mutex_lock(&mutex_ready);
+        meter_en_cola(pcb_desbloqueado, READY, cola_READY);
+        pthread_mutex_unlock(&mutex_ready);
     }
 
     /*ahora voy a tener que hacer lo mismo pero al revez para sacar el recurso. Pero si tiene mas de una
@@ -156,17 +157,13 @@ void crear_colas_bloqueo()
     /*para crear las colas de bloqueo hay que crear una lista de punteros a estructuras
      de datos t_list, que a su vez van a ser utilizadas como colas de bloqueo para cada recurso.*/
     lista_recursos = list_create();
-
     instancias_del_recurso = NULL;
-
-    //aca voy a guardar en un char** los nombres de los recursos que tengo para usar [R1,R2,R3]
-    recursos = config_valores_kernel.recursos;
     
     //aca voy a guardar en otro char** la cantidad de instancias que tengo para usar [1,2,3]
     char** cant_recursos = config_valores_kernel.instancias_recursos;
 
     //saco la cantidad de elementos que tengo en mi array de recursos
-    int tamanio = string_array_size(recursos);
+    int tamanio = string_array_size(config_valores_kernel.recursos);
     instancias_del_recurso = malloc(tamanio * sizeof(int));
 
     //por cada recurso del array de recursos que tengo, voy a hacer una cola de bloqueo
