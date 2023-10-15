@@ -7,6 +7,9 @@ int server_fd;
 int* cliente_fd;
 int socket_memoria;
 arch_config config_valores_filesystem;
+size_t tamanio_fat;
+size_t tamanio_swap;
+
 
 int main(void)
 {
@@ -26,6 +29,14 @@ int main(void)
     int server_fd = iniciar_servidor(config_valores_filesystem.ip_filesystem,config_valores_filesystem.puerto_escucha);
     log_info(filesystem_logger, "Filesystem listo para recibir al modulo cliente \n");
 
+
+    tamanio_fat = (config_valores_filesystem.cant_bloques_total - config_valores_filesystem.cant_bloques_swap) * sizeof(uint32_t);
+    tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
+
+    levantar_fcb();
+    levantar_fat(tamanio_fat);
+    levantar_archivo_bloque(tamanio_swap, tamanio_fat);
+
     while(1) 
     {
         int* cliente_fd = malloc(sizeof(int));
@@ -38,9 +49,3 @@ int main(void)
 
     return EXIT_SUCCESS;
 }
-
-
-
-
-
-
