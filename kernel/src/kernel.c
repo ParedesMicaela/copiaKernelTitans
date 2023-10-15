@@ -1,6 +1,6 @@
 #include "kernel.h"
 
-//================================================= Varibales Globales =====================================================================
+//================================================= Variables Globales =====================================================================
 t_log* kernel_logger;
 t_config* config;
 int server_fd;
@@ -9,6 +9,9 @@ int socket_cpu_interrupt;
 int socket_memoria;
 int socket_filesystem;
 arch_config_kernel config_valores_kernel;
+pthread_t consola;
+pthread_t largo_plazo;
+pthread_t corto_plazo;
 
 //========================================================================================================================================
 int main(void)
@@ -18,8 +21,6 @@ int main(void)
 	cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/kernel/cfg/kernel.config");
 
 	log_info(kernel_logger, "Archivo de configuracion cargado \n");
-
-    inicializar_planificador();
     
     //conexion con CPU
     socket_cpu_dispatch = crear_conexion(config_valores_kernel.ip_cpu, config_valores_kernel.puerto_cpu_dispatch);
@@ -44,9 +45,18 @@ int main(void)
 
    log_info(kernel_logger, "Kernel listo para recibir al modulo cliente \n");
 
-   iniciar_proceso("/home/utnso/path.txt",16,1);
+    inicializar_planificador();
+    
+    pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);
+    pthread_create(&corto_plazo, NULL, (void* ) planificador_corto_plazo, NULL);
+    pthread_create(&consola, NULL, (void* ) inicializar_consola_interactiva, NULL);
+   
+   using_history(); // Inicializar la historia de comando
 
-   void finalizar_kernel();
+   pthread_join(largo_plazo,NULL);
+   pthread_join(corto_plazo,NULL);
+   pthread_join(consola, NULL);
 
    return EXIT_SUCCESS;
 }
+

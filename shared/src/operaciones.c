@@ -49,8 +49,7 @@ t_paquete* recibir_paquete(int conexion)
 	else{
     	recv(conexion, &(paquete->buffer->size),sizeof(paquete->buffer->size),MSG_WAITALL);
     	paquete->buffer->stream = malloc(paquete->buffer->size);
-    	recv(conexion, paquete->buffer->stream, paquete->buffer->size,MSG_WAITALL);
-
+    	recv(conexion, paquete->buffer->stream, paquete->buffer->size,MSG_WAITALL);		
 		return paquete;
 	}
 }
@@ -70,6 +69,12 @@ void agregar_entero_a_paquete(t_paquete* paquete,int numero)
 	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + sizeof(int));
 	memcpy(paquete->buffer->stream + paquete->buffer->size, &numero, sizeof(int));
 	paquete->buffer->size += sizeof(int);
+}
+void agregar_entero_sin_signo_a_paquete(t_paquete* paquete, uint32_t numero)
+{
+    paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t));
+    memcpy(paquete->buffer->stream + paquete->buffer->size, &numero, sizeof(uint32_t));
+    paquete->buffer->size += sizeof(uint32_t);
 }
 
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
@@ -105,6 +110,7 @@ char* sacar_cadena_de_paquete(void** stream)
 
 	memcpy(&tamanio_cadena, *stream, sizeof(int));
 	if(tamanio_cadena<0) printf("cadena de largo negativo falla en sacar cadena paquete  \n");
+	if(tamanio_cadena==0) printf("Me llego tamaño de cadena 0  \n");
 	*stream += sizeof(int);
 
 	cadena = malloc(tamanio_cadena);
@@ -121,6 +127,15 @@ int sacar_entero_de_paquete(void** stream)
 	*stream += sizeof(int);
 
 	return numero;
+}
+
+uint32_t sacar_entero_sin_signo_de_paquete(void** stream)
+{
+    uint32_t numero = 0; // Inicializado a 0 en lugar de -1
+    memcpy(&numero, *stream, sizeof(uint32_t));
+    *stream += sizeof(uint32_t);
+
+    return numero;
 }
 
 char** sacar_array_cadenas_de_paquete(void** stream)
@@ -159,6 +174,14 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 
 	return magic;
 }
+
+//============================================== Liberar memoria ===================================================
+void free_array (char ** array){
+	int tamanio = string_array_size(array);
+	for (int i = 0; i<tamanio; i++) free(array[i]);
+	free(array);
+}
+
 
 /*/================================================== BUFFER =====================================================================
 void* recibir_buffer(int* size, int socket_cliente) {

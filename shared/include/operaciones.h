@@ -53,6 +53,18 @@ typedef enum {
 	SET,
 	SUM,
 	SUB,
+	JNZ,
+	SLEEP,
+	WAIT,
+	SIGNAL,
+	MOV_IN,
+	MOV_OUT,
+	F_OPEN,
+	F_CLOSE,
+	F_SEEK,
+	F_READ,
+	F_WRITE,
+	F_TRUNCATE,
 	INSTRUCCION_EXIT
 } codigo_instrucciones;
 
@@ -80,22 +92,45 @@ typedef struct registros_cpu
 	uint32_t BX;
 	uint32_t CX;
 	uint32_t DX;
+	
 } t_registros_cpu;
+
+//vamos a hacer una estructura recurso, ahi guardo el nombre y la cantidad del recurso y puedo tener los 3 aca
+typedef struct 
+{
+	char nombre_recurso [50];
+	int instancias_recurso;
+
+}t_recurso;
 
 typedef struct
 {
-	uint32_t pid;
-	uint32_t program_counter;
+	int pid;
+	int program_counter;
  	t_registros_cpu registros_cpu;
 	int prioridad;
+
 	//en el estado vamos a ir viendo en que parte del ciclo de instruccion esta
 	estado estado_pcb;
+	int quantum;
+	t_recurso* recursos_asignados;
+
+	/*el proceso me va a pedir un recurso a la vez, entonces puedo hacer esta variable
+	que empiece en NULL y despues si me pide un recurso, lo pongo aca y luego lo vacio nuevamente para que pueda pedir mas.
+	Capaz nos sirve para el deadlock despues*/
+	char* recurso_pedido; 
+	int sleep;
+	int motivo_bloqueo;
+
+	//esto lo pongo aca para que cada proceso guarde su path y no haya lio al ejecutar mas de 1 proceso
+	char* path_proceso;
 	
-	t_dictionary *archivosAbiertos;
+	//t_dictionary *archivosAbiertos;
 	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
 	//pthread_mutex_t *mutex;
 	//aca NO vamos a poner las cosas con las que se relaciona el proceso en memoria (tam paginas por ejemplo)
 	//vamos a ponerlo en memoria pero despues
+
 }t_pcb; //declaro el pcb
 
 //======================================================= Operaciones ======================================================================================================
@@ -111,13 +146,16 @@ void *recibir_stream(int *size, int socket_cliente);
 t_paquete* crear_paquete(op_code );
 void agregar_caracter_a_paquete(t_paquete* ,char );
 void agregar_entero_a_paquete(t_paquete* ,int );
+void agregar_entero_sin_signo_a_paquete(t_paquete* , uint32_t);
 void agregar_cadena_a_paquete(t_paquete* , char* );
 void agregar_array_cadenas_a_paquete(t_paquete* , char** );
 void agregar_a_paquete(t_paquete* , void* , int );
 void* serializar_paquete(t_paquete* , int );
+void free_array (char ** );
 t_paquete* recibir_paquete(int );
 char* sacar_cadena_de_paquete(void** );
 int sacar_entero_de_paquete(void** );
+uint32_t sacar_entero_sin_signo_de_paquete(void** );
 char** sacar_array_cadenas_de_paquete(void** );
 void enviar_paquete(t_paquete* , int );
 void eliminar_paquete(t_paquete* );

@@ -11,21 +11,21 @@ uint32_t AX;
 uint32_t BX;
 uint32_t CX;
 uint32_t DX;
-char **instruccion;
+char *instruccion;
 
 //======================= Funciones Internas ==============================================================================
 static void enviar_handshake(int socket_cliente_memoria);
 static void recibir_handshake(int socket_cliente_memoria);
-static void iniciar_registros(char **registros);
 static void setear_registro(char *registro, int valor);
 static int sumar_registros(char *registro_destino, char *registro_origen);
 static int restar_registros(char *registro_destino, char *registro_origen);
-static int buscar_registro(char *registro);
+static int buscar_registro(char *registros);
 static int tipo_inst(char *instruccion);
-static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo);
-static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo);
+static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char* recurso, int tiempo);
+static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char* recurso, int tiempo);
 static void pedir_instruccion(int socket_cliente_memoria,int posicion);
 static void recibir_instruccion(int socket_cliente_memoria);
+static bool hay_interrupcion();
 
 
 //================================================== Configuracion =====================================================================
@@ -63,6 +63,7 @@ static void enviar_handshake(int socket_cliente_memoria)
     t_paquete *paquete = crear_paquete(HANDSHAKE);
     agregar_entero_a_paquete(paquete, 1);
     enviar_paquete(paquete, socket_cliente_memoria);
+    eliminar_paquete(paquete);
 }
 
 static void recibir_handshake(int socket_cliente_memoria)
@@ -76,9 +77,11 @@ static void recibir_handshake(int socket_cliente_memoria)
     }
     else
     {
-        perror("No me enviaste el tam_pagina :( \n");
+        log_error(cpu_logger,"No me enviaste el tam_pagina :( \n");
         abort();
     }
+    eliminar_paquete(paquete);
+
 }
 
 //================================================== Instrucciones =====================================================================
@@ -90,13 +93,14 @@ static void recibir_instruccion(int socket_cliente_memoria)
 
     if (paquete->codigo_operacion == INSTRUCCIONES)
     {
-        instruccion = sacar_array_cadenas_de_paquete(&stream);
+        instruccion = sacar_cadena_de_paquete(&stream);
     }
     else
     {
-        perror("No me enviaste las instrucciones\n");
+        log_error(cpu_logger,"Falla al recibir las instrucciones\n");
         abort();
     }
+    eliminar_paquete(paquete);
 }
 
 static void pedir_instruccion(int socket_cliente_memoria,int posicion)
@@ -104,6 +108,7 @@ static void pedir_instruccion(int socket_cliente_memoria,int posicion)
     t_paquete *paquete = crear_paquete(MANDAR_INSTRUCCIONES);
     agregar_entero_a_paquete(paquete,posicion);
     enviar_paquete(paquete, socket_cliente_memoria);
+    eliminar_paquete(paquete);
 }
 
 //================================================== Dispatch =====================================================================
@@ -115,8 +120,10 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
     t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
     void *stream = paquete->buffer->stream;
     log_info(cpu_logger, "Ya recibi paquete");
-
-    t_contexto_ejecucion *contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
+    log_info(cpu_logger, "recibi %d\n",paquete->codigo_operacion);
+    
+    t_contexto_ejecucion* contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
+    contexto_ejecucion->recursos_asignados = malloc(3 *sizeof(t_recursos_asignados));
 
     // el kernel nos va a pasar el pcb al momento de poner a ejecutar un proceso
     if (paquete->codigo_operacion == PCB)
@@ -124,23 +131,33 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
         contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
         contexto_ejecucion->prioridad = sacar_entero_de_paquete(&stream);
-        contexto_ejecucion->registros = sacar_array_cadenas_de_paquete(&stream);
+        contexto_ejecucion->registros_cpu.AX = sacar_entero_sin_signo_de_paquete(&stream);
+        contexto_ejecucion->registros_cpu.BX = sacar_entero_sin_signo_de_paquete(&stream);
+        contexto_ejecucion->registros_cpu.CX = sacar_entero_sin_signo_de_paquete(&stream);
+        contexto_ejecucion->registros_cpu.DX = sacar_entero_sin_signo_de_paquete(&stream);
 
-        log_info(cpu_logger, "Recibi un PCB del Kernel :)");
+        // Iterar sobre cada recurso y recibir la información del paquete
+        for (int i = 0; i < 3; ++i) {
 
-        // una vez que recibimos el pcb inicializamos los registros de uso general de la cpu
-        iniciar_registros(contexto_ejecucion->registros);
+            char* nombre = sacar_cadena_de_paquete(&stream);
+            strcpy(contexto_ejecucion->recursos_asignados[i].nombre_recurso,nombre); 
+            contexto_ejecucion->recursos_asignados[i].instancias_recurso = sacar_entero_de_paquete(&stream);
+            free(nombre);
+        }
+
+        log_info(cpu_logger, "Recibi un PCB del Kernel :)\n");
 
         // iniciamos el procedimiento para procesar cualquier instruccion
         ciclo_de_instruccion(socket_cliente_dispatch, socket_cliente_memoria, contexto_ejecucion);
     }
-    else
+    if(paquete->codigo_operacion != PCB)
     {
-
-        // los sleep son como para que parezca que la cpu en serio esta pensando y tarda un poquito
-        sleep(3);
-        perror("No se recibio correctamente el PCB");
+       perror("No se recibio correctamente el PCB");  
+       abort();
     }
+
+    free(contexto_ejecucion);
+    eliminar_paquete(paquete);
 }
 
 //================================================== Ciclo de Instruccion =====================================================================
@@ -149,79 +166,228 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
 void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memoria, t_contexto_ejecucion *contexto_ejecucion)
 {
     bool seguir_ejecutando = true;
-    //int cant_instruccioness = string_array_size(instruccion); 
-
-    while (seguir_ejecutando)
+/*
+    //implementación para el page_fault (checkpoint 4)
+    //antes de seguir_ejecutando me fijo si hay page fault
+    if (hay_page_fault()) 
+    {
+        log_info(cpu_logger, "Oh no hermano, tenemos Page Fault: PID %d - Número de página %d", contexto_ejecucion->pid, obtener_numero_pagina(instruccion));
+        devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0);
+        //como tengo page fault notificó al kernel y no puedo seguir ejecutando el proceso hasta manejar el page fault
+        seguir_ejecutando = false;
+    }
+*/
+    while (seguir_ejecutando) // definir con cuentas voy, definir con program counter
     {
 
         // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
         log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
 
+        for (int i = 0; i < 3; ++i) {
+            log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d",contexto_ejecucion->recursos_asignados[i].nombre_recurso, contexto_ejecucion->recursos_asignados[i].instancias_recurso);
+        }
+
         //=============================================== FETCH =================================================================
         
         //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
         pedir_instruccion(socket_cliente_memoria, contexto_ejecucion->program_counter);
+        log_info(cpu_logger,"Pidiendo instruccion a memoria\n");
 
         //una vez que la recibo de memoria, la guardo en la var global de arriba
         recibir_instruccion(socket_cliente_memoria);
+        log_info(cpu_logger,"Recibi una instruccion de memoria\n");
 
+     /*
         //=============================================== DECODE =================================================================
         // vemos si la instruccion requiere de una traducción de dirección lógica a dirección física
-        /*
+        
         if(requiere_traduccion(instruccion))
         {
             log_info(cpu_logger,"%s requiere traduccion", instruccion);
             //traducir_a_direccion_fisica(instruccion);
         }
-        */
-
+        
+*/
         //=============================================== EXECUTE =================================================================
 
         // toda esta parte la usamos para trabajar con registros (sumar,restar,poner)
         char **datos = string_split(instruccion, " ");
+        free(instruccion);
         char *registro = NULL;
         char *registro_destino = NULL;
         char *registro_origen = NULL;
+        char *recurso = NULL;
+        char* modo_apertura = NULL;
+        char* nombre_archivo = NULL;
+        uint32_t direccion_logica = 0;
+        uint32_t posicion = 0;
+        int tamanio = -1;
         int valor = -1;
+        int tiempo = -1;
+        int num_instruccion = -1;
 
         switch (tipo_inst(datos[0]))
         {
         case (SET):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[1];
             valor = atoi(datos[2]);
             setear_registro(registro, valor);
+            contexto_ejecucion->program_counter += 1;
             break;
+
         case (SUM):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro_destino = datos[1];
             registro_origen = datos[2];
             valor = sumar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
+            contexto_ejecucion->program_counter += 1;
             break;
+
         case (SUB):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro_destino = datos[1];
             registro_origen = datos[2];
             valor = restar_registros(registro_destino, registro_origen);
             setear_registro(registro_destino, valor);
+            contexto_ejecucion->program_counter += 1;
             break;
+
+        case(JNZ): 
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            registro = datos[1];
+            num_instruccion = atoi(datos[2]);
+            if (registro != 0) {
+                 contexto_ejecucion->program_counter = num_instruccion;
+            }
+            break;
+            contexto_ejecucion->program_counter += 1;
+
+        case(SLEEP):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
+            tiempo = atoi(datos[1]);
+            contexto_ejecucion->program_counter += 1;
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "", tiempo); 
+            //mandar_tiempo(socket_cliente_dispatch, tiempo); //Revisar si le debería llegar separado
+            break;
+
+        case (WAIT):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
+            recurso = datos[1];
+            contexto_ejecucion->program_counter += 1;
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso, 0);
+            seguir_ejecutando = false;
+            break;
+
+        case (SIGNAL):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
+            recurso = datos[1];
+            contexto_ejecucion->program_counter += 1;
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal", recurso, 0);
+            seguir_ejecutando = false;
+            break;
+
+        case(MOV_IN):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            registro = datos[1];
+            direccion_logica = atoi(datos[2]);
+            contexto_ejecucion->program_counter += 1;
+            break;
+        
+        case(MOV_OUT):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            registro = datos[2];
+            direccion_logica = atoi(datos[1]);
+            contexto_ejecucion->program_counter += 1;
+            break;
+
+        case(F_OPEN):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            nombre_archivo = datos[1];
+            modo_apertura = datos[2];
+            contexto_ejecucion->program_counter += 1;
+            break;
+
+        case(F_CLOSE):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
+            nombre_archivo = datos[1];
+            contexto_ejecucion->program_counter += 1;
+            break;
+
+        case(F_SEEK):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            nombre_archivo = datos[1];
+            posicion = atoi(datos[2]);
+            contexto_ejecucion->program_counter += 1;
+            break;
+
+        case(F_READ):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            nombre_archivo = datos[1];
+            direccion_logica = atoi(datos[2]);
+            contexto_ejecucion->program_counter += 1;
+            break;
+
+        case(F_WRITE):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            nombre_archivo = datos[1];
+            direccion_logica = atoi(datos[2]);
+            contexto_ejecucion->program_counter += 1;
+            break;
+
+        case(F_TRUNCATE):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            nombre_archivo = datos[1];
+            tamanio = atoi(datos[2]);
+            contexto_ejecucion->program_counter += 1;
+            break;
+        
         case (INSTRUCCION_EXIT):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s", contexto_ejecucion->pid, datos[0]);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit");
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit","", 0);
             // eliminar_todas_las_entradas(contexto_ejecucion->pid);
             seguir_ejecutando = false;
             break;
-        }
+        } 
+
+        //CHECK INTERRUPT
+        //printf("num_interrupcion =  %d  \n", interrupcion); 
+        if(seguir_ejecutando && hay_interrupcion())
+        {
+            printf("detectamos interrupcion");
+            pthread_mutex_lock(&mutex_interrupcion);
+            interrupcion = 0;
+            pthread_mutex_unlock(&mutex_interrupcion);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "interrupcion", "", 0);
+            seguir_ejecutando = false;
+        } 
+
+        string_array_destroy(datos);
     }
+
+    free(contexto_ejecucion->recursos_asignados);
+
+}
+    
+//================================================== PAGE FAULT ===================================================================
+// verifica si se ha producido un page fault esto recién para el checkpoint 4
+/*bool hay_page_fault() {
+    //desallorar la lógica para el page fault
+    //return (interrupcion == PAGE_FAULT); // suponiendo que PAGE_FAULT es un valor que nos va a indicar page fault.
 }
 
+// nos va a decir el n° de página por el que se generó el page fault
+int obtener_numero_pagina(char *instruccion) {
+    
+}
+*/
 //================================================== Interrupt =====================================================================
 
 // este canal se va a usar para mensajes de interrupcion
-void atender_interrupt(void *cliente)
+void atender_interrupt(void *socket_servidor_interrupt)
 {
-    int conexion = *(int *)cliente;
+    int conexion = *(int *)socket_servidor_interrupt;
 
     while (1)
     {
@@ -247,27 +413,32 @@ void atender_interrupt(void *cliente)
     }
 }
 
-//================================================== REGISTROS =====================================================================
-static void iniciar_registros(char **registros)
+static bool hay_interrupcion() // Se fija si hubo una interrupcion
 {
-    AX = atoi(registros[0]);
-    BX = atoi(registros[1]);
-    CX = atoi(registros[2]);
-    DX = atoi(registros[3]);
-}
+    bool bandera = false;
 
-static void setear_registro(char *registro, int valor)
+    pthread_mutex_lock(&mutex_interrupcion);
+    if(interrupcion >=1)
+    {
+        bandera = true;
+    }
+    pthread_mutex_unlock(&mutex_interrupcion);
+
+    return bandera;
+}
+//================================================== REGISTROS =====================================================================
+static void setear_registro(char *registros, int valor)
 {
-    if (string_equals_ignore_case(registro, "AX"))
+    if (string_equals_ignore_case(registros, "AX"))
         AX = valor;
 
-    if (string_equals_ignore_case(registro, "BX"))
+    if (string_equals_ignore_case(registros, "BX"))
         BX = valor;
 
-    if (string_equals_ignore_case(registro, "CX"))
+    if (string_equals_ignore_case(registros, "CX"))
         CX = valor;
 
-    if (string_equals_ignore_case(registro, "DX"))
+    if (string_equals_ignore_case(registros, "DX"))
         DX = valor;
 }
 
@@ -291,20 +462,20 @@ static int restar_registros(char *registro_destino, char *registro_origen)
     return resta;
 }
 
-static int buscar_registro(char *registro)
+static int buscar_registro(char *registros)
 {
     int valor = -1;
 
-    if (string_equals_ignore_case(registro, "AX"))
+    if (string_equals_ignore_case(registros, "AX"))
         valor = AX;
 
-    if (string_equals_ignore_case(registro, "BX"))
+    if (string_equals_ignore_case(registros, "BX"))
         valor = BX;
 
-    if (string_equals_ignore_case(registro, "CX"))
+    if (string_equals_ignore_case(registros, "CX"))
         valor = CX;
 
-    if (string_equals_ignore_case(registro, "DX"))
+    if (string_equals_ignore_case(registros, "DX"))
         valor = DX;
 
     return valor;
@@ -323,6 +494,42 @@ static int tipo_inst(char *instruccion)
     if (string_equals_ignore_case(instruccion, "SUB"))
         numero = SUB;
 
+    if (string_equals_ignore_case(instruccion, "JNZ"))
+        numero = JNZ;
+
+   if (string_equals_ignore_case(instruccion, "SLEEP"))
+        numero = SLEEP;
+
+    if (string_equals_ignore_case(instruccion, "WAIT"))
+        numero = WAIT;
+
+    if (string_equals_ignore_case(instruccion, "SIGNAL"))
+        numero = SIGNAL;
+
+    if (string_equals_ignore_case(instruccion, "MOV_IN"))
+        numero = MOV_IN;
+
+    if (string_equals_ignore_case(instruccion, "MOV_OUT"))
+        numero = MOV_OUT;
+
+    if (string_equals_ignore_case(instruccion, "F_OPEN"))
+        numero = F_OPEN;
+
+    if (string_equals_ignore_case(instruccion, "F_CLOSE"))
+        numero = F_CLOSE;
+
+    if (string_equals_ignore_case(instruccion, "F_SEEK"))
+        numero = F_SEEK;
+
+    if (string_equals_ignore_case(instruccion, "F_READ"))
+        numero = F_READ;
+
+    if (string_equals_ignore_case(instruccion, "F_WRITE"))
+        numero = F_WRITE;
+
+    if (string_equals_ignore_case(instruccion, "F_TRUNCATE"))
+        numero = F_TRUNCATE;
+
     if (string_equals_ignore_case(instruccion, "EXIT"))
         numero = INSTRUCCION_EXIT;
 
@@ -331,28 +538,56 @@ static int tipo_inst(char *instruccion)
 
 //================================================== CONTEXTO =====================================================================
 
-// vamos a devolver el contexto al kernel en las instrucciones exit, sleep
-static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo)
+/*vamos a devolver el contexto al kernel en las instrucciones exit, sleep. Lo modifique para que podamos
+pedir recursos por aca tambien, en vez de hacer una funcion aparte. Si no pedimos un recurso entonces ponemos
+"" en el ultimo parametro y fuee. */
+static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char *recurso, int tiempo)
 {
     // aca nosotros agregamos las modificaciones de los registros
-    (contexto_ejecucion->registros)[0] = string_itoa(AX);
-    (contexto_ejecucion->registros)[1] = string_itoa(BX);
-    (contexto_ejecucion->registros)[2] = string_itoa(CX);
-    (contexto_ejecucion->registros)[3] = string_itoa(DX);
+    (contexto_ejecucion->registros_cpu.AX) = AX;
+    (contexto_ejecucion->registros_cpu.BX) = BX;
+    (contexto_ejecucion->registros_cpu.CX) = CX;
+    (contexto_ejecucion->registros_cpu.DX) = DX;
+    enviar_contexto(socket_cliente, contexto_ejecucion, motivo, recurso, tiempo);
+    log_info(cpu_logger, "Devolvi el contexto ejecucion al kernel por motivo de: %s \n", motivo);
 
-    enviar_contexto(socket_cliente, contexto_ejecucion, motivo);
-    log_info(cpu_logger, "devolvi el contexo ejecucion al kernel por motivo de: %s \n", motivo);
+    //esto es solamente para que quede lindo
+    if(strcmp(motivo, "exit")
+    {
+        log_info(cpu_logger, "========================================================================================\n");
+    }
 }
 
-static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo)
+static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo)
 {
     t_paquete *paquete = crear_paquete(PCB);
 
     // le mandamos esto porque creo que es lo unico que se cambia pero vemos
     agregar_entero_a_paquete(paquete, contexto_ejecucion->program_counter);
-    agregar_array_cadenas_a_paquete(paquete, contexto_ejecucion->registros);
+    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.AX);
+    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.BX);
+    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.CX);
+    agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.DX);
     agregar_cadena_a_paquete(paquete, motivo);
-    // agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_que_bloquear);
+    agregar_cadena_a_paquete(paquete, recurso);
+    agregar_entero_a_paquete(paquete, tiempo);
 
+    // agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_que_bloquear);
     enviar_paquete(paquete, socket_cliente);
+    eliminar_paquete(paquete);
 }
+
+void mostrar_recursos_asignados(t_contexto_ejecucion* proceso) {
+    if (proceso->recursos_asignados != NULL) {
+        t_recursos_asignados* recursos = proceso->recursos_asignados;
+
+        for (int i = 0; i < 3; ++i) {
+            if (strlen(recursos[i].nombre_recurso) > 0) {
+                log_info(cpu_logger, "Recurso: %s - Cantidad: %d\n", recursos[i].nombre_recurso, recursos[i].instancias_recurso);
+            }
+        }
+    } else {
+        log_info(cpu_logger, "No hay recursos asignados\n");
+    }
+}
+

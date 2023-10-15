@@ -36,12 +36,29 @@ typedef struct  // archivo de configuracion cpu
 } arch_config;
 
 extern arch_config config_valores_cpu;
+
+/*typedef struct registros_cpu
+{
+	uint32_t AX;
+	uint32_t BX;
+	uint32_t CX;
+	uint32_t DX;
+} t_registros_cpu; 
+*/
+
+typedef struct 
+{
+	char nombre_recurso [50];
+	int instancias_recurso;
+}t_recursos_asignados;
+
 typedef struct
 {
     int pid;
     int program_counter;
     int prioridad;
-    char** registros;
+ 	t_registros_cpu registros_cpu;
+   t_recursos_asignados* recursos_asignados;  
 }t_contexto_ejecucion;
 
 //======================= Funciones =======================
@@ -51,6 +68,7 @@ void ciclo_de_instruccion(int, int, t_contexto_ejecucion*);
 void*conexion_inicial_memoria();
 void atender_dispatch(int, int );
 void atender_interrupt(void* );
+void mostrar_recursos_asignados(t_contexto_ejecucion*);
 void finalizar_cpu();
 
 #endif
