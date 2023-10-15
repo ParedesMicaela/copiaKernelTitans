@@ -1,4 +1,6 @@
 #include "filesystem.h"
+
+fcb config_valores_fcb;
 //..................................CONFIGURACIONES.....................................................................
 
 void cargar_configuracion(char* path) {
@@ -20,6 +22,7 @@ void cargar_configuracion(char* path) {
       config_valores_filesystem.path_fcb = config_get_string_value(config, "PATH_FCB");
       config_valores_filesystem.cant_bloques_total = config_get_int_value(config, "CANT_BLOQUES_TOTAL");
       config_valores_filesystem.cant_bloques_swap = config_get_int_value(config, "CANT_BLOQUES_SWAP");
+      config_valores_filesystem.tam_bloque = config_get_int_value(config, "TAM_BLOQUE");
       config_valores_filesystem.retardo_acceso_bloque = config_get_int_value(config, "RETARDO_ACCESO_BLOQUE");
       config_valores_filesystem.retardo_acceso_fat = config_get_int_value(config, "RETARDO_ACCESO_FAT");
 }
@@ -41,28 +44,82 @@ void atender_clientes_filesystem(void* conexion) {
         }
 }
 
-/*
-/// COMUNICACIÓN A MEMORIA ///
-void* conexion_inicial_memoria(){
 
-	int codigo_memoria;
+void levantar_fcb() {
 
-	while(1){
-		codigo_memoria=recibir_operacion(socket_memoria);
-		switch(codigo_memoria){
-			case PAQUETE:
-				log_info(filesystem_logger,"Recibi configuracion por handshake \n");
-				return NULL;
-			break;
-			case -1:
-				log_error(filesystem_logger, "Fallo la comunicacion. Abortando \n");
-				return (void*)(EXIT_FAILURE);
-			break;
-			default:
-				 log_warning(filesystem_logger, "Operacion desconocida \n");
-			break;
-		}
-	}
-	 return (void*)(EXIT_SUCCESS);
+    config = config_create(config_valores_filesystem.path_fcb); //Leo el archivo de configuracion
+
+      if (config == NULL) {
+          perror("Archivo de configuracion de fcb no encontrado \n");
+          abort();
+      }
+
+    config_valores_fcb.nombre_archivo = config_get_string_value(config, "NOMBRE_ARCHIVO");
+    config_valores_fcb.tamanio_archivo = config_get_int_value(config, "TAMANIO_ARCHIVO");
+    config_valores_fcb.bloque_inicial = config_get_int_value(config, "BLOQUE_INCIAL");
 }
+
+void levantar_fat(size_t tamanio_fat) {
+    char* path = config_valores_filesystem.path_fat;
+    
+    FILE* archivo_fat = fopen(path, "rb+");
+    if (archivo_fat == NULL) {
+        // Si no se encuentra el fat se inicializa con 0s.
+        archivo_fat = fopen(path, "wb+");
+        if (archivo_fat == NULL) {
+            perror("No se puedo abrir o crear el archivo_fat \n");
+            abort();
+        }
+
+        uint32_t valor_inicial = 0; //Revisar que no sea while(!UINT32_MAX)
+        for (size_t i = 0; i < tamanio_fat / sizeof(uint32_t); i++) {
+            fwrite(&valor_inicial, sizeof(uint32_t), 1, archivo_fat);
+        }
+        fflush(archivo_fat);
+    }
+/*
+    // Escritura 
+    uint32_t nuevo_valor = UINT32_MAX; 
+    fseek(archivo_fat, block_number * sizeof(uint32_t), SEEK_SET);
+    fwrite(&nuevo_valor, sizeof(uint32_t), 1, archivo_fat);
+    fflush(archivo_fat);
+
+    // Lectura
+    uint32_t valor;
+    fseek(archivo_fat, block_number * sizeof(uint32_t), SEEK_SET);
+    fread(&valor, sizeof(uint32_t), 1, archivo_fat);
 */
+    fclose(archivo_fat);
+}
+
+void levantar_archivo_bloque(size_t tamanio_swap, size_t tamanio_fat) {
+    char* path = config_valores_filesystem.path_bloques;
+
+    FILE* archivo_bloque = fopen(path, "rb"); // Leemos en modo binario, puede ser wb+
+    if (archivo_bloque == NULL) {
+    perror("No se pudo abrir el archivo de bloques \n");
+    abort();
+    }
+
+    // Le asignamos un espacio de memoria al swap
+    uint32_t* particion_swap = (uint32_t*)malloc(tamanio_swap);
+    if (particion_swap == NULL) {
+    perror("No se pudo alocar memoria para el swap \n");
+    abort();
+    }
+
+    fread(particion_swap, 1, tamanio_swap, archivo_bloque);
+
+    // Le asignamos un espacio de memoria al fat
+    uint32_t* particion_fat = (uint32_t*)malloc(tamanio_fat);
+    if (particion_fat == NULL) {
+    perror("No se pudo alocar memoria para el fat \n");
+    abort();
+    }
+
+    fread(particion_fat, 1, tamanio_fat, archivo_bloque);
+
+    fclose(archivo_bloque);
+
+}          
+
