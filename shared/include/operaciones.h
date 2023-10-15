@@ -109,15 +109,22 @@ typedef struct
 	int program_counter;
  	t_registros_cpu registros_cpu;
 	int prioridad;
+
 	//en el estado vamos a ir viendo en que parte del ciclo de instruccion esta
 	estado estado_pcb;
 	int quantum;
 	t_recurso* recursos_asignados;
-	char* recurso_pedido; /*el proceso me va a pedir un recurso a la vez, entonces puedo hacer esta variable
+
+	/*el proceso me va a pedir un recurso a la vez, entonces puedo hacer esta variable
 	que empiece en NULL y despues si me pide un recurso, lo pongo aca y luego lo vacio nuevamente para que pueda pedir mas.
 	Capaz nos sirve para el deadlock despues*/
+	char* recurso_pedido; 
 	int sleep;
 	int motivo_bloqueo;
+
+	//esto lo pongo aca para que cada proceso guarde su path y no haya lio al ejecutar mas de 1 proceso
+	char* path_proceso;
+	
 	//t_dictionary *archivosAbiertos;
 	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
 	//pthread_mutex_t *mutex;

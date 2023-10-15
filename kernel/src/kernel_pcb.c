@@ -13,7 +13,7 @@ uint32_t DX;
 
 //============================================================================================================================================================================
 //cada vez que la consola interactiva nos dice de crear un pcb, nos va a pasar la prioridad, el pid lo podemos poner nosotros
-t_pcb* crear_pcb(int prioridad, int tam_swap) 
+t_pcb* crear_pcb(int prioridad, int tam_swap, char* path) 
 {
     //Nota Diego: Actualmente se puede hacer malloc de t_pcb pq todo es estatico
     t_pcb* pcb = malloc(sizeof(t_pcb)); 
@@ -44,7 +44,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap)
 
     pcb->recurso_pedido = NULL;
     pcb->sleep = 0;
-
+    pcb->path_proceso = strdup(path);
 
     //pcb->tabla_archivos_abiertos = diccionario;
     //pcb->archivosAbiertos = dictionary_create();

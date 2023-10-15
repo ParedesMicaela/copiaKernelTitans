@@ -145,11 +145,8 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
             free(nombre);
         }
 
-
-
         log_info(cpu_logger, "Recibi un PCB del Kernel :)\n");
 
-        
         // iniciamos el procedimiento para procesar cualquier instruccion
         ciclo_de_instruccion(socket_cliente_dispatch, socket_cliente_memoria, contexto_ejecucion);
     }
@@ -185,7 +182,6 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 
         // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
         log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
-        //mostrar_recursos_asignados(contexto_ejecucion);
 
         for (int i = 0; i < 3; ++i) {
             log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d",contexto_ejecucion->recursos_asignados[i].nombre_recurso, contexto_ejecucion->recursos_asignados[i].instancias_recurso);
@@ -554,6 +550,12 @@ static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion
     (contexto_ejecucion->registros_cpu.DX) = DX;
     enviar_contexto(socket_cliente, contexto_ejecucion, motivo, recurso, tiempo);
     log_info(cpu_logger, "Devolvi el contexto ejecucion al kernel por motivo de: %s \n", motivo);
+
+    //esto es solamente para que quede lindo
+    if(strcmp(motivo, "exit")
+    {
+        log_info(cpu_logger, "========================================================================================\n");
+    }
 }
 
 static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo)

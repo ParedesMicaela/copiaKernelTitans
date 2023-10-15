@@ -3,7 +3,6 @@
 sem_t mutex_otras_colas;
 
 
-
 //===============================================================================================================================
 
 // nos van a decir la prioridad, el archivo de pseudocodigo a ejecutar y el tamanio de memoria swap que va a ejecutar
@@ -12,11 +11,7 @@ void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
     log_info(kernel_logger, "Iniciando proceso \n");
 
     //Creamos un PCB, que comienza en NEW
-    crear_pcb(prioridad, tam_proceso_swap);
-
-    // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
-    enviar_path_a_memoria(path);
-    
+    crear_pcb(prioridad, tam_proceso_swap, path);
 }
 
 void consola_detener_planificacion() {

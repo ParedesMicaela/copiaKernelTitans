@@ -171,6 +171,9 @@ void proceso_en_ready()
 
 void proceso_en_execute(t_pcb *proceso_seleccionado)
 {
+    // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
+    enviar_path_a_memoria(proceso_seleccionado->path_proceso);
+
     // le enviamos el pcb a la cpu para que ejecute y recibimos el pcb resultado de su ejecucion
     enviar_pcb_a_cpu(proceso_seleccionado);
 

@@ -120,7 +120,7 @@ op_code esperar_respuesta_memoria(int);
 
 void atender_page_fault(t_pcb *);
 //================================================== PCB =====================================================================================================================
-t_pcb *crear_pcb(int, int); // como 2do parametro había un uint32_t que tiraba error ya que time_swap(en el .c) estaba como int
+t_pcb *crear_pcb(int, int, char*); 
 void enviar_pcb_a_cpu(t_pcb *);
 char *recibir_contexto(t_pcb *);
 
