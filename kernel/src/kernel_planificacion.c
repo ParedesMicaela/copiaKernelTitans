@@ -91,6 +91,8 @@ void planificador_largo_plazo()
         // elegimos el que va a pasar a ready, o sea el primero porque es FIFO
         t_pcb *proceso_nuevo = obtener_siguiente_new();
 
+        usleep(5);
+
         pthread_mutex_lock(&mutex_corriendo);
         while (corriendo == 0) { // Sea 0
            
@@ -136,6 +138,7 @@ void planificador_corto_plazo()
         }
         pthread_mutex_unlock(&mutex_corriendo);
 
+        sleep(5);
         proceso_en_ready();
 
     }
@@ -146,6 +149,13 @@ void planificador_corto_plazo()
 // aca agarramos el proceso que nos devuelve obtener_siguiente_ready y lo mandamos a ejecutar
 void proceso_en_ready()
 {
+
+    pthread_mutex_lock(&mutex_corriendo);
+    while (corriendo == 0) {
+        pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
+    }
+    pthread_mutex_unlock(&mutex_corriendo);
+    
     // creamos un proceso, que va a ser el elegido por obtener_siguiente_ready
     t_pcb *siguiente_proceso = obtener_siguiente_ready();
 

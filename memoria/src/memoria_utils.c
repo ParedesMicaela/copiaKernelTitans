@@ -64,7 +64,6 @@ void manejo_conexiones(void* socket_cliente)
 	    no lo pongo en MANDAR_INSTRUCCIONES porque el kernel no me pide que le lea la instruccion, eso me lo pide la cpu
 		el kernel me dice solamente el path que necesito leerle a la cpu*/
 		config_valores_memoria.path_instrucciones = path_recibido;
-
 		log_info(memoria_logger, "PATH recibido: %s", path_recibido);
 		break;
 
@@ -76,7 +75,7 @@ void manejo_conexiones(void* socket_cliente)
 		posicion_pedida = sacar_entero_de_paquete(&stream);
 		enviar_paquete_instrucciones(cliente, instrucciones_leidas, posicion_pedida);
 		break;
-/*
+
 	case CREACION_ESTRUCTURAS_MEMORIA:
 		int pid_proceso = sacar_entero_de_paquete(&stream);
 		int tam_swap_pid = sacar_entero_de_paquete(&stream);
@@ -96,7 +95,7 @@ void manejo_conexiones(void* socket_cliente)
         send(cliente, &ok_finalizacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras eliminadas en memoria kernel-kyunn\n");
 		break;
-*/
+
 	default:
 		break;
 	}

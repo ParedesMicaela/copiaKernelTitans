@@ -16,7 +16,7 @@ void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
 
     // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
     enviar_path_a_memoria(path);
-
+    
 }
 
 void consola_detener_planificacion() {
