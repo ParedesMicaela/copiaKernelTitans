@@ -474,7 +474,7 @@ t_pcb *obtener_siguiente_RR()
     // simulo(a.k.a para los simuladores) la ejecución del tiempo mientras se va chequeando el quantum
     while (tiempo_transcurrido < quantum)
     {
-        usleep(1 * 1000); // con esto me estoy librando de la espera activa ya que usleep lo que hace es pausar la ejecución dentro del while
+        usleep(2); // con esto me estoy librando de la espera activa ya que usleep lo que hace es pausar la ejecución dentro del while
 
         // si el proceso finaliza durante su ejecución es porque está en exit
         if (proceso_seleccionado->estado_pcb == EXIT)
@@ -482,21 +482,33 @@ t_pcb *obtener_siguiente_RR()
             log_info(kernel_logger, "PID[%d] ha finalizado durante su quantum de RR\n", proceso_seleccionado->pid);
             return proceso_seleccionado;
         }
+        log_info(kernel_logger, "Todavia no termino el quantum\n");
         tiempo_transcurrido++; // aumento el tiempo que pasa en 1 milisegundo
+
     }
     // ahora contemplo el caso en el que el tiempo que pasa sea igual al quantum, por lo que pasa de nuevo a la cola de READY(en última posición)
     if (tiempo_transcurrido == quantum)
     {
         pthread_mutex_lock(&mutex_ready);
-        list_add(cola_READY, proceso_seleccionado);
+        meter_en_cola(proceso_seleccionado,READY,cola_READY);
         pthread_mutex_unlock(&mutex_ready);
 
         // ahora reinicio el quantum para el siguiente proceso :) uwu
         proceso_seleccionado->quantum = config_valores_kernel.quantum; // Reinicia el quantum para el siguiente proceso.
         log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
+        
+        //hay que enviar por socket interrupt
+        t_paquete* paquete = crear_paquete(DESALOJO);
+        enviar_paquete(paquete, socket_cpu_interrupt);
+        eliminar_paquete(paquete);
+
+        //agarrar proceso para ejecutar
+        proceso_seleccionado = obtener_siguiente_FIFO();
+
+        return proceso_seleccionado;
+
     }
 
-    return proceso_seleccionado;
 }
 
 //=================================================== Diccionarios y Colas ==================================================================

@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "kernel.h": "c"
+        "kernel.h": "c",
+        "cpu_utils.h": "c",
+        "socket.h": "c"
     }
 }
