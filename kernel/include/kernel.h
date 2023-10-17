@@ -33,8 +33,7 @@ extern int socket_filesystem;
 
 extern sem_t mutex_pid;
 extern sem_t hay_proceso_nuevo;
-//extern sem_t sigue_corriendo_corto;
-//extern sem_t sigue_corriendo_largo;
+extern sem_t grado_multiprogramacion;
 
 extern uint32_t AX;
 extern uint32_t BX;
@@ -43,8 +42,12 @@ extern uint32_t DX;
 
 extern pthread_mutex_t mutex_new;
 extern pthread_mutex_t mutex_ready;
+extern pthread_mutex_t mutex_exec;
+extern pthread_mutex_t mutex_exit;
 extern pthread_mutex_t mutex_blocked;
 extern pthread_mutex_t mutex_recursos;
+extern pthread_mutex_t mutex_colas;
+extern t_dictionary_int *diccionario_colas;
 extern pthread_mutex_t mutex_corriendo;
 extern pthread_cond_t cond_corriendo;
 
@@ -115,7 +118,6 @@ t_pcb *obtener_siguiente_PRIORIDADES();
 t_pcb *obtener_siguiente_new();
 
 ////======================================== Relacion con Memoria ===========================================================================================================
-void enviar_path_a_memoria(char *);
 void enviar_pcb_a_memoria(t_pcb *, int, op_code);
 op_code esperar_respuesta_memoria(int);
 
