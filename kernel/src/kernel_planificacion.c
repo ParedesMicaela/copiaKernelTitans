@@ -417,34 +417,63 @@ t_pcb* obtener_siguiente_PRIORIDADES()
 {
     log_info(kernel_logger, "Inicio la planificacion PRIODIDADES \n");
 
-	pthread_mutex_lock(&mutex_ready);
-	t_pcb* proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
-	pthread_mutex_unlock(&mutex_ready);
+	 thread_mutex_lock(&mutex_ready);
+    t_pcb *proceso_ejecutandose = list_get(dictionary_int_get(diccionario_colas, EXEC), 0); // SUPONEMOS QUE DEVUELVE NULL SI NO TIENE NADA, FALTA CONSULTAD
+    pthread_mutex_unlock(&mutex_ready);
+    
+    // Selecciono el proceso que se esta ejecutando, es el que vamos a analizar
+    //si no hay ningun proceso ejecutandose, simplemente mandamos el primero en ready
+    if(!proceso_ejecutandose)
+    {
+    //agarrar proceso para ejecutar
+    pthread_mutex_lock(&mutex_ready);
+    t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
+    pthread_mutex_unlock(&mutex_ready);
 
-    if (proceso_seleccionado->estado_pcb == EXIT) 
+    return proceso_seleccionado;
+    }
+
+    if (proceso_ejecutandose->estado_pcb == EXIT) 
         {
-            log_info(kernel_logger, "PID[%d] ha finalizado\n", proceso_seleccionado->pid);
-            return proceso_seleccionado; 
+            log_info(kernel_logger, "PID[%d] ha finalizado\n", proceso_ejecutandose->pid);
+            //agarrar proceso para ejecutar
+            pthread_mutex_lock(&mutex_ready);
+            t_pcb *proceso_seleccionado = list_get_minimum(cola_READY, proceso_seleccionado->prioridad); //revisar bien el list get minimum
+            list_remove(dictionary_int_get(diccionario_colas, READY), 0);
+            pthread_mutex_unlock(&mutex_ready);
+
+            return proceso_seleccionado;
         }
     else if (  
         //ante cada entrada a la cola de ready fijarse si tiene mas prioridad, y en ese caso, ejecutarlo
-        proceso_seleccionado->estado_pcb == EXEC 
+        proceso_ejecutandose->estado_pcb == EXEC 
         && 
-        proceso_seleccionado->prioridad > list_get_minimum(cola_READY, proceso_seleccionado->prioridad)//no se si seta bien este list_get_minimum
+        proceso_ejecutandose->prioridad > list_get_minimum(cola_READY, proceso_ejecutandose->prioridad) //no se si seta bien este list_get_minimum
             )
         {
             //cambiar proceso actual de menor priodidad a la cola de ready
             //(por ahora no se si esta bien mandarlo asi nomas, porque este proceso esta desalojado
             //y capaz deberiamos directamente volver a ejecutarlo apenas termine el nuevo)
-            proceso_seleccionado->estado_pcb = READY;
-            list_add(cola_READY,proceso_seleccionado);
+            
+            pthread_mutex_lock(&mutex_ready);
+            meter_en_cola(proceso_ejecutandose,READY,cola_READY);
+            pthread_mutex_unlock(&mutex_ready);
+            //cambiar semaforo por el que sea que tenga que ir 
+        
+            //hay que enviar por socket interrupt
+            t_paquete* paquete = crear_paquete(DESALOJO);
+            enviar_paquete(paquete, socket_cpu_interrupt);
+            eliminar_paquete(paquete);
 
+            //agarrar proceso para ejecutar
+            pthread_mutex_lock(&mutex_ready);
+            t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
+            pthread_mutex_unlock(&mutex_ready);
+
+            return proceso_seleccionado;
              //ponemos proceso nuevo, con mas prioridad, como el seleccionado
              //revisar si esta bien
-             pthread_mutex_lock(&mutex_ready);
-             t_pcb* proceso_seleccionado_prioritario = list_remove(list_get_minimum(cola_READY, proceso_seleccionado->prioridad),0);
-             pthread_mutex_unlock(&mutex_ready);
-             return proceso_seleccionado_prioritario;     
+                 
         }   
 
 
@@ -458,31 +487,53 @@ t_pcb* obtener_siguiente_PRIORIDADES()
 t_pcb *obtener_siguiente_RR()
 {
     int quantum = config_valores_kernel.quantum; // obtiene el quantum de la config del kernel
-
+    int bandera = 0;
     log_info(kernel_logger, "Inicio la planificación RR\n");
-
-    // meto lock y unlock del mutex de ready para poder sacar el primer proceso de la cola tranqui
+    
+    thread_mutex_lock(&mutex_ready);
+    t_pcb *proceso_ejecutandose = list_get(dictionary_int_get(diccionario_colas, EXEC), 0); // SUPONEMOS QUE DEVUELVE NULL SI NO TIENE NADA, FALTA CONSULTAD
+    pthread_mutex_unlock(&mutex_ready);
+    
+    // Selecciono el proceso que se esta ejecutando, es el que vamos a analizar
+    //si no hay ningun proceso ejecutandose, simplemente mandamos el primero en ready
+    if(!proceso_ejecutandose)
+    {
+    //agarrar proceso para ejecutar
     pthread_mutex_lock(&mutex_ready);
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
     pthread_mutex_unlock(&mutex_ready);
 
-    log_info(kernel_logger, "PID[%d] sale de READY por planificación RR", proceso_seleccionado->pid);
-
-    // ahora acá se viene mi truquito
+    return proceso_seleccionado;
+    }
 
     int tiempo_transcurrido = 0; // arranca en 0 porque todavía no empieza jeje
-    // simulo(a.k.a para los simuladores) la ejecución del tiempo mientras se va chequeando el quantum
+
+    // mientras el proceso se esta ejecutando nos fijamos que el quantum no haya terminado
     while (tiempo_transcurrido < quantum)
     {
-        usleep(2); // con esto me estoy librando de la espera activa ya que usleep lo que hace es pausar la ejecución dentro del while
+        //con esto soluciono espera activa
+        usleep(1000); 
 
-        // si el proceso finaliza durante su ejecución es porque está en exit
-        if (proceso_seleccionado->estado_pcb == EXIT)
+        // si el proceso finaliza durante su ejecución es porque está en exit, entonces agarramos siguiente por fifo
+        if (proceso_ejecutandose->estado_pcb == EXIT)
         {
-            log_info(kernel_logger, "PID[%d] ha finalizado durante su quantum de RR\n", proceso_seleccionado->pid);
+            log_info(kernel_logger, "PID[%d] ha finalizado durante su quantum de RR\n", proceso_ejecutandose->pid);
+            
+            //si el proceso que se esta ejecutando termino, agarramos el siguiente de los que estan listos
+            //lo mandamos para que se ejecute
+            pthread_mutex_lock(&mutex_ready);
+            t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
+            pthread_mutex_unlock(&mutex_ready);
+
             return proceso_seleccionado;
         }
-        log_info(kernel_logger, "Todavia no termino el quantum\n");
+
+        //volvemos a copiar los datos para ver si ahora cambio de estado, porque sino seria el mismo estado siempre
+        pthread_mutex_lock(&mutex_ready);
+        t_pcb *proceso_ejecutandose = list_get(dictionary_int_get(diccionario_colas, EXEC), 0);
+        pthread_mutex_unlock(&mutex_ready);
+        
+        //log_info(kernel_logger, "Todavia no termino el quantum\n");
         tiempo_transcurrido++; // aumento el tiempo que pasa en 1 milisegundo
 
     }
@@ -490,12 +541,14 @@ t_pcb *obtener_siguiente_RR()
     if (tiempo_transcurrido == quantum)
     {
         pthread_mutex_lock(&mutex_ready);
-        meter_en_cola(proceso_seleccionado,READY,cola_READY);
+        meter_en_cola(proceso_ejecutandose,READY,cola_READY);
         pthread_mutex_unlock(&mutex_ready);
+        //cambiar semaforo por el que sea que tenga que ir 
+
 
         // ahora reinicio el quantum para el siguiente proceso :) uwu
-        proceso_seleccionado->quantum = config_valores_kernel.quantum; // Reinicia el quantum para el siguiente proceso.
-        log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
+        //proceso_seleccionado->quantum = config_valores_kernel.quantum; // Reinicia el quantum para el siguiente proceso.
+        log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_ejecutandose->pid);
         
         //hay que enviar por socket interrupt
         t_paquete* paquete = crear_paquete(DESALOJO);
@@ -503,7 +556,9 @@ t_pcb *obtener_siguiente_RR()
         eliminar_paquete(paquete);
 
         //agarrar proceso para ejecutar
-        proceso_seleccionado = obtener_siguiente_FIFO();
+        pthread_mutex_lock(&mutex_ready);
+        t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
+        pthread_mutex_unlock(&mutex_ready);
 
         return proceso_seleccionado;
 
