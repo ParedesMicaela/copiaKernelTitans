@@ -431,7 +431,7 @@ void mostrar_valores (t_contexto_ejecucion* contexto)
     }
 }
 
-static bool hay_interrupcion() // Se fija si hubo una interrupcion
+static hay_interrupcion()
 {
     bool seguir_ejecutando = false;
 
