@@ -26,6 +26,7 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
 static void pedir_instruccion(int socket_cliente_memoria,int posicion, int pid);
 static void recibir_instruccion(int socket_cliente_memoria);
 static bool hay_interrupcion();
+static void mostrar_valores (t_contexto_ejecucion* contexto);
 
 
 //================================================== Configuracion =====================================================================
