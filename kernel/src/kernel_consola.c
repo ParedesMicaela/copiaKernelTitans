@@ -44,7 +44,6 @@ void parse_finalizar_proceso(char *linea) {
     int pid;
     if (sscanf(linea_espaciada[1], "%d", &pid) == 1) {
       // Extrae el PID y lo asigna a la variable
-      printf(" Finalizamos proceso el proceso %d \n", pid);
       consola_finalizar_proceso(pid);
     }
     string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
@@ -56,7 +55,6 @@ void parse_detener_planificacion (char* linea) {
   char **linea_espaciada = string_split(linea," ");  // Divide la línea en tokens
 
   if (linea_espaciada) {
-     printf("Deteniendo planificaion \n");
      consola_detener_planificacion();
   }
    string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
@@ -67,7 +65,6 @@ void parse_iniciar_planificacion (char* linea) {
   char **linea_espaciada = string_split(linea, " ");  // Divide la línea en tokens
 
   if (linea_espaciada) {
-     printf("Reanudando planificacion\n");
      consola_iniciar_planificacion();
   }
    string_iterate_lines(linea_espaciada, (void*)free); // Libero memoria asignada a cada token
