@@ -16,7 +16,7 @@
 #include <commons/bitarray.h>
 
 // DEFINICIONES 
-#define MAX_CHAR 60
+#define MAX_CHAR 100
 
 //VARIABLES GLOBALES
 extern t_log* memoria_logger;
@@ -43,10 +43,11 @@ typedef struct
 {
 	int pid;
 	int tam_swap;
-	t_list* paginas_en_memoria;
+	//t_list* paginas_en_memoria;
+	char* path_proceso;
 } t_proceso_en_memoria;
 
-
+extern t_list* lista_procesos;
 extern arch_config config_valores_memoria;
 
 // FUNCIONES//
@@ -58,6 +59,7 @@ void enviar_paquete_instrucciones(int , char* , int );
 void crear_tablas_paginas_proceso(int, int );
 void liberar_espacio_usuario() ;
 char* leer_archivo_instrucciones(char* );
+char* buscar_path_proceso(int );
 
 
 #endif
