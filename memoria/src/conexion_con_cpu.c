@@ -58,6 +58,27 @@ char* leer_archivo_instrucciones(char* path_instrucciones) {
     return cadena_completa;
 }
 
+char* buscar_path_proceso(int pid)
+{
+    if (lista_procesos == NULL) {
+        log_error(memoria_logger, "Error: lista_procesos esta vacia");
+        return NULL;
+    }
+
+    for (int i = 0; i < list_size(lista_procesos); i++)
+    {
+        t_proceso_en_memoria* proceso = list_get(lista_procesos, i);
+
+        if (proceso != NULL && proceso->pid == pid)
+        {
+            return strdup(proceso->path_proceso);
+        }
+    }
+
+    log_warning(memoria_logger, "No se encontró un proceso con PID %d", pid);
+    return NULL;
+}
+
 //============================================ Instrucciones de CPU =====================================================================
 
 /// @brief Lectura y escritura del espacio de usuario ///
