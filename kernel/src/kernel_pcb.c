@@ -69,6 +69,10 @@ t_pcb* crear_pcb(int prioridad, int tam_swap, char* path)
     agregar_entero_a_paquete(paquete,pcb-> pid);
     agregar_entero_a_paquete(paquete,tam_swap);
 
+    //voy a mandar el path ya de una
+    agregar_cadena_a_paquete(paquete,path);
+    log_info(kernel_logger, "Mandando a memoria el PATH: %s\n", path);
+
     enviar_paquete(paquete, socket_memoria);
     log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso \n");
     eliminar_paquete(paquete);
