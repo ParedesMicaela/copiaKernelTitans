@@ -33,8 +33,8 @@ int main(void)
     log_info(cpu_logger, "Se conectaron los clientes de dispatch e interrupt\n");
 
     //creamos el hilo para atender las interrupciones
-    //pthread_create(&hilo_interrupt, NULL, (void *)atender_interrupt, &socket_cliente_interrupt);
-    //pthread_detach(hilo_interrupt);
+    pthread_create(&hilo_interrupt, NULL, (void *)atender_interrupt, &socket_cliente_interrupt);
+    pthread_detach(hilo_interrupt);
 
     while (1)
     {
