@@ -27,7 +27,7 @@ static void pedir_instruccion(int socket_cliente_memoria,int posicion, int pid);
 static void recibir_instruccion(int socket_cliente_memoria);
 static bool hay_interrupcion();
 static void mostrar_valores (t_contexto_ejecucion* contexto);
-
+static void mostrar_valores (t_contexto_ejecucion* contexto);
 
 //================================================== Configuracion =====================================================================
 
@@ -421,16 +421,6 @@ void atender_interrupt(void *socket_servidor_interrupt)
     }
 }
 
-void mostrar_valores (t_contexto_ejecucion* contexto)
-{
-    // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
-    log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
-
-    for (int i = 0; i < 3; ++i) {
-        log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d",contexto->recursos_asignados[i].nombre_recurso, contexto->recursos_asignados[i].instancias_recurso);
-    }
-}
-
 static hay_interrupcion()
 {
     bool seguir_ejecutando = false;
@@ -621,3 +611,12 @@ void mostrar_recursos_asignados(t_contexto_ejecucion* proceso) {
     }
 }
 
+static void mostrar_valores (t_contexto_ejecucion* contexto)
+{
+    // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
+    log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
+
+    for (int i = 0; i < 3; ++i) {
+        log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d",contexto->recursos_asignados[i].nombre_recurso, contexto->recursos_asignados[i].instancias_recurso);
+    }
+}
