@@ -3,7 +3,6 @@
 //=============================================== Variables Globales ========================================================
 t_dictionary_int *diccionario_colas;
 t_dictionary_int *diccionario_estados;
-// t_dictionary* diccionario_tipo_instrucciones;
 
 t_list *cola_NEW;
 t_list *cola_READY;
@@ -11,10 +10,6 @@ t_list *cola_BLOCKED;
 t_list *cola_EXEC;
 t_list *cola_EXIT;
 
-// semáforos en planificación (inserte emoji de calavera)
-
-/*estos los estoy usando en la parte de hilos para los procesos en ready, exec  y exit del corto plazo
-para acceder a las listas y sacarles el tamanio o agregar/eliminar procesos*/
 pthread_mutex_t mutex_ready;
 pthread_mutex_t mutex_exec;
 pthread_mutex_t mutex_exit;
@@ -24,8 +19,6 @@ pthread_cond_t cond_corriendo;
 
 sem_t hay_proceso_nuevo;
 sem_t grado_multiprogramacion;
-//sem_t sigue_corriendo_corto;
-//sem_t sigue_corriendo_largo;
 sem_t hay_procesos_ready;
 sem_t mutex_pid;
 
@@ -35,9 +28,6 @@ sem_t mutex_pid;
 // sem_t semFRead;
 // sem_t semFWrite;
 // sem_t mutex_colas;
-
-
-
 
 // bool fRead;
 // bool fWrite;
@@ -74,8 +64,6 @@ void inicializar_semaforos()
     sem_init(&grado_multiprogramacion, 0, config_valores_kernel.grado_multiprogramacion_ini);
     sem_init(&(hay_proceso_nuevo), 0, 0);
     sem_init(&(hay_procesos_ready), 0, 0);
-    //sem_init(&(sigue_corriendo_corto), 0, 0);
-    //sem_init(&(sigue_corriendo_largo), 0, 0);
     sem_init(&(mutex_pid), 0, 1);
 }
 
@@ -584,11 +572,6 @@ void inicializar_diccionarios()
     dictionary_int_put(diccionario_estados, BLOCKED, "Blocked");
     dictionary_int_put(diccionario_estados, EXEC, "Exec");
     dictionary_int_put(diccionario_estados, EXIT, "Exit");
-
-    // diccionario_tipo_instrucciones = dictionary_create();
-
-    // dictionary_put(diccionario_tipo_instrucciones, "SET", (void*)SET);
-    // dictionary_put(diccionario_tipo_instrucciones, "EXIT", (void*)EXIT);
 }
 
 void inicializar_colas()
@@ -670,31 +653,3 @@ void mostrar_lista_pcb(t_list *cola, char *nombre_cola)
    
     free(pids);
 }
-
-/*
-Cuando se reciba un mensaje de CPU con motivo de finalizar el proceso
-    se deberá pasar al mismo al estado EXIT
-    liberar todos los recursos que tenga asignados
-    dar aviso al módulo Memoria para que éste libere sus estructuras.
-*/
-
-// corto plazo
-/*
-
-Una vez seleccionado el siguiente proceso a ejecutar:
-    -se lo transicionará al estado EXEC
-    -se enviará su Contexto de Ejecución al CPU a través del puerto de dispatch
-    -queda a la espera de recibir:
-        --contexto actualizado después de la ejecución
-        --un motivo de desalojo por el cual fue desplazado a manejar.
-
-
-En caso que el algoritmo requiera desalojar al proceso en ejecución
-   - enviar interrupción a través de la conexión de interrupt para forzar el desalojo del mismo.
-
-
-Al recibir el Contexto de Ejecución del proceso en ejecución
-    -en caso de que el motivo de desalojo implique replanificar
-        --se seleccionará el siguiente proceso a ejecutar según indique el algoritmo.
-            ---Durante este período la CPU se quedará esperando el nuevo contexto (es de esta parte o de todo el corto plazo???)
-*/
