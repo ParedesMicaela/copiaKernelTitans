@@ -1,52 +1,50 @@
 #include "kernel.h"
-//semaforo
-sem_t mutex_otras_colas;
 
-
-//===============================================================================================================================
-
-// nos van a decir la prioridad, el archivo de pseudocodigo a ejecutar y el tamanio de memoria swap que va a ejecutar
+// INICIAR PROCESO //
 void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
 {
     log_info(kernel_logger, "Iniciando proceso \n");
 
+    // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
+    enviar_path_a_memoria(path);
+
     //Creamos un PCB, que comienza en NEW
-    crear_pcb(prioridad, tam_proceso_swap, path);
+    crear_pcb(prioridad, tam_proceso_swap);
 }
 
 void consola_detener_planificacion() {
-    log_info(kernel_logger, "Deteniendo planificacion \n");
+    printf("PAUSA DE PLANIFICACIÓN \n");
 
     if(corriendo){
     pthread_mutex_lock(&mutex_corriendo);
     corriendo = 0;  //Bandera en Pausa
     pthread_mutex_unlock(&mutex_corriendo);
     }
-    else log_info (kernel_logger,"Ya esta detenida flaco");
+    else printf("Ya esta detenida flaco");
 }
 
 void consola_iniciar_planificacion() {
 
   if(!corriendo) {
-       log_info(kernel_logger, "Reanudando planificacion \n");
+       printf("INICIO DE PLANIFICACIÓN \n");
         pthread_mutex_lock(&mutex_corriendo);
         pthread_cond_broadcast(&cond_corriendo);  
         corriendo = 1;  // Bandera sigue
         pthread_mutex_unlock(&mutex_corriendo);
   }
   else {
-    log_info(kernel_logger, "No estaba pausada la planificacion \n");
+    printf("No estaba pausada la planificacion -_- \n");
   }
   
 }
 
 void consola_modificar_multiprogramacion(int valor) {
     if (valor <= config_valores_kernel.grado_multiprogramacion_ini) {
-        log_info(kernel_logger, "NO se puede modificador el grado de multiprogramacion \n"); //Revisar despues si es asi
+        printf("NO se puede modificador el grado de multiprogramacion \n"); 
     }
     else {
         config_valores_kernel.grado_multiprogramacion_ini = valor;
-        log_info(kernel_logger, "Se modifico el grado de multipromacion a: %d \n", valor);
+        printf("Se modifico el grado de multipromacion a: %d \n", valor);
     }
 
 }
@@ -58,132 +56,262 @@ void consola_proceso_estado() {
     mostrar_lista_pcb(cola_EXEC, "EXEC");
     mostrar_lista_pcb(cola_EXIT, "EXIT");
 }
-
+/*
 void consola_finalizar_proceso(int pid){
 
     printf("Entramos a finalizar proceso \n");
+
+|   //Obtenemos el tamanio de cada cola
+    pthread_mutex_lock(&mutex_blocked);
     int tam_cola_BLOCKED = list_size(cola_BLOCKED);
+    pthread_mutex_unlock(&mutex_blocked);
+
+    pthread_mutex_lock(&mutex_exec);
     int tam_cola_EXEC= list_size(cola_EXEC);
-    int bandera_cola = 0; // Si queda en 1, el pcb esta en blocked; si esta en 2, el pcb esta en exec.
+    pthread_mutex_unlock(&mutex_exec);
+
+    pthread_mutex_lock(&mutex_new);
+    int tam_cola_NEW = list_size(cola_NEW);
+    pthread_mutex_unlock(&mutex_new);
+
+    pthread_mutex_lock(&mutex_ready);
+    int tam_cola_NEW = list_size(cola_READY);
+    pthread_mutex_unlock(&mutex_ready);
 
     //BUSQUEDA DE PCB
 
-    //recorremos la cola de bloqueados y buscamos el pid del pcb
+    //Recorremos cola de bloqueados
     for(int i=0;i<tam_cola_BLOCKED ;i++)
         {
             //encontramos el pcb con el pid que mandamos
             if(pid == ((t_pcb*) list_get(tam_cola_BLOCKED, i))->pid)
             {
                 t_pcb* pcb = ((t_pcb*) list_get(cola_BLOCKED, i)); // hacemos esto para llamarlo directamente pcb
-                bandera_cola = 1;
+
+                pthread_mutex_lock(&mutex_blocked);
+                pcb = list_remove(dictionary_int_get(diccionario_colas, BLOCKED), 0);
+                pthread_mutex_unlock(&mutex_blocked);
+
+                liberar_pid(pid, EXIT, cola_EXIT);
                 printf("Encontramos pcb en bloqueado\n");            
             }
         }
 
-    //si no, lo buscamos en la cola de ejecutandose
+    //Recorremos cola de Execute
     for(int i=0;i<tam_cola_EXEC ;i++)
         {
             //encontramos el pcb con el pid que mandamos
-            if(pid == ((t_pcb*) list_get(tam_cola_BLOCKED, i))->pid)
+            if(pid == ((t_pcb*) list_get(tam_cola_EXEC, i))->pid)
             {
-                t_pcb* pcb = ((t_pcb*) list_get(cola_BLOCKED, i)); // hacemos esto para llamarlo directamente pcb
-                bandera_cola = 2; 
+                t_pcb* pcb = ((t_pcb*) list_get(cola_EXEC, i)); // hacemos esto para llamarlo directamente pcb
+
+                pthread_mutex_lock(&mutex_exec);
+                pcb = list_remove(dictionary_int_get(diccionario_colas, EXEC), 0);
+                pthread_mutex_unlock(&mutex_exec);
+
+                liberar_pid(pid, EXIT, cola_EXIT);
+                printf("Encontramos pcb ejecutandose \n");            
+            }
+        }
+
+    //Recorremos cola de NEW
+    for(int i=0;i<tam_cola_NEW ;i++)
+        {
+            //encontramos el pcb con el pid que mandamos
+            if(pid == ((t_pcb*) list_get(tam_cola_NEW, i))->pid)
+            {
+                t_pcb* pcb = ((t_pcb*) list_get(cola_NEW, i)); // hacemos esto para llamarlo directamente pcb
+
+                pthread_mutex_lock(&mutex_new);
+                pcb = list_remove(dictionary_int_get(diccionario_colas, NEW), 0);
+                pthread_mutex_unlock(&mutex_new);
+
+                liberar_pid(pid, EXIT, cola_EXIT);
+                printf("Encontramos pcb ejecutandose \n");            
+            }
+        }
+
+     //Recorremos cola de READY
+    for(int i=0;i<tam_cola_READY ;i++)
+        {
+            //encontramos el pcb con el pid que mandamos
+            if(pid == ((t_pcb*) list_get(tam_cola_READY, i))->pid)
+            {
+                t_pcb* pcb = ((t_pcb*) list_get(cola_READY, i)); // hacemos esto para llamarlo directamente pcb
+
+                pthread_mutex_lock(&mutex_ready);
+                pcb = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
+                pthread_mutex_unlock(&mutex_ready);
+
+                liberar_pid(pid, EXIT, cola_EXIT);
                 printf("Encontramos pcb ejecutandose \n");            
             }
         }
     
-    //CAMBIO DE ESTADO DE PCB
-    switch(bandera_cola)
+    //Si no lo encuentra en ninguna
+    printf("Proceso equivocado, no se encontro. Intente nuevamente"); 
+}
+
+
+void liberar_pid(int pid, estado ESTADO, t_list *cola)
+{
+    // recorremos la cola y buscamos el pid del pcb
+    for (int i = 0; i < list_size(cola); i++)
     {
-        case 1: cambiar_estado_de_proceso_dado_un_pid(pid, EXIT, cola_BLOCKED, cola_EXIT); break;
-        case 2: cambiar_estado_de_proceso_dado_un_pid(pid, EXIT, cola_EXEC, cola_EXIT); break;
-        default: printf("Proceso equivocado, no se encontro. Intente nuevamente"); inicializar_consola_interactiva(); break;
+        if (pid == ((t_pcb *)list_get(cola, i))->pid)
+        {
+            pthread_mutex_lock(&mutex_colas);
+            list_remove(cola, i); // yendome del indice maximo de la lista
+            pthread_mutex_unlock(&mutex_colas);
+        }
+    }
+
+    // nuestro nuevo estado va a ser el estado al cual queremos cambiarlo
+    pcb->estado_pcb = ESTADO;
+
+    // finalmente lo agregamos a la cola de nuestro nuevo estado
+    pthread_mutex_lock(&mutex_colas);
+    list_add(cola, pcb);
+    printf("PID: %d  es desalojado \n", pid);
+    pthread_mutex_unlock(&mutex_colas);
+}
+*/
+void consola_finalizar_proceso(int pid) {
+
+    printf(" Finalizamos proceso el proceso %d \n", pid);
+
+    t_pcb* pcb_asociado = NULL;  
+    //t_list* cola_con_proceso = NULL;
+    int estado = -1;  
+
+    // Recorremos cola de Blocked
+    pthread_mutex_lock(&mutex_blocked);
+    if (list_size(cola_BLOCKED) > 0) {
+        for (int i = 0; i < list_size(cola_BLOCKED); i++) {
+            t_pcb* pcb = list_get(cola_BLOCKED, i);
+            if (pcb->pid == pid) {
+                pcb_asociado = pcb;
+                //cola_con_proceso = cola_BLOCKED;
+                estado = BLOCKED;
+                break;
+            }
+        }
+    }
+    pthread_mutex_unlock(&mutex_blocked);
+
+    // Recorremos cola de Execute
+    if (pcb_asociado == NULL) {
+        pthread_mutex_lock(&mutex_exec);
+        if (list_size(cola_EXEC) > 0) {
+            for (int i = 0; i < list_size(cola_EXEC); i++) {
+                t_pcb* pcb = list_get(cola_EXEC, i);
+                if (pcb->pid == pid) {
+                    pcb_asociado = pcb;
+                    //cola_con_proceso = cola_EXEC;
+                    estado = EXEC;
+                    break;
+                }
+            }
+        }
+        pthread_mutex_unlock(&mutex_exec);
+    }
+
+   // Recorremos cola de NEW
+    if (pcb_asociado == NULL) {
+        pthread_mutex_lock(&mutex_new);
+        if (list_size(cola_NEW) > 0) {
+            for (int i = 0; i < list_size(cola_NEW); i++) {
+                t_pcb* pcb = list_get(cola_NEW, i);
+                if (pcb->pid == pid) {
+                    pcb_asociado = pcb;
+                    //cola_con_proceso = cola_NEW;
+                    estado = NEW;
+                    break;
+                }
+            }
+        }
+        pthread_mutex_unlock(&mutex_new);
+    }
+
+    // Recorremos cola de READY
+    if (pcb_asociado == NULL) {
+        pthread_mutex_lock(&mutex_ready);
+        if (list_size(cola_READY) > 0) {
+            for (int i = 0; i < list_size(cola_READY); i++) {
+                t_pcb* pcb = list_get(cola_READY, i);
+                if (pcb->pid == pid) {
+                    pcb_asociado = pcb;
+                    //cola_con_proceso = cola_READY;
+                    estado = READY;
+                    break;
+                }
+            }
+        }
+        pthread_mutex_unlock(&mutex_ready);
+    }
+
+    //Si encuentra el pcb
+    if (pcb_asociado != NULL) {
+        // Remuevo el pcb del diccionario
+        pthread_mutex_lock(&mutex_colas);
+        list_remove_element(dictionary_int_get(diccionario_colas, estado), pcb_asociado);
+        pthread_mutex_unlock(&mutex_colas);
+
+        //Lo desalojo
+        if(estado == EXEC) {
+        t_paquete* paquete = crear_paquete(DESALOJO);
+        agregar_entero_a_paquete(paquete, 1);
+        enviar_paquete(paquete, socket_cpu_interrupt);
+        eliminar_paquete(paquete);
+        }
+
+        // Lo meto en Exit
+        pthread_mutex_lock(&mutex_exit);
+        meter_en_cola(pcb_asociado, EXIT, cola_EXIT);
+        pthread_mutex_unlock(&mutex_exit);
+
+        // sacamos el proceso de la lista de exit
+        pthread_mutex_lock(&mutex_exit);
+        list_remove_element(dictionary_int_get(diccionario_colas, EXIT), pcb_asociado);
+        pthread_mutex_unlock(&mutex_exit);
+
+        printf("Finaliza el  PCB de ID: %d\n", pcb_asociado->pid);
+
+        // le mandamos esto a memoria para que destruya las estructuras
+    
+        enviar_pcb_a_memoria(pcb_asociado, socket_memoria, FINALIZAR_EN_MEMORIA);
+        printf("Enviando a memoria liberar estructuras del proceso \n");
+
+        int fin_ok;
+        recv(socket_memoria, &fin_ok, sizeof(int), 0);
+
+        if (fin_ok != 1)
+        {
+        printf("No se pudieron eliminar estructuras en memoria del proceso PID[%d]\n", pcb_asociado->pid);
+        }
+    
+        // si la respuesta que conseguimos de memoria es que se finalice la memoria, le avisamos a la consola que ya finaliza el proceso
+        printf("Respuesta memoria de estructuras liberadas del proceso recibida \n");
+
+        eliminar_pcb(pcb_asociado);
+        sem_post(&grado_multiprogramacion);
+    } else {
+        printf("Proceso no encontrado. Intente nuevamente.\n");
     }
 }
 
-
-void cambiar_estado_de_proceso_dado_un_pid(int pid, estado ESTADO_NUEVO, t_list* cola_origen, t_list* cola_destino) // recibimos pid de proceso, estado nuevo y cola origen del pcb y destino para cambiarlo
-{   
-    //int posicion_pcb; // guarda posicion del proceso, cuando se encuentra
-    //estado estado_anterior; // guarda el estado anterior del proceso
-    
-    //si la cola esta vacia 
-    int tam_cola_origen = list_size(cola_origen);
-    if(tam_cola_origen == 0) log_info(kernel_logger, "Esta vacia esta cola origen de procesos");
-    
-    pthread_mutex_lock(&mutex_new);
-
-    //recorremos la cola y buscamos el pid del pcb
-    for(int i=0;i<tam_cola_origen ;i++)
-        {
-            //encontramos el pcb con el pid que mandamos
-            if(pid == ((t_pcb*) list_get(cola_origen, i))->pid)
-            {
-                t_pcb* pcb = ((t_pcb*) list_get(cola_origen, i)); // hacemos esto para llamarlo directamente pcb
-                
-                //nadie nos rompe los quinotos con el semaforo
-                sem_wait(&(mutex_otras_colas));
-
-                //agregar el pcb a la cola destino que le mandamos
-                list_add(cola_destino,pcb);
-
-                //FALTA VERIFICAR SI HAY QUE HACER ALGO MAS ANTES DE LIBERAR RECURSOS
-
-                //liberamos recursos del pcb en la cola anterior
-                //eliminamos de la lista en la que estaba
-                eliminar_pcb(pcb);
-                list_remove(cola_origen, i);
-
-                sem_post(&(mutex_otras_colas));            
-            }
-        }
-
-    pthread_mutex_unlock(&mutex_new);
-}
-
 /*
+  // Remove el pcb de la cola
+        pthread_mutex_lock(&mutex_colas);
+        list_remove_element(target_queue, list_index_of(target_queue, pcb_to_remove));
+        pthread_mutex_unlock(&mutex_colas);
 
-Iniciar proceso // INICIAR_PROCESO [PATH] [SIZE] [PRIORIDAD]
-    - Ejecutar un nuevo proceso en base a un archivo dentro del file system de linux
-    - Dicho mensaje se encargará de:
-        --creación del proceso (PCB)
-        --Dejar el mismo en el estado NEW.
+        // Cambiamos estado a exit
+        pcb_asociado->estado_pcb = EXIT;
 
-
-Finalizar proceso // FINALIZAR_PROCESO [PID]
-    - Es un mensaje
-    - Finalizar un proceso que se encuentre dentro del sistema
-    - Realiza las mismas operaciones como si el proceso llegara a EXIT por sus caminos habituales
-    - (deberá liberar recursos, archivos y memoria).
-
-
-Detener planificación // DETENER_PLANIFICACION
-    - Es un mensaje
-    - Pausar la planificación de corto y largo plazo.
-    - El proceso que se encuentra en ejecución NO es desalojado
-    - Una vez que salga de EXEC se va a pausar su transición al siguiente estado.
-
-
-Iniciar planificación // INICIAR_PLANIFICACION
-    - Es un mensaje
-    - en caso que se encuentre pausada:
-        --retoma la planificación de corto y largo plazo
-    - En caso que no se encuentre pausada
-        --se debe ignorar el mensaje.
-
-Modificar grado multiprogramación //  MULTIPROGRAMACION [VALOR]
-    - Actualiza del grado de multiprogramación configurado inicialmente por archivo de configuración.
-    - En caso que dicho valor sea inferior al actual
-        --NO se debe desalojar ni finalizar los procesos.
-
-
-Listar procesos por estado // PROCESO_ESTADO
-    - Es un mensaje
-    - Muestra por consola listado de los estados con los procesos que se encuentran dentro de cada uno de ellos.
-
-
-!!!Se debe tener en cuenta que!!!
-    - frente a un fallo en la escritura de un comando en consola
-        --el sistema debe permanecer estable sin reacción alguna.
-
-*/
+        // Añadimos el PCB a exit
+        pthread_mutex_lock(&mutex_colas);
+        list_add(cola_EXIT, pcb_asociado);
+        printf("PID: %d is desalojado\n", pid);
+        pthread_mutex_unlock(&mutex_colas);
+    */
