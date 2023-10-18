@@ -156,9 +156,6 @@ void proceso_en_ready()
 
 void proceso_en_execute(t_pcb *proceso_seleccionado)
 {
-    // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
-    enviar_path_a_memoria(proceso_seleccionado->path_proceso);
-
     // le enviamos el pcb a la cpu para que ejecute y recibimos el pcb resultado de su ejecucion
     enviar_pcb_a_cpu(proceso_seleccionado);
 
@@ -190,6 +187,14 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     if (string_equals_ignore_case(devuelto_por, "sleep"))
     {
         usleep(proceso_seleccionado->sleep);
+    }
+
+     if (string_equals_ignore_case(devuelto_por, "desalojo"))
+    {
+        // Lo agregamos nuevamente a la cola de Ready
+        pthread_mutex_lock(&mutex_ready);
+        meter_en_cola(proceso_seleccionado, READY, cola_READY);
+        pthread_mutex_unlock(&mutex_ready);
     }
 
     if (string_equals_ignore_case(devuelto_por, "page_fault"))
@@ -229,7 +234,7 @@ void proceso_en_exit(t_pcb *proceso)
     enviar_pcb_a_memoria(proceso, socket_memoria, FINALIZAR_EN_MEMORIA);
     log_info(kernel_logger, "Enviando a memoria liberar estructuras del proceso \n");
 
-    int fin_ok;
+    int fin_ok = 0;
     recv(socket_memoria, &fin_ok, sizeof(int), 0);
 
     if (fin_ok != 1)
@@ -447,7 +452,7 @@ t_pcb *obtener_siguiente_PRIORIDADES()
 
             // Desalojamos
             pthread_mutex_lock(&mutex_exec);
-            t_pcb *proceso_ejecutando = list_remove(dictionary_int_get(diccionario_colas, EXEC), 0);
+            list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso_ejecutando);
             pthread_mutex_unlock(&mutex_exec);
 
             // Enviamos el Desalojo a la CPU
@@ -458,7 +463,7 @@ t_pcb *obtener_siguiente_PRIORIDADES()
 
             // Eliminar el proceso de mayor prioridad de la cola de Ready
             pthread_mutex_lock(&mutex_ready);
-            list_remove_by_condition(dictionary_int_get(diccionario_colas, READY), (void *)comparar_prioridad);
+            list_remove_element(dictionary_int_get(diccionario_colas, READY), (void*) proceso_mayor_prioridad);
             pthread_mutex_unlock(&mutex_ready);
 
             // Devolver el proceso de mayor prioridad para la ejecución
@@ -481,14 +486,13 @@ t_pcb *obtener_siguiente_PRIORIDADES()
     }
 }
 
-
 t_pcb *obtener_siguiente_RR()
 {
     int quantum = config_valores_kernel.quantum; // obtiene el quantum de la config del kernel
     int bandera = 0;
     log_info(kernel_logger, "Inicio la planificación RR\n");
     
-    thread_mutex_lock(&mutex_ready);
+    pthread_mutex_lock(&mutex_ready);
     t_pcb *proceso_ejecutandose = list_get(dictionary_int_get(diccionario_colas, EXEC), 0); // SUPONEMOS QUE DEVUELVE NULL SI NO TIENE NADA, FALTA CONSULTAD
     pthread_mutex_unlock(&mutex_ready);
     
@@ -630,7 +634,7 @@ void meter_en_cola(t_pcb *pcb, estado ESTADO, t_list *cola)
 void mostrar_lista_pcb(t_list *cola, char *nombre_cola)
 {
     char *string_pid = NULL;
-    char *pids = string_new();
+    char *pids = NULL;
 
     pthread_mutex_lock(&mutex_colas);
     int tam_cola = list_size(cola);
@@ -640,6 +644,7 @@ void mostrar_lista_pcb(t_list *cola, char *nombre_cola)
         log_info(kernel_logger, "esta vacia la cola %s", nombre_cola);
      } 
       else { 
+        pids = string_new();
         for (int i = 0; i < tam_cola; i++) {
             pthread_mutex_lock(&mutex_colas);
 
@@ -652,14 +657,17 @@ void mostrar_lista_pcb(t_list *cola, char *nombre_cola)
             // Junto los pids
             string_append(&pids, string_pid);
 
+            free(string_pid);
+
             // Separo los PIDs con comas
             if (i < tam_cola - 1)
                 string_append(&pids, ", ");
         }
          // mostramos la lista con los pids en la cola dada
         log_info(kernel_logger, "Cola %s %s : [%s]\n", nombre_cola, config_valores_kernel.algoritmo_planificacion, pids);
-        free(string_pid);
+        //free(pids);
     }
-   
-    free(pids);
+    if (pids != NULL) {
+        free(pids);  // Free pids if it was allocated
+    }
 }

@@ -5,11 +5,8 @@ void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
 {
     log_info(kernel_logger, "Iniciando proceso \n");
 
-    // necesitamos que la memoria tenga el path que nos pasaron para poder leersela al cpu
-    enviar_path_a_memoria(path);
-
     //Creamos un PCB, que comienza en NEW
-    crear_pcb(prioridad, tam_proceso_swap);
+    crear_pcb(prioridad, tam_proceso_swap, path);
 }
 
 void consola_detener_planificacion() {

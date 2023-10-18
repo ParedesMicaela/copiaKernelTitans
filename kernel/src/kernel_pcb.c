@@ -44,7 +44,21 @@ t_pcb* crear_pcb(int prioridad, int tam_swap, char* path)
 
     pcb->recurso_pedido = NULL;
     pcb->sleep = 0;
+
+    
+    if (path != NULL) {
     pcb->path_proceso = strdup(path);
+    if (pcb->path_proceso == NULL) {
+        log_error(kernel_logger, "No se pudo alocar memoria\n");
+        free(pcb);
+        inicializar_consola_interactiva();
+    }
+} else {
+    log_error(kernel_logger, "No me enviaste un path correcto\n");
+    free(pcb);
+    inicializar_consola_interactiva();
+}
+
 
     //pcb->tabla_archivos_abiertos = diccionario;
     //pcb->archivosAbiertos = dictionary_create();
@@ -77,7 +91,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap, char* path)
     log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso \n");
     eliminar_paquete(paquete);
 
-    int respuesta;
+    int respuesta = 0;
     recv(socket_memoria, &respuesta,sizeof(int),0);
 
     if (respuesta != 1)

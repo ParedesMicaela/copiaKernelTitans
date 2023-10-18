@@ -122,7 +122,6 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
     t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
     void *stream = paquete->buffer->stream;
     log_info(cpu_logger, "Ya recibi paquete");
-    log_info(cpu_logger, "recibi %d\n",paquete->codigo_operacion);
     
     t_contexto_ejecucion* contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
     contexto_ejecucion->recursos_asignados = malloc(3 *sizeof(t_recursos_asignados));
@@ -130,6 +129,8 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
     // el kernel nos va a pasar el pcb al momento de poner a ejecutar un proceso
     if (paquete->codigo_operacion == PCB)
     {
+        log_info(cpu_logger, "Recibi un PCB del Kernel :)\n");
+
         contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
         contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
         contexto_ejecucion->prioridad = sacar_entero_de_paquete(&stream);
@@ -146,8 +147,6 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
             contexto_ejecucion->recursos_asignados[i].instancias_recurso = sacar_entero_de_paquete(&stream);
             free(nombre);
         }
-
-        log_info(cpu_logger, "Recibi un PCB del Kernel :)\n");
 
         // iniciamos el procedimiento para procesar cualquier instruccion
         ciclo_de_instruccion(socket_cliente_dispatch, socket_cliente_memoria, contexto_ejecucion);
@@ -185,7 +184,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         //=============================================== FETCH =================================================================
         
         //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
-        pedir_instruccion(socket_cliente_memoria, contexto_ejecucion->program_counter);
+        pedir_instruccion(socket_cliente_memoria, contexto_ejecucion->program_counter, contexto_ejecucion->pid);
 
         //una vez que la recibo de memoria, la guardo en la var global de arriba
         recibir_instruccion(socket_cliente_memoria);
@@ -361,7 +360,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 
         //CHECK INTERRUPT
         //printf("num_interrupcion =  %d  \n", interrupcion); 
-        if(seguir_ejecutando && hay_interrupcion())
+        if(hay_interrupcion()) //&& seguir ejecutando?
         {
             printf("detectamos interrupcion");
             pthread_mutex_lock(&mutex_interrupcion);
@@ -421,7 +420,7 @@ void atender_interrupt(void *socket_servidor_interrupt)
     }
 }
 
-static hay_interrupcion()
+static bool hay_interrupcion()
 {
     bool seguir_ejecutando = false;
 
@@ -468,6 +467,7 @@ static int restar_registros(char *registro_destino, char *registro_origen)
     int resta = valor1 - valor2;
 
     int absoluto = abs(resta);
+
     return absoluto;
 }
 
@@ -497,65 +497,65 @@ static int tipo_inst(char *instruccion)
     if (string_equals_ignore_case(instruccion, "SET"))
     {
         numero = SET;
-    }else if (string_equals_ignore_case(instruccion, "SUM"))
+    } else if (string_equals_ignore_case(instruccion, "SUM"))
     {
         numero = SUM;
         
-    }else if (string_equals_ignore_case(instruccion, "SUB"))
+    } else if (string_equals_ignore_case(instruccion, "SUB"))
     {
         numero = SUB;
         
-    }else if (string_equals_ignore_case(instruccion, "JNZ"))
+    } else if (string_equals_ignore_case(instruccion, "JNZ"))
     {
         numero = JNZ;
 
-    }else if (string_equals_ignore_case(instruccion, "SLEEP"))
+    } else if (string_equals_ignore_case(instruccion, "SLEEP"))
     {
         numero = SLEEP;
-    }else if (string_equals_ignore_case(instruccion, "WAIT"))
+    } else if (string_equals_ignore_case(instruccion, "WAIT"))
     {
         numero = WAIT;
-    }else if (string_equals_ignore_case(instruccion, "SIGNAL"))
+    } else if (string_equals_ignore_case(instruccion, "SIGNAL"))
     {
         numero = SIGNAL;
-    }else if (string_equals_ignore_case(instruccion, "MOV_IN"))
+    } else if (string_equals_ignore_case(instruccion, "MOV_IN"))
     {
         numero = MOV_IN;
 
-    }else if (string_equals_ignore_case(instruccion, "MOV_OUT"))
+    } else if (string_equals_ignore_case(instruccion, "MOV_OUT"))
     {
         numero = MOV_OUT;
 
-    }else if (string_equals_ignore_case(instruccion, "F_OPEN"))
+    } else if (string_equals_ignore_case(instruccion, "F_OPEN"))
     {
         numero = F_OPEN;
 
-    }else if (string_equals_ignore_case(instruccion, "F_CLOSE"))
+    } else if (string_equals_ignore_case(instruccion, "F_CLOSE"))
     {
         numero = F_CLOSE;
 
-    }else if (string_equals_ignore_case(instruccion, "F_SEEK"))
+    } else if (string_equals_ignore_case(instruccion, "F_SEEK"))
     {
         numero = F_SEEK;
 
-    }else if (string_equals_ignore_case(instruccion, "F_READ"))
+    } else if (string_equals_ignore_case(instruccion, "F_READ"))
     {
         numero = F_READ;
 
-    }else if (string_equals_ignore_case(instruccion, "F_WRITE"))
+    } else if (string_equals_ignore_case(instruccion, "F_WRITE"))
     {
         numero = F_WRITE;
 
-    }else if (string_equals_ignore_case(instruccion, "F_TRUNCATE"))
+    } else if (string_equals_ignore_case(instruccion, "F_TRUNCATE"))
     {
         numero = F_TRUNCATE;
 
-    }else if (string_equals_ignore_case(instruccion, "EXIT"))
+    } else if (string_equals_ignore_case(instruccion, "EXIT"))
     {
         numero = INSTRUCCION_EXIT;
-    }else
+    } else
     {
-        printf("no encontre la instruccion");
+        log_info(cpu_logger, "no encontre la instruccion\n");
         abort();
     }
     return numero;

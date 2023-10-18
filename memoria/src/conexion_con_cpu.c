@@ -35,12 +35,12 @@ void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones, int inst_
     free(instrucciones);
 	eliminar_paquete(paquete);
 }
-
+/*
 char* leer_archivo_instrucciones(char* path_instrucciones) {
 
     FILE* instr_f = fopen(path_instrucciones, "r");
     char* una_cadena    = malloc(MAX_CHAR);
-    char* cadena_completa   = malloc(MAX_CHAR);
+    char* cadena_completa  = NULL; //malloc(MAX_CHAR);
 
     if (instr_f == NULL) {
         perror("no se pudo abrir el archivo de instrucciones");
@@ -53,6 +53,38 @@ char* leer_archivo_instrucciones(char* path_instrucciones) {
     }
 
     free(una_cadena);
+    fclose(instr_f);
+
+    return cadena_completa;
+}
+*/
+
+char* leer_archivo_instrucciones(char* path_instrucciones) {
+    FILE* instr_f = fopen(path_instrucciones, "r");
+    if (instr_f == NULL) {
+        perror("No se pudo abrir el archivo de instrucciones");
+        abort();
+    }
+
+    char* cadena_completa = NULL;
+    char* linea = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    while ((read = getline(&linea, &len, instr_f)) != -1) {
+        if (cadena_completa == NULL) {
+            cadena_completa = strdup(linea);
+        } else {
+            char* temp = malloc(strlen(cadena_completa) + strlen(linea) + 1);
+            strcpy(temp, cadena_completa);
+            strcat(temp, linea);
+            free(cadena_completa);
+            cadena_completa = temp;
+           
+        }
+    }
+   
+    free(linea);
     fclose(instr_f);
 
     return cadena_completa;

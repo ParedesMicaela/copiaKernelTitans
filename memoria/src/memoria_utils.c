@@ -55,9 +55,7 @@ void manejo_conexiones(void* socket_cliente)
 
 		//va a recibir un handshake de la cpu y le va a tener que mandar como min el tam_pagina
 		log_info(memoria_logger,"Me llego el handshake :)\n");
-
-		//lo retardamos
-		usleep(config_valores_memoria.retardo_respuesta * 1000); 
+		int entero = sacar_entero_de_paquete(&stream);
 		enviar_paquete_handshake(cliente);
 		break;
 
@@ -71,6 +69,7 @@ void manejo_conexiones(void* socket_cliente)
 		path_asignado = buscar_path_proceso(pid_proceso); 
 
 		//mandamos directamente el path del proceso porque ahi ya voy a tener las instrucciones leidas y cargadas
+		usleep(config_valores_memoria.retardo_respuesta * 1000);  //Retardo consigna
 		enviar_paquete_instrucciones(cliente, path_asignado, posicion_pedida);
 		break;
 
@@ -112,8 +111,8 @@ void manejo_conexiones(void* socket_cliente)
         int ok_creacion = 1;
         send(cliente, &ok_creacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras creadas en memoria kernel-kyunn\n");
-		free(instrucciones_leidas);
-		free(path_recibido);
+		//free(instrucciones_leidas);
+		//free(path_recibido);
 		break;
 
 	case FINALIZAR_EN_MEMORIA:
