@@ -488,85 +488,57 @@ t_pcb *obtener_siguiente_PRIORIDADES()
 
 t_pcb *obtener_siguiente_RR()
 {
-    int quantum = config_valores_kernel.quantum; // obtiene el quantum de la config del kernel
-    int bandera = 0;
     log_info(kernel_logger, "Inicio la planificación RR\n");
-    
-    pthread_mutex_lock(&mutex_ready);
-    t_pcb *proceso_ejecutandose = list_get(dictionary_int_get(diccionario_colas, EXEC), 0); // SUPONEMOS QUE DEVUELVE NULL SI NO TIENE NADA, FALTA CONSULTAD
-    pthread_mutex_unlock(&mutex_ready);
-    
-    // Selecciono el proceso que se esta ejecutando, es el que vamos a analizar
-    //si no hay ningun proceso ejecutandose, simplemente mandamos el primero en ready
-    if(!proceso_ejecutandose)
-    {
-    //agarrar proceso para ejecutar
+
+    int quantum = config_valores_kernel.quantum; 
+
+    // Realiza el bloqueo y desbloqueo del mutex de READY para sacar el primer proceso de la cola.
     pthread_mutex_lock(&mutex_ready);
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
     pthread_mutex_unlock(&mutex_ready);
 
-    return proceso_seleccionado;
-    }
+    log_info(kernel_logger, "PID[%d] sale de READY por planificación RR", proceso_seleccionado->pid);
 
-    int tiempo_transcurrido = 0; // arranca en 0 porque todavía no empieza jeje
+    int tiempo_restante = quantum; // Comienza con el valor del quantum
 
-    // mientras el proceso se esta ejecutando nos fijamos que el quantum no haya terminado
-    while (tiempo_transcurrido < quantum)
+    while (tiempo_restante > 0)
     {
-        //con esto soluciono espera activa
-        usleep(1000); 
+        usleep(1000); // Simula la ejecución y pausa el proceso en milisegundos
 
-        // si el proceso finaliza durante su ejecución es porque está en exit, entonces agarramos siguiente por fifo
-        if (proceso_ejecutandose->estado_pcb == EXIT)
+        // Si el proceso finaliza durante su ejecución, es porque está en EXIT
+        if (proceso_seleccionado->estado_pcb == EXIT)
         {
-            log_info(kernel_logger, "PID[%d] ha finalizado durante su quantum de RR\n", proceso_ejecutandose->pid);
-            
-            //si el proceso que se esta ejecutando termino, agarramos el siguiente de los que estan listos
-            //lo mandamos para que se ejecute
+            log_info(kernel_logger, "PID[%d] ha finalizado durante su quantum de RR\n", proceso_seleccionado->pid);
             pthread_mutex_lock(&mutex_ready);
-            t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
+            list_remove(dictionary_int_get(diccionario_colas, READY), 0);
             pthread_mutex_unlock(&mutex_ready);
 
             return proceso_seleccionado;
         }
-
-        //volvemos a copiar los datos para ver si ahora cambio de estado, porque sino seria el mismo estado siempre
-        pthread_mutex_lock(&mutex_ready);
-        t_pcb *proceso_ejecutandose = list_get(dictionary_int_get(diccionario_colas, EXEC), 0);
-        pthread_mutex_unlock(&mutex_ready);
         
-        //log_info(kernel_logger, "Todavia no termino el quantum\n");
-        tiempo_transcurrido++; // aumento el tiempo que pasa en 1 milisegundo
-
+        tiempo_restante--; // Reduce el tiempo restante en cada iteración
     }
-    // ahora contemplo el caso en el que el tiempo que pasa sea igual al quantum, por lo que pasa de nuevo a la cola de READY(en última posición)
-    if (tiempo_transcurrido == quantum)
+    
+    if(tiempo_restante == 0)
     {
-        pthread_mutex_lock(&mutex_ready);
-        meter_en_cola(proceso_ejecutandose,READY,cola_READY);
-        pthread_mutex_unlock(&mutex_ready);
-        //cambiar semaforo por el que sea que tenga que ir 
+    // Reinicia el quantum para el siguiente proceso.
+    proceso_seleccionado->quantum = config_valores_kernel.quantum;
+    log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
 
+    // Debes enviar una señal de desalojo al proceso en CPU.
+    t_paquete *paquete = crear_paquete(DESALOJO);
+    agregar_entero_a_paquete(paquete, 1);
+    enviar_paquete(paquete, socket_cpu_interrupt);
+    eliminar_paquete(paquete);
 
-        // ahora reinicio el quantum para el siguiente proceso :) uwu
-        //proceso_seleccionado->quantum = config_valores_kernel.quantum; // Reinicia el quantum para el siguiente proceso.
-        log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_ejecutandose->pid);
-        
-        //hay que enviar por socket interrupt
-        t_paquete* paquete = crear_paquete(DESALOJO);
-        enviar_paquete(paquete, socket_cpu_interrupt);
-        eliminar_paquete(paquete);
-
-        //agarrar proceso para ejecutar
-        pthread_mutex_lock(&mutex_ready);
-        t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
-        pthread_mutex_unlock(&mutex_ready);
-
-        return proceso_seleccionado;
-
+    // Selecciona un nuevo proceso para ejecutar y continúa la planificación.
+    // Puedes hacer esto llamando recursivamente a la función obtener_siguiente_RR.
+    return proceso_seleccionado;
     }
 
+    return NULL;
 }
+
 
 //=================================================== Diccionarios y Colas ==================================================================
 void inicializar_diccionarios()

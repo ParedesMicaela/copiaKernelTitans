@@ -16,7 +16,7 @@
 #include <commons/bitarray.h>
 
 // DEFINICIONES 
-#define MAX_CHAR 100
+//#define MAX_CHAR 100
 
 //VARIABLES GLOBALES
 extern t_log* memoria_logger;
