@@ -33,7 +33,7 @@ sem_t mutex_pid;
 // bool fWrite;
 
 int corriendo = 1;
-
+static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2);
 //====================================================== Planificadores ========================================================
 void inicializar_planificador()
 {
@@ -401,76 +401,86 @@ t_pcb *obtener_siguiente_FIFO()
     return proceso_seleccionado;
 }
 
-t_pcb* obtener_siguiente_PRIORIDADES()
+static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2)
 {
-    log_info(kernel_logger, "Inicio la planificacion PRIODIDADES \n");
-
-	 thread_mutex_lock(&mutex_ready);
-    t_pcb *proceso_ejecutandose = list_get(dictionary_int_get(diccionario_colas, EXEC), 0); // SUPONEMOS QUE DEVUELVE NULL SI NO TIENE NADA, FALTA CONSULTAD
-    pthread_mutex_unlock(&mutex_ready);
-    
-    // Selecciono el proceso que se esta ejecutando, es el que vamos a analizar
-    //si no hay ningun proceso ejecutandose, simplemente mandamos el primero en ready
-    if(!proceso_ejecutandose)
-    {
-    //agarrar proceso para ejecutar
-    pthread_mutex_lock(&mutex_ready);
-    t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
-    pthread_mutex_unlock(&mutex_ready);
-
-    return proceso_seleccionado;
+    if (proceso1 == NULL) {
+        return proceso2;
+    } else if (proceso2 == NULL) {
+        return proceso1;
+    } else if (proceso1->prioridad < proceso2->prioridad) {
+        return proceso1;
+    } else if (proceso1->prioridad > proceso2->prioridad) {
+        return proceso2;
+    } else {
+        // En caso de empate, devuelve el primero de la lista
+        return proceso1;
     }
+}
 
-    if (proceso_ejecutandose->estado_pcb == EXIT) 
-        {
-            log_info(kernel_logger, "PID[%d] ha finalizado\n", proceso_ejecutandose->pid);
-            //agarrar proceso para ejecutar
-            pthread_mutex_lock(&mutex_ready);
-            t_pcb *proceso_seleccionado = list_get_minimum(cola_READY, proceso_seleccionado->prioridad); //revisar bien el list get minimum
-            list_remove(dictionary_int_get(diccionario_colas, READY), 0);
-            pthread_mutex_unlock(&mutex_ready);
+t_pcb *obtener_siguiente_PRIORIDADES()
+{
+    log_info(kernel_logger, "Inicio la planificacion PRIORIDADES \n");
 
-            return proceso_seleccionado;
-        }
-    else if (  
-        //ante cada entrada a la cola de ready fijarse si tiene mas prioridad, y en ese caso, ejecutarlo
-        proceso_ejecutandose->estado_pcb == EXEC 
-        && 
-        proceso_ejecutandose->prioridad > list_get_minimum(cola_READY, proceso_ejecutandose->prioridad) //no se si seta bien este list_get_minimum
-            )
+    // Nos fijamos si hay procesos
+    pthread_mutex_lock(&mutex_exec);
+    int tam_cola_execute = list_size(cola_EXEC);
+    pthread_mutex_unlock(&mutex_exec);
+
+    // Obtenemos el proceso de mayor prioridad
+    pthread_mutex_lock(&mutex_ready);
+    t_pcb *proceso_mayor_prioridad = list_fold(dictionary_int_get(diccionario_colas, READY), NULL, (void *)comparar_prioridad);
+    pthread_mutex_unlock(&mutex_ready);
+
+    log_info(kernel_logger, "PID[%d] es el de mas prioridad\n", proceso_mayor_prioridad->pid);
+
+    // Desalojar el proceso actual (si lo hay)
+    if (tam_cola_execute > 0)
+    {
+
+        // Obtengo el proceso que esta ejecutando
+        pthread_mutex_lock(&mutex_exec);
+        t_pcb *proceso_ejecutando = list_get(dictionary_int_get(diccionario_colas, EXEC), 0);
+        pthread_mutex_unlock(&mutex_exec);
+
+        if (proceso_mayor_prioridad->prioridad < proceso_ejecutando->prioridad)
         {
-            //cambiar proceso actual de menor priodidad a la cola de ready
-            //(por ahora no se si esta bien mandarlo asi nomas, porque este proceso esta desalojado
-            //y capaz deberiamos directamente volver a ejecutarlo apenas termine el nuevo)
-            
-            pthread_mutex_lock(&mutex_ready);
-            meter_en_cola(proceso_ejecutandose,READY,cola_READY);
-            pthread_mutex_unlock(&mutex_ready);
-            //cambiar semaforo por el que sea que tenga que ir 
-        
-            //hay que enviar por socket interrupt
-            t_paquete* paquete = crear_paquete(DESALOJO);
+
+            // Desalojamos
+            pthread_mutex_lock(&mutex_exec);
+            t_pcb *proceso_ejecutando = list_remove(dictionary_int_get(diccionario_colas, EXEC), 0);
+            pthread_mutex_unlock(&mutex_exec);
+
+            // Enviamos el Desalojo a la CPU
+            t_paquete *paquete = crear_paquete(DESALOJO);
+            agregar_entero_a_paquete(paquete, 1);
             enviar_paquete(paquete, socket_cpu_interrupt);
             eliminar_paquete(paquete);
 
-            //agarrar proceso para ejecutar
+            // Eliminar el proceso de mayor prioridad de la cola de Ready
             pthread_mutex_lock(&mutex_ready);
-            t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
+            list_remove_by_condition(dictionary_int_get(diccionario_colas, READY), (void *)comparar_prioridad);
             pthread_mutex_unlock(&mutex_ready);
 
-            return proceso_seleccionado;
-             //ponemos proceso nuevo, con mas prioridad, como el seleccionado
-             //revisar si esta bien
-                 
-        }   
-
-
-
-    //meto lock y unlock del mutex de ready para poder sacar el proceso de la cola de ready con mas priodidad
-
-
-    //cuando termines vol
+            // Devolver el proceso de mayor prioridad para la ejecución
+            return proceso_mayor_prioridad;
+        }
+        else
+        {
+            log_info(kernel_logger, "Sigue ejecutando el mismo proceso \n");
+            return proceso_ejecutando;
+        }
+    }
+    else
+    {
+        log_info(kernel_logger, "No hay otro proceso ejecutando \n");
+        // Eliminar el proceso de mayor prioridad de la cola de Ready
+        pthread_mutex_lock(&mutex_ready);
+        list_remove_element(dictionary_int_get(diccionario_colas, READY), (void*) proceso_mayor_prioridad);
+        pthread_mutex_unlock(&mutex_ready);
+        return proceso_mayor_prioridad;
+    }
 }
+
 
 t_pcb *obtener_siguiente_RR()
 {
