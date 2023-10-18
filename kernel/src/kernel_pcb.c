@@ -82,10 +82,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap, char* path)
     //a la memoria solamente le pasamos el pid y el tamanio que va a ocupar en swap, despues se encarga ella
     agregar_entero_a_paquete(paquete,pcb-> pid);
     agregar_entero_a_paquete(paquete,tam_swap);
-
-    //voy a mandar el path ya de una
     agregar_cadena_a_paquete(paquete,path);
-    log_info(kernel_logger, "Mandando a memoria el PATH: %s\n", path);
 
     enviar_paquete(paquete, socket_memoria);
     log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso \n");
@@ -174,6 +171,7 @@ char* recibir_contexto(t_pcb* proceso)
 	proceso->program_counter = program_counter;
     proceso->recurso_pedido = recurso_pedido;
     proceso->sleep = sleep_pedido;
+    proceso->motivo_bloqueo = motivo_de_devolucion;
 
 	//proceso->registros_cpu = registros;
 

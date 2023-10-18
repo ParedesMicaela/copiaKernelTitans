@@ -107,7 +107,7 @@ void proceso_en_execute(t_pcb *);
 void proceso_en_ready();
 void proceso_en_blocked(t_pcb *);
 void proceso_en_exit(t_pcb *);
-t_pcb* obtener_siguiente_blocked();
+void obtener_siguiente_blocked(t_pcb* proceso);
 t_pcb* obtener_bloqueado_por_recurso(t_list* );
 t_pcb *obtener_siguiente_FIFO();
 algoritmo obtener_algoritmo();

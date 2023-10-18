@@ -257,15 +257,13 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
                  contexto_ejecucion->program_counter = num_instruccion;
             }
             break;
-            mostrar_valores(contexto_ejecucion);
-            contexto_ejecucion->program_counter += 1;
 
         case(SLEEP):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             tiempo = atoi(datos[1]);
-            mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "", tiempo); 
+            seguir_ejecutando = false;
             //mandar_tiempo(socket_cliente_dispatch, tiempo); //Revisar si le debería llegar separado
             break;
 

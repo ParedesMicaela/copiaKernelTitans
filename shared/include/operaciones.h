@@ -120,7 +120,7 @@ typedef struct
 	Capaz nos sirve para el deadlock despues*/
 	char* recurso_pedido; 
 	int sleep;
-	int motivo_bloqueo;
+	char* motivo_bloqueo;
 
 	//esto lo pongo aca para que cada proceso guarde su path y no haya lio al ejecutar mas de 1 proceso
 	char* path_proceso;

@@ -186,7 +186,8 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 
     if (string_equals_ignore_case(devuelto_por, "sleep"))
     {
-        usleep(proceso_seleccionado->sleep);
+        // Lo agregamos a bloqueado
+        proceso_en_blocked(proceso_seleccionado);
     }
 
      if (string_equals_ignore_case(devuelto_por, "desalojo"))
@@ -227,7 +228,7 @@ void proceso_en_exit(t_pcb *proceso)
     proceso = list_remove(dictionary_int_get(diccionario_colas, EXIT), 0);
     pthread_mutex_unlock(&mutex_exit);
 
-    log_info(kernel_logger, "[EXIT]Sale de EXIT y Finaliza el  PCB de ID: %d\n", proceso->pid);
+    log_info(kernel_logger, "Finaliza el proceso %d - Motivo: SUCCESS\n", proceso->pid);
 
     // le mandamos esto a memoria para que destruya las estructuras
     
@@ -249,17 +250,23 @@ void proceso_en_exit(t_pcb *proceso)
     sem_post(&grado_multiprogramacion);
 }
 
-void proceso_en_blocked(t_pcb *proceso) //nota: no uso obtener_siguiente_blocked ya que de blocked directamente se va ready, para el page fault tengo que trabajar un poco más esa parte
+void proceso_en_blocked(t_pcb *proceso) 
 {
-    //el motivo de bloqueo debe ser para page_fault
-    if (proceso->motivo_bloqueo == PAGE_FAULT)
-    {
-    // Movemos el proceso a la cola de BLOCKED
+    log_info(kernel_logger, "Motivo de bloqueo %s", proceso->motivo_bloqueo);
+
+    // Desalojamos el proceso
+    pthread_mutex_lock(&mutex_exec);
+    list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
+    pthread_mutex_unlock(&mutex_exec);
+
+     // Movemos el proceso a la cola de BLOCKED
     pthread_mutex_lock(&mutex_blocked);
     meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
     pthread_mutex_unlock(&mutex_blocked);
 
-    log_info(kernel_logger, "PID[%d] bloqueado por page fault\n");
+    if (string_equals_ignore_case(proceso->motivo_bloqueo, "page_fault"))
+    {
+    log_info(kernel_logger, "Page Fault PID: %d - Pagina: <Página>", proceso->pid); // FALTA PAGINA
     /*Mover al proceso al estado Bloqueado. Este estado bloqueado será 
     independiente de todos los demás ya que solo afecta al proceso 
     y no compromete recursos compartidos.*/
@@ -274,7 +281,12 @@ void proceso_en_blocked(t_pcb *proceso) //nota: no uso obtener_siguiente_blocked
     /*pthread_mutex_lock(&mutex_ready);
     meter_en_cola(proceso, READY, cola_READY);
     pthread_mutex_unlock(&mutex_ready);*/
-    } //más adelante vamos a agregar los otros casos por los que se puede bloquear
+    } else if (string_equals_ignore_case(proceso->motivo_bloqueo, "sleep"))
+    {
+        log_info(kernel_logger, "PID[%d] bloqueado por SLEEP\n", proceso->pid);
+        sleep(proceso->sleep);
+        obtener_siguiente_blocked(proceso);
+    }
 }
 
 //======================================================== Algoritmos ==================================================================
@@ -373,20 +385,21 @@ algoritmo obtener_algoritmo()
 }
 
 //agarramos el siguiente de la cola de bloqueados y metemos el proceso seleccionado a la cola ready
-t_pcb* obtener_siguiente_blocked()
+void obtener_siguiente_blocked(t_pcb* proceso)
 {
     pthread_mutex_lock(&mutex_blocked);
-    t_pcb* proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, BLOCKED), 0);
+    list_remove_element(dictionary_int_get(diccionario_colas, BLOCKED), proceso);
     pthread_mutex_unlock(&mutex_blocked);
 
     //aca ya de una lo mandamos a ready porque sabemos que en el diagrama va directo a ready
     pthread_mutex_lock(&mutex_ready);
-    meter_en_cola(proceso_seleccionado, READY, cola_READY);
+    meter_en_cola(proceso, READY, cola_READY);
     pthread_mutex_unlock(&mutex_ready);
 
-    log_info(kernel_logger, "PID[%d] sale de BLOCKED para meterse en READY\n", proceso_seleccionado->pid);
+    log_info(kernel_logger, "PID[%d] sale de BLOCKED para meterse en READY\n", proceso->pid);
 
-    return proceso_seleccionado;
+    proceso_en_ready();
+
 }
 
 t_pcb *obtener_siguiente_FIFO()
