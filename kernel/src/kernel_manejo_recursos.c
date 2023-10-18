@@ -46,7 +46,8 @@ void asignacion_recursos(t_pcb* proceso)
 
         //y agregamos a la cola que agarre, el proceso que pidio ese recurso
         list_add(cola_bloqueados_recurso, (void *)proceso);  
-        log_info(kernel_logger,"PID: %d - Bloqueado por: %s\n", proceso->pid, recurso); 
+        log_info(kernel_logger,"PID: %d - Bloqueado por: %s\n", proceso->pid, recurso);
+        deteccion_deadlock(proceso); 
     } 
     else {
         
