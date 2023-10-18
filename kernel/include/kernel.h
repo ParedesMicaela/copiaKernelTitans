@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <semaphore.h>
 #include <pthread.h>
@@ -132,6 +133,8 @@ int indice_recurso (char* );
 void asignacion_recursos(t_pcb* );
 char* recibir_peticion_recurso(t_pcb* );
 void liberacion_recursos(t_pcb* );
+bool proceso_reteniendo_recurso(t_pcb* ,char* );
+void deteccion_deadlock (t_pcb* );
 
 //================================================ Destruir ==================================================================================================================
 void finalizar_kernel();
