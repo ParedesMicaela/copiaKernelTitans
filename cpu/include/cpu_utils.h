@@ -68,7 +68,6 @@ void ciclo_de_instruccion(int, int, t_contexto_ejecucion*);
 void*conexion_inicial_memoria();
 void atender_dispatch(int, int );
 void atender_interrupt(void* );
-void mostrar_recursos_asignados(t_contexto_ejecucion*);
 void finalizar_cpu();
 
 #endif
