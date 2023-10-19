@@ -121,7 +121,7 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 
     // Iterar sobre cada recurso y agregarlo al paquete
     for (int i = 0; i < cantidad_recursos; ++i) {
-        agregar_cadena_a_paquete(paquete, pcb_a_enviar->recursos_asignados[i].nombre_recurso);
+        agregar_cadena_a_paquete(paquete, pcb_a_enviar->recursos_asignados[i].nombre_recurso); //Problema Signal
         agregar_entero_a_paquete(paquete, pcb_a_enviar->recursos_asignados[i].instancias_recurso);
     }
 
@@ -158,7 +158,7 @@ char* recibir_contexto(t_pcb* proceso)
         CX = sacar_entero_sin_signo_de_paquete(&stream);
         DX = sacar_entero_sin_signo_de_paquete(&stream);
         motivo_de_devolucion = sacar_cadena_de_paquete(&stream);
-        recurso_pedido = sacar_cadena_de_paquete(&stream);
+        recurso_pedido = sacar_cadena_de_paquete(&stream); ////Problema Wait
         sleep_pedido = sacar_entero_de_paquete(&stream);
 
     }
@@ -192,7 +192,7 @@ void eliminar_pcb(t_pcb* proceso)
 {
     free(proceso->path_proceso);
     eliminar_recursos_asignados(proceso);
-    free(proceso); 
+    free(proceso); //Signal no tiene recursos asignados?
 }
 
 void eliminar_recursos_asignados(t_pcb* proceso) {

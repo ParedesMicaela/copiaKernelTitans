@@ -72,13 +72,13 @@ void planificador_largo_plazo()
 {
     while (1)
     {
-
         sem_wait(&hay_proceso_nuevo);
         // si el grado de multiprogramacion lo permite
         sem_wait(&grado_multiprogramacion);
 
+      //Detener planifiacion
         pthread_mutex_lock(&mutex_corriendo);
-        while (corriendo == 0) { // Sea 0
+        while (corriendo == 0) { // Mientras no se detenga
            
             pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
         }
@@ -93,13 +93,6 @@ void planificador_largo_plazo()
         pthread_mutex_unlock(&mutex_ready);
 
         mostrar_lista_pcb(cola_READY, "READY");
-
-        pthread_mutex_lock(&mutex_corriendo);
-        while (corriendo == 0) { // Sea 0
-           
-            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
-        }
-        pthread_mutex_unlock(&mutex_corriendo);
 
          /*le avisamos al corto plazo que puede empezar a planificar. Aca solamente vamos a poner el proceso
         en la cola de ready pero no vamos a elegir cual va a ejecutar el de corto plazo porque no hacemos eso
@@ -119,12 +112,14 @@ void planificador_corto_plazo()
     {
         sem_wait(&hay_procesos_ready);
 
+        //Detener planifiacion
         pthread_mutex_lock(&mutex_corriendo);
-        while (corriendo == 0) {
+        while (corriendo == 0) { // Mientras no se detenga
+           
             pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
         }
         pthread_mutex_unlock(&mutex_corriendo);
-
+ 
         proceso_en_ready();
 
     }
@@ -135,13 +130,6 @@ void planificador_corto_plazo()
 // aca agarramos el proceso que nos devuelve obtener_siguiente_ready y lo mandamos a ejecutar
 void proceso_en_ready()
 {
-
-    pthread_mutex_lock(&mutex_corriendo);
-    while (corriendo == 0) {
-        pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
-    }
-    pthread_mutex_unlock(&mutex_corriendo);
-    
     // creamos un proceso, que va a ser el elegido por obtener_siguiente_ready
     t_pcb *siguiente_proceso = obtener_siguiente_ready();
 
@@ -193,7 +181,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     }
 
      if (string_equals_ignore_case(devuelto_por, "desalojo"))
-    {
+    {   
         // Lo agregamos nuevamente a la cola de Ready
         pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso_seleccionado, READY, cola_READY);
@@ -394,6 +382,14 @@ algoritmo obtener_algoritmo()
 //agarramos el siguiente de la cola de bloqueados y metemos el proceso seleccionado a la cola ready
 void obtener_siguiente_blocked(t_pcb* proceso)
 {
+    //Detener planifiacion
+    pthread_mutex_lock(&mutex_corriendo);
+        while (corriendo == 0) { // Mientras no se detenga
+           
+            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
+        }
+    pthread_mutex_unlock(&mutex_corriendo);
+
     pthread_mutex_lock(&mutex_blocked);
     list_remove_element(dictionary_int_get(diccionario_colas, BLOCKED), proceso);
     pthread_mutex_unlock(&mutex_blocked);
