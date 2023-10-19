@@ -7,6 +7,7 @@ sem_t analisis_deadlock_completo;
 
 t_list *lista_recursos;
 int *instancias_del_recurso;
+int tamanio_recursos;
 
 //====================================================== WAIT/SIGNAL =====================================================================================
 void asignacion_recursos(t_pcb* proceso)
@@ -24,12 +25,8 @@ void asignacion_recursos(t_pcb* proceso)
         log_error(kernel_logger, "El recurso solicitado no existe\n");
         proceso_en_exit(proceso);
         return;
-    }
+    }    
 
-    //actualizo la cantidad de instancias para el recurso que me pidio el proceso y lo borro de recurso_pedido
-    proceso->recurso_pedido = NULL;
-
-    //si o si lo tenia que poner con mutex porque sino habia condicion de carrera
     pthread_mutex_lock(&mutex_recursos);
     instancias = instancias_del_recurso[indice_pedido];
     instancias--;
@@ -48,8 +45,8 @@ void asignacion_recursos(t_pcb* proceso)
         //y agregamos a la cola que agarre, el proceso que pidio ese recurso
         list_add(cola_bloqueados_recurso, (void *)proceso);  
         log_info(kernel_logger,"PID: %d - Bloqueado por: %s\n", proceso->pid, recurso);
-        deteccion_deadlock(proceso);
-        sem_wait(&analisis_deadlock_completo);
+        deteccion_deadlock(proceso, recurso);
+        //sem_wait(&analisis_deadlock_completo);
     } 
     else {
         
@@ -65,6 +62,7 @@ void asignacion_recursos(t_pcb* proceso)
         //despues vamos a mandar el proceso a execute para que siga su camino
         proceso_en_execute(proceso);
     }
+    proceso->recurso_pedido = NULL;
     free(recurso);
 }
 
@@ -140,8 +138,7 @@ int indice_recurso (char* recurso_buscado){
 
     /*buscamos en el array de recursos que tenemos en la config si existe el recurso que llega por parametro
     y si no existe, devolvemos 1 */
-    int tamanio = string_array_size(config_valores_kernel.recursos);
-    for (int i = 0; i < tamanio; i++)
+    for (int i = 0; i < tamanio_recursos; i++)
         if (!strcmp(recurso_buscado, config_valores_kernel.recursos[i]))
         {
             return i;
@@ -165,12 +162,10 @@ void crear_colas_bloqueo()
     //aca voy a guardar en otro char** la cantidad de instancias que tengo para usar [1,2,3]
     char** cant_recursos = config_valores_kernel.instancias_recursos;
 
-    //saco la cantidad de elementos que tengo en mi array de recursos
-    int tamanio = string_array_size(config_valores_kernel.recursos);
-    instancias_del_recurso = malloc(tamanio * sizeof(int));
+    instancias_del_recurso = malloc(tamanio_recursos * sizeof(int));
 
     //por cada recurso del array de recursos que tengo, voy a hacer una cola de bloqueo
-    for (int i = 0; i < tamanio; i++)
+    for (int i = 0; i < tamanio_recursos; i++)
     {
         /* en cant_recursos yo me hago un array con las cantidades de recursos unicamente pero esta en un
         array como un string cada numero. Entonces para poder guardar la cantidad de recursos totales que tengo
