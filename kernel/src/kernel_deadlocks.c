@@ -1,6 +1,10 @@
 #include "kernel.h"
 
-void deteccion_deadlock (t_pcb* proceso)
+char* recurso_retenido = NULL;
+
+//==========================================================================================================================================================
+
+void deteccion_deadlock (t_pcb* proceso, char* recurso_pedido)
 {
     //voy a ver si el proceso P1 que pidio un recurso, tiene al menos 1 recurso asignado, sino no cumple deadlock
     for (int i = 0; i < 3; ++i)
@@ -9,7 +13,7 @@ void deteccion_deadlock (t_pcb* proceso)
         {
             //si tiene al menos 1 recurso asignado entonces vemos si hay deadlock.
             log_info(kernel_logger, "EL PID [%d] esta reteniendo %s\n", proceso->pid, proceso->recursos_asignados[i].nombre_recurso);
-            char* recurso_involucrado = proceso->recursos_asignados[i].nombre_recurso;
+            recurso_retenido = strdup(proceso->recursos_asignados[i].nombre_recurso);
 
             //necesito saber si el recurso que P1 esta reteniendo, tiene una cola de espera
             t_list* cola_recurso = (t_list *)list_get(lista_recursos, i);
@@ -17,53 +21,70 @@ void deteccion_deadlock (t_pcb* proceso)
             //si hay algo en la cola de espera, entonces hay un P2 esperando por ese recurso que P1 tiene
             if(cola_recurso != NULL && list_size(cola_recurso) > 0)
             {
-                log_info(kernel_logger, "encontre la cola de recurso");
+
                 /*voy a buscar dentro de la cola de bloqueados del recurso, un P2 que este reteniendo 
                 el recurso que P1 esta pidiendo, para ver si hay espera circular->deadlock*/
                 for(int j = 0; j < list_size(cola_recurso); j++)
                 {
-                    if (proceso_reteniendo_recurso((t_pcb*)list_get(cola_recurso, j), recurso_involucrado)) 
+                    t_pcb* proceso_involucrado = list_get(cola_recurso, j);
+                    if (proceso_reteniendo_recurso(proceso_involucrado, recurso_pedido)) 
+                    {                       
+                        //P1 que esta reteniendo el que P2 necesita
+                        mensaje_deadlock_detectado(proceso, recurso_pedido);
+                    }else
                     {
-                        t_pcb* proceso_involucrado = (t_pcb*)list_get(cola_recurso, j);
-                        log_info(kernel_logger, "EL PID [%d] esta reteniendo %s", proceso_involucrado->pid, recurso_involucrado);
-                        log_info(kernel_logger, "HAY DEADLOCK");
-
+                        log_info(kernel_logger,"Analisis de deteccion de deadlock completado: NO hay deadlock");
                     }
                 }
             }
         }
-
-        //si no retiene recursos, entonces no puede estar en deadlock
-        sem_post(&analisis_deadlock_completo);
     }
+    //si no retiene recursos, entonces no puede estar en deadlock
+    //sem_post(&analisis_deadlock_completo);
 }
 
-bool proceso_reteniendo_recurso(t_pcb* proceso,char* recurso) {
+bool proceso_reteniendo_recurso(t_pcb* proceso_involucrado, char* recurso) {
 
-    for (int i = 0; i < 3; ++i) {
-        if (strcmp(proceso->recursos_asignados[i].nombre_recurso, recurso) == 0) {
-            return true;  // El recurso está siendo retenido por el proceso
+    for (int i = 0; i < tamanio_recursos; ++i) {
+        if (strcmp(proceso_involucrado->recursos_asignados[i].nombre_recurso, recurso) == 0) {
+
+            //P2 que esta reteniendo el que P1 necesita
+            mensaje_deadlock_detectado(proceso_involucrado, recurso_retenido);
+            return true; 
         }
     }
-    return false;  // El proceso no está reteniendo el recurso
+    return false; 
 }
 
-/*
-va a haber deadlock cuendo un proceso pida recursos mientras este reteniendo recursos que necesita otro proceso
-para ejecutar
+void mensaje_deadlock_detectado(t_pcb* proceso, char* recurso_requerido)
+{
+    char *recursos_totales = string_new();
 
-ni idea, todavia no creo que sea de importancia esto
+    for (int i = 0; i < tamanio_recursos; i++) {
 
-Detección y resolución de Deadlocks
-Frente a acciones donde los procesos lleguen al estado Block (por recursos o archivos)
-se debe realizar una detección automática de deadlock (proceso bloqueados entre sí).
-En caso que se detecte afirmativamente un deadlock se debe informar el mismo por consola.
-En dicho mensaje se debe informar cuales son los procesos (PID) que se encuentran en deadlocks,
-cuales son los recursos (o archivos) tomados y cuales son los recursos (o archivos) requeridos
-(por los que fueron bloqueados).
-La resolución de deadlocks se realizará de forma manual por la consola del Kernel utilizando el
-mensaje “Finalizar proceso” donde el proceso finalizado deberá liberar los recursos (o archivos) tomados.
-Una vez realizada esta acción se debe volver a realizar una nueva detección de deadlock.
+        //voy a guardar en un string los nombres de los recursos que tenga asignados
+        if (proceso->recursos_asignados[i].instancias_recurso > 0)
+        {
+            char *recurso = string_duplicate(proceso->recursos_asignados[i].nombre_recurso);   
+
+            //el recurso que encuentro asignado lo engancho al string de recursos totales
+            string_append(&recursos_totales, recurso);
+            free(recurso);
+
+            //separo los recursos con comas
+            if (i < tamanio_recursos - 1)
+            {
+                string_append(&recursos_totales, ", ");
+            }
+        }
+    }
+
+    log_info(kernel_logger, "Deadlock detectado: PID[%d] - Recursos en posesión [%s] - Recurso requerido: [%s]\n", proceso->pid, recursos_totales, recurso_requerido);
+
+    if (recursos_totales != NULL) {
+        free(recursos_totales); 
+    }
+}
 
 
-*/
+
