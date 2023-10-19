@@ -253,7 +253,7 @@ void proceso_en_exit(t_pcb *proceso)
 
 void proceso_en_blocked(t_pcb *proceso) 
 {
-    log_info(kernel_logger, "Motivo de bloqueo %s", proceso->motivo_bloqueo);
+    log_info(kernel_logger, "PID[%d] bloqueado por %s\n", proceso->pid, proceso->motivo_bloqueo);
 
     // Desalojamos el proceso
     pthread_mutex_lock(&mutex_exec);
@@ -284,7 +284,6 @@ void proceso_en_blocked(t_pcb *proceso)
     pthread_mutex_unlock(&mutex_ready);*/
     } else if (string_equals_ignore_case(proceso->motivo_bloqueo, "sleep"))
     {
-        log_info(kernel_logger, "PID[%d] bloqueado por SLEEP\n", proceso->pid);
         sleep(proceso->sleep);
         obtener_siguiente_blocked(proceso);
     }
