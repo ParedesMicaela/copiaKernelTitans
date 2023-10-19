@@ -19,6 +19,7 @@ int main(void)
 	kernel_logger = log_create("/home/utnso/tp-2023-2c-KernelTitans/kernel/cfg/kernel.log", "kernel.log", 1, LOG_LEVEL_INFO);
 
 	cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/kernel/cfg/kernel.config");
+	tamanio_recursos = string_array_size(config_valores_kernel.recursos);
 
 	log_info(kernel_logger, "Archivo de configuracion cargado \n");
     
