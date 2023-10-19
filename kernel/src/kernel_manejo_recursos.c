@@ -7,9 +7,12 @@ sem_t analisis_deadlock_completo;
 
 t_list *lista_recursos;
 int *instancias_del_recurso;
+int *instancias_maximas_del_recurso;
 int tamanio_recursos;
 
 //====================================================== WAIT/SIGNAL =====================================================================================
+
+//funcion de wait
 void asignacion_recursos(t_pcb* proceso)
 {
     //descubri que era mas facil si lo pasaba directamente por aca
@@ -23,6 +26,7 @@ void asignacion_recursos(t_pcb* proceso)
         //si el recurso no existe, mando el proceso a exit
         proceso->recurso_pedido = NULL;
         log_error(kernel_logger, "El recurso solicitado no existe\n");
+        log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
         proceso_en_exit(proceso);
         return;
     }    
@@ -66,6 +70,7 @@ void asignacion_recursos(t_pcb* proceso)
     free(recurso);
 }
 
+//funcion de signal
 void liberacion_recursos(t_pcb* proceso)
 {
     //voy a robar vilmente lo que hice arriba y lo voy a copiar aca, porque por suerte no estamos en pdep
@@ -79,6 +84,7 @@ void liberacion_recursos(t_pcb* proceso)
         //si el recurso no existe, mando el proceso a exit
         proceso->recurso_pedido = NULL;
         log_error(kernel_logger, "El recurso solicitado no existe\n");
+        log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
         proceso_en_exit(proceso);
         return;
     }
@@ -90,6 +96,16 @@ void liberacion_recursos(t_pcb* proceso)
     pthread_mutex_lock(&mutex_recursos);
     instancias = instancias_del_recurso[indice_pedido];
     instancias++;
+
+    if(instancias > instancias_maximas_del_recurso[indice_pedido])
+    {
+        proceso->recurso_pedido = NULL;
+        instancias--;
+        log_error(kernel_logger, "Instancia de recurso no valida\n");
+        log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
+        proceso_en_exit(proceso);
+    }
+
     instancias_del_recurso[indice_pedido]=instancias;
     pthread_mutex_unlock(&mutex_recursos);
 
@@ -158,11 +174,13 @@ void crear_colas_bloqueo()
      de datos t_list, que a su vez van a ser utilizadas como colas de bloqueo para cada recurso.*/
     lista_recursos = list_create();
     instancias_del_recurso = NULL;
+    instancias_maximas_del_recurso = NULL;
     
     //aca voy a guardar en otro char** la cantidad de instancias que tengo para usar [1,2,3]
     char** cant_recursos = config_valores_kernel.instancias_recursos;
 
     instancias_del_recurso = malloc(tamanio_recursos * sizeof(int));
+    instancias_maximas_del_recurso = malloc(tamanio_recursos * sizeof(int));
 
     //por cada recurso del array de recursos que tengo, voy a hacer una cola de bloqueo
     for (int i = 0; i < tamanio_recursos; i++)
@@ -174,6 +192,9 @@ void crear_colas_bloqueo()
 
         //en i=0 el recurso que este en recursos[i] va a tener la cantidad que me marque en cant_recursos[i] :)
         instancias_del_recurso[i] = instancia_en_entero;
+
+        //voy a guardar la cantidad maxima de instancias que tengo porque lo de arriba lo voy a modificar en la ejecucion
+        instancias_maximas_del_recurso[i] = instancia_en_entero;
 
         //voy a crear una lista para cada recurso y la voy a guardar dentro de otra lista
         t_list* cola_bloqueo = list_create();

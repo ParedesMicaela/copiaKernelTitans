@@ -14,6 +14,9 @@ uint32_t DX;
 char *instruccion;
 int tamanio_recursos;
 
+//lo usamos para ver si es desalojo o finalizacion
+int tipo_interrupcion = -1;
+
 //======================= Funciones Internas ==============================================================================
 static void enviar_handshake(int socket_cliente_memoria);
 static void recibir_handshake(int socket_cliente_memoria);
@@ -27,7 +30,6 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
 static void pedir_instruccion(int socket_cliente_memoria,int posicion, int pid);
 static void recibir_instruccion(int socket_cliente_memoria);
 static bool hay_interrupcion();
-static void mostrar_valores (t_contexto_ejecucion* contexto);
 static void mostrar_valores (t_contexto_ejecucion* contexto);
 
 //================================================== Configuracion =====================================================================
@@ -359,15 +361,23 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 
         //CHECK INTERRUPT
         //printf("num_interrupcion =  %d  \n", interrupcion); 
-        if(hay_interrupcion()) //&& seguir ejecutando?
+        if(hay_interrupcion() && tipo_interrupcion == 1) //&& seguir ejecutando?
         {
-            printf("detectamos interrupcion");
+            printf("detectamos interrupcion\n");
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "desalojo", "", 0);
             seguir_ejecutando = false;
-        } 
+        }else if (hay_interrupcion() && tipo_interrupcion == 2)
+        {
+            printf("detectamos interrupcion\n");
+            pthread_mutex_lock(&mutex_interrupcion);
+            interrupcion = 0;
+            pthread_mutex_unlock(&mutex_interrupcion);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "finalizacion", "", 0);
+            seguir_ejecutando = false;
+        }
 
         string_array_destroy(datos);
     }
@@ -404,10 +414,16 @@ void atender_interrupt(void *socket_servidor_interrupt)
         if (paquete->codigo_operacion == DESALOJO)
         {
             // esto despues lo usamos en el check interrupt para saber que si hay una interrupcion, devolvemos el contexto de ejecucion
-            int entero = sacar_entero_de_paquete(&stream);
+            tipo_interrupcion = sacar_entero_de_paquete(&stream);
 
             // lo tenemos que poner en un semaforo para que nada lo modifique mientras le sumo 1, cosa que despues no se pierda que
             // efectivamente hubo un interrupcion
+            pthread_mutex_lock(&mutex_interrupcion);
+            interrupcion += 1;
+            pthread_mutex_unlock(&mutex_interrupcion);
+        }else if (paquete->codigo_operacion == FINALIZACION_PROCESO)
+        {
+            tipo_interrupcion = sacar_entero_de_paquete(&stream);
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion += 1;
             pthread_mutex_unlock(&mutex_interrupcion);
@@ -416,6 +432,7 @@ void atender_interrupt(void *socket_servidor_interrupt)
         {
             printf("No recibi una interrupcion\n");
         }
+        eliminar_paquete(paquete);
     }
 }
 

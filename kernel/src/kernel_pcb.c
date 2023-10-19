@@ -190,6 +190,7 @@ char* recibir_contexto(t_pcb* proceso)
 //eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)
 {
+    free(proceso->path_proceso);
     eliminar_recursos_asignados(proceso);
     free(proceso); 
 }
