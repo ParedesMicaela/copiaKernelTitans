@@ -40,10 +40,10 @@ void consola_modificar_multiprogramacion(int valor) {
         printf("NO se puede modificador el grado de multiprogramacion \n"); 
     }
     else {
+        int grado_anterior = config_valores_kernel.grado_multiprogramacion_ini;
         config_valores_kernel.grado_multiprogramacion_ini = valor;
-        printf("Se modifico el grado de multipromacion a: %d \n", valor);
+        printf("Grado Anterior: %d - Grado Actual: %d \n", grado_anterior, valor);
     }
-
 }
 
 void consola_proceso_estado() {
