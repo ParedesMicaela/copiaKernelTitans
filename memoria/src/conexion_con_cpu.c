@@ -6,11 +6,11 @@ int tiempo;
 void enviar_paquete_handshake(int socket_cliente) {
 
 	t_paquete* handshake=crear_paquete(HANDSHAKE);
-	agregar_entero_a_paquete(handshake,config_get_int_value(config, "TAM_PAGINA"));
+	agregar_entero_a_paquete(handshake,config_valores_memoria.tam_pagina);
 
 	enviar_paquete(handshake,socket_cliente);
 	log_info(memoria_logger,"Handshake enviado :)\n");
-	log_info(memoria_logger,"Se envio el tamaño de pagina %d bytes al CPU \n",config_get_int_value(config, "TAM_PAGINA"));
+	log_info(memoria_logger,"Se envio el tamaño de pagina %d bytes al CPU \n",config_valores_memoria.tam_pagina);
 
 	eliminar_paquete(handshake);
 }
