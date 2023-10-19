@@ -553,7 +553,7 @@ static int tipo_inst(char *instruccion)
         numero = INSTRUCCION_EXIT;
     } else
     {
-        log_info(cpu_logger, "no encontre la instruccion\n");
+        log_info(cpu_logger, "no encontre la instruccion %d\n", numero);
         abort();
     }
     return numero;

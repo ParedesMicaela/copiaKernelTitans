@@ -80,7 +80,6 @@ char* leer_archivo_instrucciones(char* path_instrucciones) {
             strcat(temp, linea);
             free(cadena_completa);
             cadena_completa = temp;
-           
         }
     }
    

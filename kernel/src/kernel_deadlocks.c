@@ -8,7 +8,7 @@ void deteccion_deadlock (t_pcb* proceso)
         if (proceso->recursos_asignados[i].instancias_recurso > 0)
         {
             //si tiene al menos 1 recurso asignado entonces vemos si hay deadlock.
-            log_info(kernel_logger, "EL PID [%d] esta reteniendo %s", proceso->pid, proceso->recursos_asignados[i].nombre_recurso);
+            log_info(kernel_logger, "EL PID [%d] esta reteniendo %s\n", proceso->pid, proceso->recursos_asignados[i].nombre_recurso);
             char* recurso_involucrado = proceso->recursos_asignados[i].nombre_recurso;
 
             //necesito saber si el recurso que P1 esta reteniendo, tiene una cola de espera
@@ -17,6 +17,7 @@ void deteccion_deadlock (t_pcb* proceso)
             //si hay algo en la cola de espera, entonces hay un P2 esperando por ese recurso que P1 tiene
             if(cola_recurso != NULL && list_size(cola_recurso) > 0)
             {
+                log_info(kernel_logger, "encontre la cola de recurso");
                 /*voy a buscar dentro de la cola de bloqueados del recurso, un P2 que este reteniendo 
                 el recurso que P1 esta pidiendo, para ver si hay espera circular->deadlock*/
                 for(int j = 0; j < list_size(cola_recurso); j++)
@@ -25,10 +26,15 @@ void deteccion_deadlock (t_pcb* proceso)
                     {
                         t_pcb* proceso_involucrado = (t_pcb*)list_get(cola_recurso, j);
                         log_info(kernel_logger, "EL PID [%d] esta reteniendo %s", proceso_involucrado->pid, recurso_involucrado);
+                        log_info(kernel_logger, "HAY DEADLOCK");
+
                     }
                 }
             }
         }
+
+        //si no retiene recursos, entonces no puede estar en deadlock
+        sem_post(&analisis_deadlock_completo);
     }
 }
 

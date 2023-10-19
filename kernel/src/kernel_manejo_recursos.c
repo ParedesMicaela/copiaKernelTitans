@@ -3,6 +3,7 @@
 pthread_mutex_t mutex_blocked;
 pthread_mutex_t mutex_recursos;
 
+sem_t analisis_deadlock_completo;
 
 t_list *lista_recursos;
 int *instancias_del_recurso;
@@ -38,7 +39,7 @@ void asignacion_recursos(t_pcb* proceso)
     log_info(kernel_logger,"PID: %d - Wait: %s - Instancias: %d\n",proceso->pid, recurso, instancias); 
 
     if(instancias < 0){
-
+ 
         /*voy a agarrar la cola del indice del recurso que me piden. Como la lista_recursos es una lista 
         de punteros a otras colas, lo que voy a hacer es buscar dentro de esa lista, el indice del recurso 
         que me pasan por parametro y agarrar la cola del recurso al que nos estamos refiriendo*/
@@ -47,7 +48,8 @@ void asignacion_recursos(t_pcb* proceso)
         //y agregamos a la cola que agarre, el proceso que pidio ese recurso
         list_add(cola_bloqueados_recurso, (void *)proceso);  
         log_info(kernel_logger,"PID: %d - Bloqueado por: %s\n", proceso->pid, recurso);
-        deteccion_deadlock(proceso); 
+        deteccion_deadlock(proceso);
+        sem_wait(&analisis_deadlock_completo);
     } 
     else {
         

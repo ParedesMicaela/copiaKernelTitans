@@ -34,6 +34,7 @@ extern int socket_filesystem;
 
 extern sem_t mutex_pid;
 extern sem_t hay_proceso_nuevo;
+extern sem_t analisis_deadlock_completo;
 extern sem_t grado_multiprogramacion;
 
 extern uint32_t AX;
