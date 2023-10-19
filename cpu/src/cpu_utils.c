@@ -183,7 +183,8 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
     {
 
         //=============================================== FETCH =================================================================
-        
+        log_info(cpu_logger, "PID: %d - FETCH - Program Counter: %d", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
+
         //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
         pedir_instruccion(socket_cliente_memoria, contexto_ejecucion->program_counter, contexto_ejecucion->pid);
 
