@@ -172,6 +172,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
             pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
         }
         pthread_mutex_unlock(&mutex_corriendo);
+        log_info(kernel_logger, "Finaliza el proceso %d - Motivo: SUCCESS\n", proceso_seleccionado->pid);
         proceso_en_exit(proceso_seleccionado);
     }
 
@@ -199,6 +200,12 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         pthread_mutex_unlock(&mutex_ready);
     }
 
+     if (string_equals_ignore_case(devuelto_por, "finalizacion"))
+    {
+        log_info(kernel_logger, "Finaliza el proceso %d - Motivo: SUCCESS\n", proceso_seleccionado->pid);
+        proceso_en_exit(proceso_seleccionado);
+    }
+
     if (string_equals_ignore_case(devuelto_por, "page_fault"))
     {
         //si tenemos page_fault, hay que bloquear el proceso
@@ -216,10 +223,12 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 void proceso_en_exit(t_pcb *proceso)
 {
 
+    //obtenemos el proceso de execute
     pthread_mutex_lock(&mutex_exec);
     proceso = list_remove(dictionary_int_get(diccionario_colas, EXEC), 0);
     pthread_mutex_unlock(&mutex_exec);
 
+    //lo metemos en exit
     pthread_mutex_lock(&mutex_exit);
     meter_en_cola(proceso, EXIT, cola_EXIT);
     pthread_mutex_unlock(&mutex_exit);
@@ -229,10 +238,7 @@ void proceso_en_exit(t_pcb *proceso)
     proceso = list_remove(dictionary_int_get(diccionario_colas, EXIT), 0);
     pthread_mutex_unlock(&mutex_exit);
 
-    log_info(kernel_logger, "Finaliza el proceso %d - Motivo: SUCCESS\n", proceso->pid);
-
     // le mandamos esto a memoria para que destruya las estructuras
-    
     enviar_pcb_a_memoria(proceso, socket_memoria, FINALIZAR_EN_MEMORIA);
     log_info(kernel_logger, "Enviando a memoria liberar estructuras del proceso \n");
 
@@ -242,11 +248,12 @@ void proceso_en_exit(t_pcb *proceso)
     if (fin_ok != 1)
     {
         log_error(kernel_logger, "No se pudieron eliminar estructuras en memoria del proceso PID[%d]\n", proceso->pid);
+    }else
+    {
+        // si la respuesta que conseguimos de memoria es que se finalice la memoria, le avisamos a la consola que ya finaliza el proceso
+        log_info(kernel_logger, "Respuesta memoria de estructuras liberadas del proceso recibida \n");
     }
     
-    // si la respuesta que conseguimos de memoria es que se finalice la memoria, le avisamos a la consola que ya finaliza el proceso
-    log_info(kernel_logger, "Respuesta memoria de estructuras liberadas del proceso recibida \n");
-
     eliminar_pcb(proceso);
     sem_post(&grado_multiprogramacion);
 }

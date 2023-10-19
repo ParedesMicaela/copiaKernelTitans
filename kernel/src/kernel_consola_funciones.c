@@ -175,7 +175,7 @@ void liberar_pid(int pid, estado ESTADO, t_list *cola)
 */
 void consola_finalizar_proceso(int pid) {
 
-    printf(" Finalizamos proceso el proceso %d \n", pid);
+    printf("Finalizamos proceso el proceso %d \n", pid);
 
     t_pcb* pcb_asociado = NULL;  
     //t_list* cola_con_proceso = NULL;
@@ -249,18 +249,21 @@ void consola_finalizar_proceso(int pid) {
 
     //Si encuentra el pcb
     if (pcb_asociado != NULL) {
+
+        //Lo desalojo
+        if(estado == EXEC) {
+        t_paquete *paquete_fin = crear_paquete(FINALIZACION_PROCESO);
+        int interrupcion_exit = 2;
+        agregar_entero_a_paquete(paquete_fin, interrupcion_exit);
+        enviar_paquete(paquete_fin, socket_cpu_interrupt);
+        eliminar_paquete(paquete_fin);
+        }
+
+        /*
         // Remuevo el pcb del diccionario
         pthread_mutex_lock(&mutex_colas);
         list_remove_element(dictionary_int_get(diccionario_colas, estado), pcb_asociado);
         pthread_mutex_unlock(&mutex_colas);
-
-        //Lo desalojo
-        if(estado == EXEC) {
-        t_paquete* paquete = crear_paquete(DESALOJO);
-        agregar_entero_a_paquete(paquete, 1);
-        enviar_paquete(paquete, socket_cpu_interrupt);
-        eliminar_paquete(paquete);
-        }
 
         // Lo meto en Exit
         pthread_mutex_lock(&mutex_exit);
@@ -275,7 +278,6 @@ void consola_finalizar_proceso(int pid) {
         printf("Finaliza el  PCB de ID: %d\n", pcb_asociado->pid);
 
         // le mandamos esto a memoria para que destruya las estructuras
-    
         enviar_pcb_a_memoria(pcb_asociado, socket_memoria, FINALIZAR_EN_MEMORIA);
         printf("Enviando a memoria liberar estructuras del proceso \n");
 
@@ -292,6 +294,7 @@ void consola_finalizar_proceso(int pid) {
 
         eliminar_pcb(pcb_asociado);
         sem_post(&grado_multiprogramacion);
+        */
     } else {
         printf("Proceso no encontrado. Intente nuevamente.\n");
     }

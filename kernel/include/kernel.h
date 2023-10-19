@@ -62,6 +62,7 @@ extern t_list *cola_EXIT;
 
 extern t_list *lista_recursos;
 extern int *instancias_del_recurso;
+extern int *instancias_maximas_del_recurso;
 extern char **recursos;
 
 extern int corriendo;
