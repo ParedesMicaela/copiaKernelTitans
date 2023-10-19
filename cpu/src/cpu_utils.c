@@ -12,6 +12,7 @@ uint32_t BX;
 uint32_t CX;
 uint32_t DX;
 char *instruccion;
+int tamanio_recursos;
 
 //======================= Funciones Internas ==============================================================================
 static void enviar_handshake(int socket_cliente_memoria);
@@ -140,7 +141,7 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         contexto_ejecucion->registros_cpu.DX = sacar_entero_sin_signo_de_paquete(&stream);
 
         // Iterar sobre cada recurso y recibir la información del paquete
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < tamanio_recursos; ++i) {
 
             char* nombre = sacar_cadena_de_paquete(&stream);
             strcpy(contexto_ejecucion->recursos_asignados[i].nombre_recurso,nombre); 
@@ -595,26 +596,12 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
     eliminar_paquete(paquete);
 }
 
-void mostrar_recursos_asignados(t_contexto_ejecucion* proceso) {
-    if (proceso->recursos_asignados != NULL) {
-        t_recursos_asignados* recursos = proceso->recursos_asignados;
-
-        for (int i = 0; i < 3; ++i) {
-            if (strlen(recursos[i].nombre_recurso) > 0) {
-                log_info(cpu_logger, "Recurso: %s - Cantidad: %d\n", recursos[i].nombre_recurso, recursos[i].instancias_recurso);
-            }
-        }
-    } else {
-        log_info(cpu_logger, "No hay recursos asignados\n");
-    }
-}
-
 static void mostrar_valores (t_contexto_ejecucion* contexto)
 {
     // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
     log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < tamanio_recursos; ++i) {
         log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d",contexto->recursos_asignados[i].nombre_recurso, contexto->recursos_asignados[i].instancias_recurso);
     }
 }
