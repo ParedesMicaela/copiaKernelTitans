@@ -33,11 +33,10 @@ t_pcb* crear_pcb(int prioridad, int tam_swap, char* path)
 
     /*para inicializar el t_recurso le tengo que asignar memoria porque es un puntero a la estructura
     asi como hice para t_pcb*/
-    int cantidad_recursos = 3;  // Suponiendo que hay 3 recursos
-    pcb->recursos_asignados = malloc(cantidad_recursos * sizeof(t_recurso));
+    pcb->recursos_asignados = malloc(tamanio_recursos * sizeof(t_recurso));
 
-// Inicialización de cada recurso
-    for (int i = 0; i < cantidad_recursos; ++i) {
+    // Inicialización de cada recurso
+    for (int i = 0; i < tamanio_recursos; ++i) {
         strcpy(pcb->recursos_asignados[i].nombre_recurso, "Recurso");  // Puedes asignar el nombre que desees
         pcb->recursos_asignados[i].instancias_recurso = 0;
     }
@@ -109,25 +108,17 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     agregar_entero_a_paquete(paquete, pcb_a_enviar->program_counter);
     agregar_entero_a_paquete(paquete, pcb_a_enviar->prioridad);
 
-
     // ojo al piojo, es un struct, tengo que mandar los registros por separado
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.AX); 
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.BX);
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.CX);
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
 
-    // Asumiendo que cantidad_recursos es la cantidad de recursos en pcb_a_enviar->recursos_asignados
-    int cantidad_recursos = 3;  // Ajusta según tus necesidades
-
     // Iterar sobre cada recurso y agregarlo al paquete
-    for (int i = 0; i < cantidad_recursos; ++i) {
+    for (int i = 0; i < tamanio_recursos; ++i) {
         agregar_cadena_a_paquete(paquete, pcb_a_enviar->recursos_asignados[i].nombre_recurso); //Problema Signal
         agregar_entero_a_paquete(paquete, pcb_a_enviar->recursos_asignados[i].instancias_recurso);
     }
-
-
-    //agregar_cadena_a_paquete(paquete, pcb_a_enviar->recursos_asignados->nombre_recurso);
-    //agregar_entero_a_paquete(paquete, pcb_a_enviar->recursos_asignados->instancias_recurso);
 
     //agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
 
@@ -183,6 +174,7 @@ char* recibir_contexto(t_pcb* proceso)
     me diga el recurso y lo que quiere hacer el proceso con ese recurso.*/
 
     //si no me piden hacer algo con recursos, solamente retorno el motivo de devolucion
+    free(recurso_pedido);
     eliminar_paquete(paquete);
     return motivo_de_devolucion;
 }
@@ -190,18 +182,24 @@ char* recibir_contexto(t_pcb* proceso)
 //eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)
 {
-    free(proceso->path_proceso);
-    eliminar_recursos_asignados(proceso);
-    free(proceso); //Signal no tiene recursos asignados?
+    if (proceso->path_proceso != NULL) {
+        free(proceso->path_proceso);
+    }
+
+    int tam = string_array_size(proceso->recursos_asignados->instancias_recurso);
+    for(int i = 0; i < tam; i++)
+    {
+        free(proceso->recursos_asignados[i].nombre_recurso);
+        free(proceso->recursos_asignados[i].instancias_recurso);
+    }
+
+    
 }
 
 void eliminar_recursos_asignados(t_pcb* proceso) {
 
     free(proceso->recursos_asignados);
-
-    if (proceso->recurso_pedido != NULL) {
-        free(proceso->recurso_pedido);
-    }
+    proceso->recursos_asignados = NULL;
 }
 
 void eliminar_registros_pcb (t_registros_cpu registros_cpu)

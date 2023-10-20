@@ -9,6 +9,7 @@ t_list *lista_recursos;
 int *instancias_del_recurso;
 int *instancias_maximas_del_recurso;
 int tamanio_recursos;
+char** nombres_recursos;
 
 //====================================================== WAIT/SIGNAL =====================================================================================
 
@@ -155,7 +156,7 @@ int indice_recurso (char* recurso_buscado){
     /*buscamos en el array de recursos que tenemos en la config si existe el recurso que llega por parametro
     y si no existe, devolvemos 1 */
     for (int i = 0; i < tamanio_recursos; i++)
-        if (!strcmp(recurso_buscado, config_valores_kernel.recursos[i]))
+        if (!strcmp(recurso_buscado, nombres_recursos[i]))
         {
             return i;
         }
@@ -178,6 +179,7 @@ void crear_colas_bloqueo()
     
     //aca voy a guardar en otro char** la cantidad de instancias que tengo para usar [1,2,3]
     char** cant_recursos = config_valores_kernel.instancias_recursos;
+    nombres_recursos = config_valores_kernel.recursos;
 
     instancias_del_recurso = malloc(tamanio_recursos * sizeof(int));
     instancias_maximas_del_recurso = malloc(tamanio_recursos * sizeof(int));

@@ -7,7 +7,7 @@ char* recurso_retenido = NULL;
 void deteccion_deadlock (t_pcb* proceso, char* recurso_pedido)
 {
     //voy a ver si el proceso P1 que pidio un recurso, tiene al menos 1 recurso asignado, sino no cumple deadlock
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < tamanio_recursos; ++i)
     {
         if (proceso->recursos_asignados[i].instancias_recurso > 0)
         {
