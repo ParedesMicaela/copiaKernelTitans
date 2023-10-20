@@ -133,6 +133,8 @@ void consola_finalizar_proceso(int pid) {
         agregar_entero_a_paquete(paquete_fin, interrupcion_exit);
         enviar_paquete(paquete_fin, socket_cpu_interrupt);
         eliminar_paquete(paquete_fin);
+
+        eliminar_pcb(pcb_asociado);
         } 
         else {
         // Remuevo el pcb del diccionario

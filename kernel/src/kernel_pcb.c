@@ -182,6 +182,7 @@ char* recibir_contexto(t_pcb* proceso)
 //eliminamos el pcb, sus estructuras, y lo de adentro de esas estructuras
 void eliminar_pcb(t_pcb* proceso)
 {
+    eliminar_recursos_asignados(proceso);
     if (proceso->path_proceso != NULL) {
         free(proceso->path_proceso);
     }
@@ -191,8 +192,48 @@ void eliminar_pcb(t_pcb* proceso)
 
 void eliminar_recursos_asignados(t_pcb* proceso) {
 
+    liberar_todos_recurso(proceso);
     free(proceso->recursos_asignados);
-    proceso->recursos_asignados = NULL;
+    //proceso->recursos_asignados = NULL;
+}
+
+void liberar_todos_recurso(t_pcb* proceso)
+{
+    //por cada recurso asignado que tiene el proceso, tengo que liberarlo y ver si ese recurso tiene procesos esperando
+    int tamanio_asignados = string_array_size(proceso->recursos_asignados->nombre_recurso);
+    int instancias = 0;
+    char* recurso_asig = NULL;
+
+    for (int i = 0; i < tamanio_recursos; i++)
+    {
+        if(proceso->recursos_asignados[i].instancias_recurso > 0)
+        {
+            //agarro uno por uno cada recurso que tiene el proceso
+            recurso_asig = proceso->recursos_asignados[i].nombre_recurso;
+            int indice_pedido = indice_recurso(recurso_asig);
+
+            //le sumo una instancia a cada recurso que se esta liberando
+            instancias = instancias_del_recurso[indice_pedido];
+            instancias++;
+            instancias_del_recurso[indice_pedido] = instancias;
+            if (instancias <= 0)
+            {
+                //buscamos la lista del recurso que se libero, dentro de la lista de recursos
+                t_list *cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
+
+                //agarramos el primer proceso que esta bloqueado dentro de esa lista
+                t_pcb *pcb_desbloqueado = obtener_bloqueado_por_recurso(cola_bloqueados_recurso);
+
+                //metemos el proceso que desbloqueamos a la cola de ready y el plani se fija despues cuando ejecutarlo
+                pthread_mutex_lock(&mutex_ready);
+                meter_en_cola(pcb_desbloqueado, READY, cola_READY);
+                pthread_mutex_unlock(&mutex_ready);
+
+                log_info(kernel_logger, "Se libero el recurso: [%s] y se desbloquea el PID [%d]", recurso_asig, pcb_desbloqueado->pid);
+                deteccion_deadlock(pcb_desbloqueado, recurso_asig);
+            }
+        }
+    }
 }
 
 void eliminar_registros_pcb (t_registros_cpu registros_cpu)

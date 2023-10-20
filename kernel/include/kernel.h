@@ -141,6 +141,7 @@ void liberacion_recursos(t_pcb* );
 bool proceso_reteniendo_recurso(t_pcb* ,char* );
 void deteccion_deadlock (t_pcb*, char* );
 void mensaje_deadlock_detectado(t_pcb* , char* );
+void liberar_todos_recurso(t_pcb* );
 
 //================================================ Destruir ==================================================================================================================
 void finalizar_kernel();

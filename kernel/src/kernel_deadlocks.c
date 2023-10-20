@@ -60,9 +60,8 @@ bool proceso_reteniendo_recurso(t_pcb* proceso_involucrado, char* recurso) {
 void mensaje_deadlock_detectado(t_pcb* proceso, char* recurso_requerido)
 {
     char *recursos_totales = string_new();
-    int tamanio_asignados = string_array_size(proceso->recursos_asignados->nombre_recurso);
 
-    for (int i = 0; i < tamanio_asignados; i++) {
+    for (int i = 0; i < tamanio_recursos; i++) {
 
         //voy a guardar en un string los nombres de los recursos que tenga asignados
         if (proceso->recursos_asignados[i].instancias_recurso > 0)
@@ -73,8 +72,8 @@ void mensaje_deadlock_detectado(t_pcb* proceso, char* recurso_requerido)
             string_append(&recursos_totales, recurso);
             free(recurso);
 
-            //separo los recursos con comas
-            if (i < tamanio_recursos - 1)
+            //separo los recursos con comas solamente si hay un recurso que le sigue, sino no pongo la coma
+            if (i < tamanio_recursos - 1 && proceso->recursos_asignados[i + 1].instancias_recurso > 0)
             {
                 string_append(&recursos_totales, ", ");
             }
