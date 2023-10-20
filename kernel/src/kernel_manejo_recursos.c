@@ -170,11 +170,8 @@ int indice_recurso(char *recurso_buscado)
         {
             return i;
         }
-        else
-        {
-            return -1;
-        }
     }
+    return -1;
 }
 
 t_pcb *obtener_bloqueado_por_recurso(t_list *cola_recurso)

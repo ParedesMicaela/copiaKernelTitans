@@ -37,7 +37,7 @@ t_pcb* crear_pcb(int prioridad, int tam_swap, char* path)
 
     // Inicialización de cada recurso
     for (int i = 0; i < tamanio_recursos; ++i) {
-        strcpy(pcb->recursos_asignados[i].nombre_recurso, "Recurso");  // Puedes asignar el nombre que desees
+        strcpy(pcb->recursos_asignados[i].nombre_recurso, nombres_recursos[i]);  // Puedes asignar el nombre que desees
         pcb->recursos_asignados[i].instancias_recurso = 0;
     }
 

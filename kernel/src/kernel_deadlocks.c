@@ -41,6 +41,7 @@ void deteccion_deadlock (t_pcb* proceso, char* recurso_pedido)
     }
     //si no retiene recursos, entonces no puede estar en deadlock
     //sem_post(&analisis_deadlock_completo);
+    free(recurso_retenido);
 }
 
 bool proceso_reteniendo_recurso(t_pcb* proceso_involucrado, char* recurso) {
@@ -59,8 +60,9 @@ bool proceso_reteniendo_recurso(t_pcb* proceso_involucrado, char* recurso) {
 void mensaje_deadlock_detectado(t_pcb* proceso, char* recurso_requerido)
 {
     char *recursos_totales = string_new();
+    int tamanio_asignados = string_array_size(proceso->recursos_asignados->nombre_recurso);
 
-    for (int i = 0; i < tamanio_recursos; i++) {
+    for (int i = 0; i < tamanio_asignados; i++) {
 
         //voy a guardar en un string los nombres de los recursos que tenga asignados
         if (proceso->recursos_asignados[i].instancias_recurso > 0)
