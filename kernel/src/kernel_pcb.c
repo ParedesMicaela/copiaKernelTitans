@@ -123,7 +123,7 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     //agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
 
     enviar_paquete(paquete, socket_cpu_dispatch);
-    log_info(kernel_logger, "Se envio el PCB %d a la CPU \n", pcb_a_enviar->pid);
+    log_info(kernel_logger, "\nSe envio el PCB %d a la CPU \n", pcb_a_enviar->pid);
     eliminar_paquete(paquete);
     return;
 }
@@ -154,7 +154,7 @@ char* recibir_contexto(t_pcb* proceso)
 
     }
     else{
-        log_error(kernel_logger, "Falla al recibir PCB, se cierra el Kernel \n");
+        log_error(kernel_logger, "\nFalla al recibir PCB, se cierra el Kernel \n");
         abort();
     }
 
@@ -166,7 +166,7 @@ char* recibir_contexto(t_pcb* proceso)
 
 	//proceso->registros_cpu = registros;
 
-    log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
+    log_info(kernel_logger, "\nRecibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
 
     /*la cpu nos va a devolver el contexto si hace exit, algo de recursos o sleep. Si en recurso_pedido
     no me manda nada, es porque esta ejecutando exit o sleep. Entonces lo que voy a hacer aca es ver si

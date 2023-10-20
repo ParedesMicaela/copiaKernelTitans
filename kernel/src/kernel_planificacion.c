@@ -148,7 +148,44 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 {
     // le enviamos el pcb a la cpu para que ejecute y recibimos el pcb resultado de su ejecucion
     enviar_pcb_a_cpu(proceso_seleccionado);
+    printf("\nEnviamos pcb a cpu para que empieze a ejecutar\n");
 
+    //si es rr y termina el quantum tenemos que desalojar    
+    char *algoritmo = config_valores_kernel.algoritmo_planificacion;
+    if(strcmp(algoritmo, "RR") == 0)
+    {
+        printf("\nDetectamos RR\n");
+        int quantum = config_valores_kernel.quantum;
+        usleep(1000 * quantum); // Simula la ejecución y pausa el proceso en milisegundos
+        quantum = 0;
+        
+        printf("\nComparamos si el proceso que nos dieron es el que se esta ejecutando\n");
+        
+        pthread_mutex_lock(&mutex_ready);
+        t_pcb *proceso_en_exec = list_get(dictionary_int_get(diccionario_colas, EXEC),0);
+        pthread_mutex_unlock(&mutex_ready);
+
+        //si el que agarramos es el mismo que enviamos, significa que se quiere seguir ejecutando dps del quantum (nao nao)
+        if (proceso_en_exec->pid == proceso_seleccionado->pid )
+        {
+            log_info(kernel_logger, "\nPID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
+            
+            // Debes enviar una señal de desalojo al proceso en CPU.
+            t_paquete *paquete = crear_paquete(DESALOJO);
+            agregar_entero_a_paquete(paquete, 1);
+            enviar_paquete(paquete, socket_cpu_interrupt);
+            eliminar_paquete(paquete);
+        }
+        else
+        {
+            log_info(kernel_logger, "\n E que se esta ejecutando no es el mismo que mandamos. Estamos ejecutando Proceso con PID[%d] \n", proceso_en_exec->pid);
+
+        }
+    }
+    else
+    {
+    printf("\nNo estamos en RR\n");
+    }
     /*despues la cpu nos va a devolver el contexto en caso de que haya finalizado el proceso
     haya pedido un recurso (wait/signal), por desalojo o por page fault*/
     char *devuelto_por = recibir_contexto(proceso_seleccionado);
@@ -530,55 +567,20 @@ t_pcb *obtener_siguiente_PRIORIDADES()
 
 t_pcb *obtener_siguiente_RR()
 {
-    log_info(kernel_logger, "Inicio la planificación RR\n");
+    //es lo mismo que FIFO
+    log_info(kernel_logger, "Inicio la planificacion RR \n");
 
-    int quantum = config_valores_kernel.quantum; 
+    //mostramos los que estan en ready
+    mostrar_lista_pcb(cola_READY, "READY");
 
-    // Realiza el bloqueo y desbloqueo del mutex de READY para sacar el primer proceso de la cola.
+    /*voy a seleccionar el primer proceso que esta en ready usando esta funcion porque me retorna el proceso
+    que le pido y tambien me lo borra. Como FIFO va a ejecutar todo hasta terminar, me biene barbaro*/
     pthread_mutex_lock(&mutex_ready);
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
     pthread_mutex_unlock(&mutex_ready);
 
-    log_info(kernel_logger, "PID[%d] sale de READY por planificación RR", proceso_seleccionado->pid);
-
-    int tiempo_restante = quantum; // Comienza con el valor del quantum
-
-    while (tiempo_restante > 0)
-    {
-        usleep(1000); // Simula la ejecución y pausa el proceso en milisegundos
-
-        // Si el proceso finaliza durante su ejecución, es porque está en EXIT
-        if (proceso_seleccionado->estado_pcb == EXIT)
-        {
-            log_info(kernel_logger, "PID[%d] ha finalizado durante su quantum de RR\n", proceso_seleccionado->pid);
-            pthread_mutex_lock(&mutex_ready);
-            list_remove(dictionary_int_get(diccionario_colas, READY), 0);
-            pthread_mutex_unlock(&mutex_ready);
-
-            return proceso_seleccionado;
-        }
-        
-        tiempo_restante--; // Reduce el tiempo restante en cada iteración
-    }
-    
-    if(tiempo_restante == 0)
-    {
-    // Reinicia el quantum para el siguiente proceso.
-    proceso_seleccionado->quantum = config_valores_kernel.quantum;
-    log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
-
-    // Debes enviar una señal de desalojo al proceso en CPU.
-    t_paquete *paquete = crear_paquete(DESALOJO);
-    agregar_entero_a_paquete(paquete, 1);
-    enviar_paquete(paquete, socket_cpu_interrupt);
-    eliminar_paquete(paquete);
-
-    // Selecciona un nuevo proceso para ejecutar y continúa la planificación.
-    // Puedes hacer esto llamando recursivamente a la función obtener_siguiente_RR.
+    log_info(kernel_logger, "PID[%d] sale de READY por planificacion RR \n", proceso_seleccionado->pid);
     return proceso_seleccionado;
-    }
-
-    return NULL;
 }
 
 
