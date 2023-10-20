@@ -174,7 +174,7 @@ char* recibir_contexto(t_pcb* proceso)
     me diga el recurso y lo que quiere hacer el proceso con ese recurso.*/
 
     //si no me piden hacer algo con recursos, solamente retorno el motivo de devolucion
-    free(recurso_pedido);
+    //free(recurso_pedido);
     eliminar_paquete(paquete);
     return motivo_de_devolucion;
 }
@@ -185,15 +185,8 @@ void eliminar_pcb(t_pcb* proceso)
     if (proceso->path_proceso != NULL) {
         free(proceso->path_proceso);
     }
+    free(proceso->recurso_pedido);
 
-    int tam = string_array_size(proceso->recursos_asignados->instancias_recurso);
-    for(int i = 0; i < tam; i++)
-    {
-        free(proceso->recursos_asignados[i].nombre_recurso);
-        free(proceso->recursos_asignados[i].instancias_recurso);
-    }
-
-    
 }
 
 void eliminar_recursos_asignados(t_pcb* proceso) {

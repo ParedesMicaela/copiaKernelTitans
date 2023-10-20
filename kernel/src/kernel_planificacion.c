@@ -152,6 +152,8 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     haya pedido un recurso (wait/signal), por desalojo o por page fault*/
     char *devuelto_por = recibir_contexto(proceso_seleccionado);
 
+    /*aca usamos el proceso_en_exit para el mejor de los casos, cuando un proceso estaba ejecutando
+    y termina su ejecucion con exit*/
     if (string_equals_ignore_case(devuelto_por, "exit"))
     {
         pthread_mutex_lock(&mutex_corriendo);
@@ -188,7 +190,9 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         pthread_mutex_unlock(&mutex_ready);
     }
 
-     if (string_equals_ignore_case(devuelto_por, "finalizacion"))
+    /*aca lo usamos cuando matamos al proceso. Estaba ejecutando y lo sacamos de la cola y le disparamos
+    tiene sentido usarlo aca tambien, porque lo estamos sacando de la cola de exec*/
+    if (string_equals_ignore_case(devuelto_por, "finalizacion"))
     {
         log_info(kernel_logger, "Finaliza el proceso %d - Motivo: SUCCESS\n", proceso_seleccionado->pid);
         proceso_en_exit(proceso_seleccionado);
