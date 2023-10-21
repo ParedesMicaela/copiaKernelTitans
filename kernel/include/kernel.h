@@ -68,6 +68,7 @@ extern char **nombres_recursos;
 
 
 extern int corriendo;
+extern bool hay_deadlock;
 //==============================================================================================================================
 
 typedef struct

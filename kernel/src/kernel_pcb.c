@@ -216,19 +216,29 @@ void liberar_todos_recurso(t_pcb* proceso)
             instancias = instancias_del_recurso[indice_pedido];
             instancias++;
             instancias_del_recurso[indice_pedido] = instancias;
+            printf("cantidad instancias ahora: %d", instancias);
             if (instancias <= 0)
             {
                 //buscamos la lista del recurso que se libero, dentro de la lista de recursos
                 t_list *cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
 
+                list_remove_element(cola_bloqueados_recurso, (void *)proceso);
+                //list_remove_and_destroy_element
                 //agarramos el primer proceso que esta bloqueado dentro de esa lista
                 t_pcb *pcb_desbloqueado = obtener_bloqueado_por_recurso(cola_bloqueados_recurso);
 
                 log_info(kernel_logger, "Se libero el recurso: [%s] y se desbloquea el PID [%d]", recurso_asig, pcb_desbloqueado->pid);
 
-                obtener_siguiente_blocked(pcb_desbloqueado);
+                //antes de ver su hay deadlock tengo que asignar el recurso liberado al proceso que estaba esperando
+                strcpy(pcb_desbloqueado->recursos_asignados[indice_pedido].nombre_recurso, recurso_asig);
+                pcb_desbloqueado->recursos_asignados[indice_pedido].instancias_recurso++;
+                pcb_desbloqueado->recurso_pedido = NULL;           
+                //obtener_siguiente_blocked(pcb_desbloqueado);
 
-                //deteccion_deadlock(pcb_desbloqueado, recurso_asig);
+                deteccion_deadlock(pcb_desbloqueado, recurso_asig);
+                if(!hay_deadlock){
+                    obtener_siguiente_blocked(pcb_desbloqueado);
+                }
             }
         }
     }

@@ -38,7 +38,7 @@ void asignacion_recursos(t_pcb *proceso)
     instancias_del_recurso[indice_pedido] = instancias;
     pthread_mutex_unlock(&mutex_recursos);
 
-    log_info(kernel_logger, "PID: %d - Wait: %s - Instancias: %d\n", proceso->pid, recurso, instancias);
+    log_info(kernel_logger, "PID: %d - Wait: %s - Instancias: %d\n", proceso->pid, proceso->recurso_pedido, instancias);
 
     if (instancias < 0)
     {
@@ -61,8 +61,8 @@ void asignacion_recursos(t_pcb *proceso)
         meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
         pthread_mutex_unlock(&mutex_blocked);
 
-        log_info(kernel_logger, "PID: %d - Bloqueado por: %s\n", proceso->pid, recurso);
-        deteccion_deadlock(proceso, recurso);
+        log_info(kernel_logger, "PID: %d - Bloqueado por: %s\n", proceso->pid, proceso->recurso_pedido);
+        deteccion_deadlock(proceso, proceso->recurso_pedido);
         // sem_wait(&analisis_deadlock_completo);
     }
     else
@@ -77,11 +77,17 @@ void asignacion_recursos(t_pcb *proceso)
         strcpy(proceso->recursos_asignados[indice_pedido].nombre_recurso, recurso);
         proceso->recursos_asignados[indice_pedido].instancias_recurso++;
 
+        proceso->recurso_pedido = NULL;
+
+        if(proceso->estado_pcb == BLOCKED)
+        {
+            obtener_siguiente_blocked(proceso);
+        }
+
         // Si puede realizar exitosamente wait, sigue ejecutando
         proceso_en_execute(proceso);
     }
-    proceso->recurso_pedido = NULL;
-    free(recurso);
+    //free(recurso);
 }
 
 // funcion de signal
