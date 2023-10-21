@@ -26,7 +26,7 @@ void cargar_configuracion(char* path){
 int atender_clientes_memoria(int socket_servidor){
 
 	int socket_cliente = malloc(sizeof(int));
-	*socket_cliente = esperar_cliente(socket_servidor); // se conecta primero cpu
+	socket_cliente = esperar_cliente(socket_servidor); // se conecta primero cpu
 
 	if(socket_cliente != -1){
 		log_info(memoria_logger, "Se conecto un cliente \n");
