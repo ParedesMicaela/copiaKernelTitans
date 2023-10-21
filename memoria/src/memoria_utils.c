@@ -40,15 +40,15 @@ int atender_clientes_memoria(int socket_servidor){
 	return 0;
 }
 
-void manejo_conexiones(void* socket_cliente)
+void manejo_conexiones(int socket_cliente)
 {
-	int cliente = *(int*)socket_cliente;
+	//int cliente = *(int*)socket_cliente;
 	int posicion_pedida = 0;
 	int pid_proceso = 0;
 	char* path_asignado = NULL;
 
 	while(1){
-	t_paquete* paquete = recibir_paquete(cliente);
+	t_paquete* paquete = recibir_paquete(socket_cliente);
     void* stream = paquete->buffer->stream;
 
 	switch(paquete->codigo_operacion){		
