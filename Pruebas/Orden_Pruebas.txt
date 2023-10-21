@@ -1,0 +1,30 @@
+-- 1 --
+DETENER_PLANIFICACION
+
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/PLANI_1.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/PLANI_2.txt" 64 3
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/PLANI_3.txt" 64 2
+
+INICIAR_PLANIFICACION
+
+-- 2 --
+DETENER_PLANIFICACION
+
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/DEADLOCK_A.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/DEADLOCK_B.txt" 64 3
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/DEADLOCK_C.txt" 64 2
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/DEADLOCK_D.txt" 64 2
+
+INICIAR_PLANIFICACION
+FINALIZAR_PROCESO 1
+
+-- 3 --
+DETENER_PLANIFICACION
+
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ERROR_1.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ERROR_2.txt" 64 3
+
+INICIAR_PLANIFICACION
+
+
+
