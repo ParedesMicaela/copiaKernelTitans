@@ -176,19 +176,3 @@ void consola_finalizar_proceso(int pid) {
         printf("Proceso no encontrado. Intente nuevamente.\n");
     }
 }
-
-/*
-  // Remove el pcb de la cola
-        pthread_mutex_lock(&mutex_colas);
-        list_remove_element(target_queue, list_index_of(target_queue, pcb_to_remove));
-        pthread_mutex_unlock(&mutex_colas);
-
-        // Cambiamos estado a exit
-        pcb_asociado->estado_pcb = EXIT;
-
-        // Añadimos el PCB a exit
-        pthread_mutex_lock(&mutex_colas);
-        list_add(cola_EXIT, pcb_asociado);
-        printf("PID: %d is desalojado\n", pid);
-        pthread_mutex_unlock(&mutex_colas);
-    */

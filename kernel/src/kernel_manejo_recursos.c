@@ -16,24 +16,22 @@ char **nombres_recursos;
 // funcion de wait
 void asignacion_recursos(t_pcb *proceso)
 {
-    // descubri que era mas facil si lo pasaba directamente por aca
     char *recurso = proceso->recurso_pedido;
     int instancias = 0;
 
     int indice_pedido = indice_recurso(recurso);
-
+    
+    // si el recurso no existe, mando el proceso a exit
     if (indice_pedido == -1)
     {
-        // si el recurso no existe, mando el proceso a exit
         proceso->recurso_pedido = NULL;
         log_error(kernel_logger, "El recurso solicitado no existe\n");
         log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
 
-        // aca tiene sentido usarlo porque lo sacamos de exec y lo mandamos a exit porque pedir cualquiera
         proceso_en_exit(proceso);
         return;
     }
-
+    // Restamos la instancia pedida
     pthread_mutex_lock(&mutex_recursos);
     instancias = instancias_del_recurso[indice_pedido];
     instancias--;
@@ -50,8 +48,19 @@ void asignacion_recursos(t_pcb *proceso)
         que me pasan por parametro y agarrar la cola del recurso al que nos estamos refiriendo*/
         t_list *cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
 
-        // y agregamos a la cola que agarre, el proceso que pidio ese recurso
+        // Bloqueamos el proceso en la cola de recursos
         list_add(cola_bloqueados_recurso, (void *)proceso);
+
+        // Desalojo de EXECUTE
+        pthread_mutex_lock(&mutex_exec);
+        list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
+        pthread_mutex_unlock(&mutex_exec);
+
+        // Meto en BLOCKED 
+        pthread_mutex_lock(&mutex_blocked);
+        meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
+        pthread_mutex_unlock(&mutex_blocked);
+
         log_info(kernel_logger, "PID: %d - Bloqueado por: %s\n", proceso->pid, recurso);
         deteccion_deadlock(proceso, recurso);
         // sem_wait(&analisis_deadlock_completo);
@@ -68,7 +77,7 @@ void asignacion_recursos(t_pcb *proceso)
         strcpy(proceso->recursos_asignados[indice_pedido].nombre_recurso, recurso);
         proceso->recursos_asignados[indice_pedido].instancias_recurso++;
 
-        // despues vamos a mandar el proceso a execute para que siga su camino
+        // Si puede realizar exitosamente wait, sigue ejecutando
         proceso_en_execute(proceso);
     }
     proceso->recurso_pedido = NULL;
@@ -78,41 +87,36 @@ void asignacion_recursos(t_pcb *proceso)
 // funcion de signal
 void liberacion_recursos(t_pcb *proceso)
 {
-    // voy a robar vilmente lo que hice arriba y lo voy a copiar aca, porque por suerte no estamos en pdep
     char *recurso = proceso->recurso_pedido;
     int instancias = 0;
 
     int indice_pedido = indice_recurso(recurso);
 
+     // si el recurso no existe, mando el proceso a exit
     if (indice_pedido == -1)
     {
-        // si el recurso no existe, mando el proceso a exit
         log_error(kernel_logger, "El recurso solicitado no existe\n");
         log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
 
-        //aca tiene sentido usarlo porque lo sacamos de exec y lo mandamos a exit porque pedir cualquiera
         proceso_en_exit(proceso);
         return;
     }
 
     // actualizo la cantidad de instancias para el recurso que me pidio el proceso y lo borro de recurso_pedido
     proceso->recurso_pedido = NULL;
-
-    // si o si lo tenia que poner con mutex porque sino habia condicion de carrera
     pthread_mutex_lock(&mutex_recursos);
     instancias = instancias_del_recurso[indice_pedido];
     instancias++;
 
+    // No puede pedirme más del maximo que declaró
     if (instancias > instancias_maximas_del_recurso[indice_pedido])
     {
-        //proceso->recurso_pedido = NULL;
         instancias--;
         log_error(kernel_logger, "Instancia de recurso no valida\n");
         log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
 
-        //aca tambien tiene sentido usarlo al hijoeputa de proceso_en_exit
         proceso_en_exit(proceso);
-    }else
+    } else //  Hago el signal
     {
         instancias_del_recurso[indice_pedido] = instancias;
         pthread_mutex_unlock(&mutex_recursos);
@@ -123,7 +127,6 @@ void liberacion_recursos(t_pcb *proceso)
         hay un proceso esperando en la cola de bloqueado*/
         if (instancias <= 0)
         {
-
             t_list *cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
 
             /*esta funcion ya la habre hecho como 10 veces en lo que vamos de codigo, no hace falta presentacion
@@ -131,12 +134,7 @@ void liberacion_recursos(t_pcb *proceso)
             del recurso y de ahi vamos a sacar nuestro proceso*/
             t_pcb *pcb_desbloqueado = obtener_bloqueado_por_recurso(cola_bloqueados_recurso);
 
-            /*una vez que lo desbloqueamos porque justo se libero el recurso que este proceso estaba buscando,
-            vamos a mandar a nuestro amigo a ready porque no se puede mandar solo a exec. Que nuestro plani
-            decida si quiere mandarlo a ejecutar, para algo lo cree*/
-            pthread_mutex_lock(&mutex_ready);
-            meter_en_cola(pcb_desbloqueado, READY, cola_READY);
-            pthread_mutex_unlock(&mutex_ready);
+           obtener_siguiente_blocked(pcb_desbloqueado);
         }
 
         /*ahora voy a tener que hacer lo mismo pero al revez para sacar el recurso. Pero si tiene mas de una

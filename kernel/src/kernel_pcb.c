@@ -123,7 +123,7 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
     //agregar_entero_a_paquete(paquete, pcb_a_enviar->archivosAbiertos); ///hay que ver como mandamos esto
 
     enviar_paquete(paquete, socket_cpu_dispatch);
-    log_info(kernel_logger, "\nSe envio el PCB %d a la CPU \n", pcb_a_enviar->pid);
+    //log_info(kernel_logger, "\nSe envio el PCB %d a la CPU \n", pcb_a_enviar->pid);
     eliminar_paquete(paquete);
     return;
 }
@@ -137,6 +137,7 @@ char* recibir_contexto(t_pcb* proceso)
     void* stream = paquete->buffer->stream;
     int program_counter =-1;
     char* recurso_pedido = NULL;
+    char* prueba_leak = NULL;
     int sleep_pedido = 0;
     
     //si lo que recibimos es en efecto un pcb, lo abrimos
@@ -149,7 +150,7 @@ char* recibir_contexto(t_pcb* proceso)
         CX = sacar_entero_sin_signo_de_paquete(&stream);
         DX = sacar_entero_sin_signo_de_paquete(&stream);
         motivo_de_devolucion = sacar_cadena_de_paquete(&stream);
-        recurso_pedido = sacar_cadena_de_paquete(&stream); ////Problema Wait
+        recurso_pedido = sacar_cadena_de_paquete(&stream); 
         sleep_pedido = sacar_entero_de_paquete(&stream);
 
     }
@@ -174,7 +175,6 @@ char* recibir_contexto(t_pcb* proceso)
     me diga el recurso y lo que quiere hacer el proceso con ese recurso.*/
 
     //si no me piden hacer algo con recursos, solamente retorno el motivo de devolucion
-    //free(recurso_pedido);
     eliminar_paquete(paquete);
     return motivo_de_devolucion;
 }
@@ -186,15 +186,15 @@ void eliminar_pcb(t_pcb* proceso)
     if (proceso->path_proceso != NULL) {
         free(proceso->path_proceso);
     }
-    free(proceso->recurso_pedido);
-
+     if (proceso->recurso_pedido != NULL) {
+        free(proceso->recurso_pedido);
+    }
 }
 
 void eliminar_recursos_asignados(t_pcb* proceso) {
 
     liberar_todos_recurso(proceso);
     free(proceso->recursos_asignados);
-    //proceso->recursos_asignados = NULL;
 }
 
 void liberar_todos_recurso(t_pcb* proceso)
@@ -224,13 +224,11 @@ void liberar_todos_recurso(t_pcb* proceso)
                 //agarramos el primer proceso que esta bloqueado dentro de esa lista
                 t_pcb *pcb_desbloqueado = obtener_bloqueado_por_recurso(cola_bloqueados_recurso);
 
-                //metemos el proceso que desbloqueamos a la cola de ready y el plani se fija despues cuando ejecutarlo
-                pthread_mutex_lock(&mutex_ready);
-                meter_en_cola(pcb_desbloqueado, READY, cola_READY);
-                pthread_mutex_unlock(&mutex_ready);
-
                 log_info(kernel_logger, "Se libero el recurso: [%s] y se desbloquea el PID [%d]", recurso_asig, pcb_desbloqueado->pid);
-                deteccion_deadlock(pcb_desbloqueado, recurso_asig);
+
+                obtener_siguiente_blocked(pcb_desbloqueado);
+
+                //deteccion_deadlock(pcb_desbloqueado, recurso_asig);
             }
         }
     }

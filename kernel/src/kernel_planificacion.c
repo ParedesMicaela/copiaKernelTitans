@@ -148,7 +148,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 {
     // le enviamos el pcb a la cpu para que ejecute y recibimos el pcb resultado de su ejecucion
     enviar_pcb_a_cpu(proceso_seleccionado);
-    printf("\nEnviamos pcb a cpu para que empieze a ejecutar\n");
+    //printf("\nEnviamos pcb a cpu para que empieze a ejecutar\n");
 
     //si es rr y termina el quantum tenemos que desalojar    
     char *algoritmo = config_valores_kernel.algoritmo_planificacion;
@@ -184,7 +184,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     }
     else
     {
-    printf("\nNo estamos en RR\n");
+    //printf("\nNo estamos en RR\n");
     }
     /*despues la cpu nos va a devolver el contexto en caso de que haya finalizado el proceso
     haya pedido un recurso (wait/signal), por desalojo o por page fault*/
@@ -327,7 +327,7 @@ void proceso_en_exit(t_pcb *proceso)
 void proceso_en_sleep(t_pcb *proceso) 
 {
     sleep(proceso->sleep);
-    obtener_siguiente_blocked();
+    obtener_siguiente_blocked(proceso);
 }
 
 void proceso_en_page_fault(t_pcb* proceso){
@@ -344,7 +344,7 @@ void proceso_en_page_fault(t_pcb* proceso){
 
 
     //en el .4 se menciona que se coloca al proceso en ready después de solucionar el page fault
-    obtener_siguiente_blocked();
+    obtener_siguiente_blocked(proceso);
 }
 
 //======================================================== Algoritmos ==================================================================
@@ -443,7 +443,7 @@ algoritmo obtener_algoritmo()
 }
 
 //agarramos el siguiente de la cola de bloqueados y metemos el proceso seleccionado a la cola ready
-void obtener_siguiente_blocked()
+void obtener_siguiente_blocked(t_pcb* proceso)
 {
     //Detener planifiacion
     pthread_mutex_lock(&mutex_corriendo);
@@ -455,7 +455,7 @@ void obtener_siguiente_blocked()
 
     //sacamos el primero de la cola de blocked
     pthread_mutex_lock(&mutex_blocked);
-    t_pcb* proceso = list_remove(dictionary_int_get(diccionario_colas, BLOCKED), 0);
+    list_remove_element(dictionary_int_get(diccionario_colas, BLOCKED), proceso);
     pthread_mutex_unlock(&mutex_blocked);
 
     //aca ya de una lo mandamos a ready porque sabemos que en el diagrama va directo a ready

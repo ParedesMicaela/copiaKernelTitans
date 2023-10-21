@@ -48,16 +48,6 @@ bool proceso_reteniendo_recurso(t_pcb* proceso_involucrado, char* recurso) {
 
     for (int i = 0; i < tamanio_recursos; ++i) {
         if (strcmp(proceso_involucrado->recursos_asignados[i].nombre_recurso, recurso) == 0) {
-
-            // Desalojo
-            pthread_mutex_lock(&mutex_exec);
-            list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso_involucrado);
-            pthread_mutex_unlock(&mutex_exec);
-
-            // Meto en BLOCKED ;)
-            pthread_mutex_lock(&mutex_blocked);
-            meter_en_cola(proceso_involucrado, BLOCKED, cola_BLOCKED);
-            pthread_mutex_unlock(&mutex_blocked);
             
             //P2 que esta reteniendo el que P1 necesita
             mensaje_deadlock_detectado(proceso_involucrado, recurso_retenido);
@@ -92,15 +82,6 @@ void mensaje_deadlock_detectado(t_pcb* proceso, char* recurso_requerido)
 
     log_info(kernel_logger, "Deadlock detectado: PID[%d] - Recursos en posesión [%s] - Recurso requerido: [%s]\n", proceso->pid, recursos_totales, recurso_requerido);
 
-    // Desalojo
-    pthread_mutex_lock(&mutex_exec);
-    list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
-    pthread_mutex_unlock(&mutex_exec);
-
-    // Meto en BLOCKED ;)
-    pthread_mutex_lock(&mutex_blocked);
-    meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
-    pthread_mutex_unlock(&mutex_blocked);
     if (recursos_totales != NULL) {
         free(recursos_totales); 
     }
