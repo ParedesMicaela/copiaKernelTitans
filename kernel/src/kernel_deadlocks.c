@@ -1,45 +1,54 @@
 #include "kernel.h"
 
 char* recurso_retenido = NULL;
+bool hay_deadlock = false;
 
 //==========================================================================================================================================================
 
 void deteccion_deadlock (t_pcb* proceso, char* recurso_pedido)
 {
-    //voy a ver si el proceso P1 que pidio un recurso, tiene al menos 1 recurso asignado, sino no cumple deadlock
-    for (int i = 0; i < tamanio_recursos; ++i)
+    if(proceso->recurso_pedido != NULL)
     {
-        if (proceso->recursos_asignados[i].instancias_recurso > 0)
+        //voy a ver si el proceso P1 que pidio un recurso, tiene al menos 1 recurso asignado, sino no cumple deadlock
+        for (int i = 0; i < tamanio_recursos; ++i)
         {
-            //si tiene al menos 1 recurso asignado entonces vemos si hay deadlock.
-            log_info(kernel_logger, "EL PID [%d] esta reteniendo %s\n", proceso->pid, proceso->recursos_asignados[i].nombre_recurso);
-            recurso_retenido = strdup(proceso->recursos_asignados[i].nombre_recurso);
-
-            //necesito saber si el recurso que P1 esta reteniendo, tiene una cola de espera
-            t_list* cola_recurso = (t_list *)list_get(lista_recursos, i);
-
-            //si hay algo en la cola de espera, entonces hay un P2 esperando por ese recurso que P1 tiene
-            if(cola_recurso != NULL && list_size(cola_recurso) > 0)
+            if (proceso->recursos_asignados[i].instancias_recurso > 0)
             {
+                //si tiene al menos 1 recurso asignado entonces vemos si hay deadlock.
+                log_info(kernel_logger, "EL PID [%d] esta reteniendo %s\n", proceso->pid, proceso->recursos_asignados[i].nombre_recurso);
+                recurso_retenido = strdup(proceso->recursos_asignados[i].nombre_recurso);
 
-                /*voy a buscar dentro de la cola de bloqueados del recurso, un P2 que este reteniendo 
-                el recurso que P1 esta pidiendo, para ver si hay espera circular->deadlock*/
-                for(int j = 0; j < list_size(cola_recurso); j++)
+                //necesito saber si el recurso que P1 esta reteniendo, tiene una cola de espera
+                t_list* cola_recurso = (t_list *)list_get(lista_recursos, i);
+
+                //si hay algo en la cola de espera, entonces hay un P2 esperando por ese recurso que P1 tiene
+                if(cola_recurso != NULL && list_size(cola_recurso) > 0)
                 {
-                    t_pcb* proceso_involucrado = list_get(cola_recurso, j);
-                    if (proceso_reteniendo_recurso(proceso_involucrado, recurso_pedido)) 
-                    {                       
-                        //P1 que esta reteniendo el que P2 necesita
-                        mensaje_deadlock_detectado(proceso, recurso_pedido);
-                    }else
+
+                    /*voy a buscar dentro de la cola de bloqueados del recurso, un P2 que este reteniendo 
+                    el recurso que P1 esta pidiendo, para ver si hay espera circular->deadlock*/
+                    for(int j = 0; j < list_size(cola_recurso); j++)
                     {
-                        log_info(kernel_logger,"Analisis de deteccion de deadlock completado: NO hay deadlock");
+                        t_pcb* proceso_involucrado = list_get(cola_recurso, j);
+                        if (proceso_reteniendo_recurso(proceso_involucrado, proceso->recurso_pedido)) 
+                        {                       
+                            //P1 que esta reteniendo el que P2 necesita
+                            mensaje_deadlock_detectado(proceso, proceso->recurso_pedido);
+                            hay_deadlock = true;
+                        }else
+                        {
+                            log_info(kernel_logger,"Analisis de deteccion de deadlock completado: NO hay deadlock");
+                        }
                     }
                 }
             }
         }
+    }else
+    {
+        log_info(kernel_logger,"Analisis de deteccion de deadlock completado: NO hay deadlock");
+        hay_deadlock = false;
     }
-    //si no retiene recursos, entonces no puede estar en deadlock
+    //si no retiene recursos, entonces no puede estar en deadlockproceso->recurso_pedido
     //sem_post(&analisis_deadlock_completo);
     free(recurso_retenido);
 }
