@@ -3,8 +3,6 @@
 pthread_mutex_t mutex_blocked;
 pthread_mutex_t mutex_recursos;
 
-sem_t analisis_deadlock_completo;
-
 t_list *lista_recursos;
 int *instancias_del_recurso;
 int *instancias_maximas_del_recurso;

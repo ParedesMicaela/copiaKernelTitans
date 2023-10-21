@@ -65,7 +65,6 @@ void inicializar_semaforos()
     sem_init(&grado_multiprogramacion, 0, config_valores_kernel.grado_multiprogramacion_ini);
     sem_init(&(hay_proceso_nuevo), 0, 0);
     sem_init(&(hay_procesos_ready), 0, 0);
-    sem_init(&(analisis_deadlock_completo), 0, 0);
     sem_init(&(mutex_pid), 0, 1);
 }
 
@@ -77,14 +76,7 @@ void planificador_largo_plazo()
         // si el grado de multiprogramacion lo permite
         sem_wait(&grado_multiprogramacion);
 
-      //Detener planifiacion
-        pthread_mutex_lock(&mutex_corriendo);
-        while (corriendo == 0) { // Mientras no se detenga
-           
-            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
-        }
-        pthread_mutex_unlock(&mutex_corriendo);
-
+        detener_planificacion();
         // elegimos el que va a pasar a ready, o sea el primero porque es FIFO
         t_pcb *proceso_nuevo = obtener_siguiente_new();
 
@@ -113,13 +105,7 @@ void planificador_corto_plazo()
     {
         sem_wait(&hay_procesos_ready);
 
-        //Detener planifiacion
-        pthread_mutex_lock(&mutex_corriendo);
-        while (corriendo == 0) { // Mientras no se detenga
-           
-            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
-        }
-        pthread_mutex_unlock(&mutex_corriendo);
+        detener_planificacion();
  
         proceso_en_ready();
 
@@ -194,12 +180,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     y termina su ejecucion con exit*/
     if (string_equals_ignore_case(devuelto_por, "exit"))
     {
-        pthread_mutex_lock(&mutex_corriendo);
-        while (corriendo == 0) { // Sea 0
-           
-            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
-        }
-        pthread_mutex_unlock(&mutex_corriendo);
+       detener_planificacion();
         log_info(kernel_logger, "Finaliza el proceso %d - Motivo: SUCCESS\n", proceso_seleccionado->pid);
         proceso_en_exit(proceso_seleccionado);
     }
@@ -445,13 +426,7 @@ algoritmo obtener_algoritmo()
 //agarramos el siguiente de la cola de bloqueados y metemos el proceso seleccionado a la cola ready
 void obtener_siguiente_blocked(t_pcb* proceso)
 {
-    //Detener planifiacion
-    pthread_mutex_lock(&mutex_corriendo);
-        while (corriendo == 0) { // Mientras no se detenga
-           
-            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
-        }
-    pthread_mutex_unlock(&mutex_corriendo);
+    detener_planificacion();
 
     //sacamos el primero de la cola de blocked
     pthread_mutex_lock(&mutex_blocked);
@@ -686,4 +661,13 @@ void mostrar_lista_pcb(t_list *cola, char *nombre_cola)
     if (pids != NULL) {
         free(pids);  // Free pids if it was allocated
     }
+}
+
+void detener_planificacion () {
+          pthread_mutex_lock(&mutex_corriendo);
+        while (corriendo == 0) { // Mientras no se detenga
+           
+            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
+        }
+        pthread_mutex_unlock(&mutex_corriendo);
 }
