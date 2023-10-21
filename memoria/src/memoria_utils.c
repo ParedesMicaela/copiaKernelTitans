@@ -25,8 +25,8 @@ void cargar_configuracion(char* path){
 // ATENDER CLIENTES CON HILOS//
 int atender_clientes_memoria(int socket_servidor){
 
-	int socket_cliente = malloc(sizeof(int));
-	socket_cliente = esperar_cliente(socket_servidor); // se conecta primero cpu
+	//int socket_cliente = malloc(sizeof(int));
+	int socket_cliente = esperar_cliente(socket_servidor); // se conecta primero cpu
 
 	if(socket_cliente != -1){
 		log_info(memoria_logger, "Se conecto un cliente \n");
@@ -40,9 +40,9 @@ int atender_clientes_memoria(int socket_servidor){
 	return 0;
 }
 
-void manejo_conexiones(int cliente)
+void manejo_conexiones(void* socket_cliente)
 {
-	//int cliente = *(int*)socket_cliente;
+	int cliente = *(int*)socket_cliente;
 	int posicion_pedida = 0;
 	int pid_proceso = 0;
 	char* path_asignado = NULL;
