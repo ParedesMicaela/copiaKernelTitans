@@ -52,7 +52,8 @@ extern arch_config config_valores_memoria;
 
 // FUNCIONES//
 int atender_clientes_memoria(int);
-void manejo_conexiones(void* );
+// void manejo_conexiones(void* );
+void manejo_conexiones(int );
 void cargar_configuracion(char* );
 void enviar_paquete_handshake(int );
 void enviar_paquete_instrucciones(int , char* , int );
