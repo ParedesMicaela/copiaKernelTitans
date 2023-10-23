@@ -312,8 +312,8 @@ void proceso_en_sleep(t_pcb *proceso)
 }
 
 void proceso_en_page_fault(t_pcb* proceso){
-        
-    log_info(kernel_logger, "Page Fault PID: %d - Pagina: <Página>", proceso->pid); // FALTA PAGINA
+
+    log_info(kernel_logger, "Page Fault PID: %d - Pagina: <Página>", proceso->pid, proceso->pagina_pf); // FALTA PAGINA
     /*Mover al proceso al estado Bloqueado. Este estado bloqueado será 
     independiente de todos los demás ya que solo afecta al proceso 
     y no compromete recursos compartidos.*/
