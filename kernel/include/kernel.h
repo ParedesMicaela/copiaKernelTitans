@@ -1,8 +1,5 @@
 #ifndef KERNEL_H_
 #define KERNEL_H_
-#ifndef PAGE_FAULT
-#define PAGE_FAULT "page_fault"
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>

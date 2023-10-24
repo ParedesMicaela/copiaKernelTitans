@@ -34,7 +34,9 @@ int main(void)
     tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
 
     levantar_fcb();
+    log_info(filesystem_logger, "llegué hasta acá papa\n");
     levantar_fat(tamanio_fat);
+    log_info(filesystem_logger, "GORDA PELOTUDA \n");
     levantar_archivo_bloque(tamanio_swap, tamanio_fat);
 
     while(1) 
