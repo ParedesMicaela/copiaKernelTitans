@@ -31,7 +31,7 @@ int main(void)
 
     tamanio_fat = (config_valores_filesystem.cant_bloques_total - config_valores_filesystem.cant_bloques_swap) * sizeof(uint32_t);
     tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
-
+    
     log_info(filesystem_logger,"\n Empezamo \n");
     levantar_fcb(config_valores_filesystem.path_fcb);
     log_info(filesystem_logger,"\n Levanto fcb \n");
@@ -40,6 +40,7 @@ int main(void)
     levantar_archivo_bloque(tamanio_swap, tamanio_fat);
     log_info(filesystem_logger,"\n Levanto el archivo bloque\n");
 
+    //atender peticiones de kernel
     while(1) 
     {
         int* cliente_fd = malloc(sizeof(int));
@@ -52,3 +53,4 @@ int main(void)
 
     return EXIT_SUCCESS;
 }
+

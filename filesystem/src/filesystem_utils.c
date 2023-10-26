@@ -133,11 +133,12 @@ void levantar_fat(size_t tamanio_fat) {
     FILE* archivo_fat = fopen(path, "rb+");
     if (archivo_fat == NULL) {
         // Si no se encuentra el fat se inicializa con 0s.
-        archivo_fat = fopen(path, "wb+");
+		archivo_fat = fopen(path, "wb+");
         if (archivo_fat == NULL) {
-            perror("No se puedo abrir o crear el archivo_fat \n");
+            perror("\n No se puedo abrir o crear el archivo_fat \n");
             abort();
         }
+		else printf("\nTerminamos abriendo con wb+\n");
 
         uint32_t valor_inicial = 0; //Revisar que no sea while(!UINT32_MAX)
         for (size_t i = 0; i < tamanio_fat / sizeof(uint32_t); i++) {
@@ -162,37 +163,48 @@ void levantar_fat(size_t tamanio_fat) {
 }
 
 void levantar_archivo_bloque(size_t tamanio_swap, size_t tamanio_fat) {
-    char* path = config_valores_filesystem.path_bloques;
+    
+	char* path = config_valores_filesystem.path_bloques;
 
     FILE* archivo_bloque = fopen(path, "rb"); // Leemos en modo binario, puede ser wb+
-    if (archivo_bloque == NULL) {
-    perror("\nNo se pudo abrir el archivo de bloques \n");
+    
+	if (archivo_bloque == NULL)
+	{
+    perror("\n\nNo se pudo abrir el archivo de bloques \n\n");
     abort();
     }
-	else printf("\n Se abrio el archivo del path\n");
+	else printf("\n\n Se abrio el archivo de bloques\n\n");
 
     // Le asignamos un espacio de memoria al swap
-    uint32_t* particion_swap = (uint32_t*)malloc(tamanio_swap);
-    if (particion_swap == NULL) {
-    perror("\nNo se pudo alocar memoria para el swap \n");
+	uint32_t* particion_swap = (uint32_t*)malloc(tamanio_swap);
+    if (particion_swap == NULL)
+	{
+    perror("\n\nNo se pudo alocar memoria para el swap\n \n");
     abort();
     }
-	else printf("\n Se aloco la memoria para el swap\n");
-
-    fread(particion_swap, 1, tamanio_swap, archivo_bloque);
+	else
+	{
+	fread(particion_swap, 1, 1, archivo_bloque);
+	printf("\n\n Se aloco la memoria para el swap\n\n");
+	}
 
     // Le asignamos un espacio de memoria al fat
-    uint32_t* particion_fat = (uint32_t*)malloc(tamanio_fat);
-    if (particion_fat == NULL) {
-    perror("\nNo se pudo alocar memoria para el fat \n");
+	uint32_t* particion_fat = (uint32_t*)malloc(tamanio_fat);
+    if (particion_fat == NULL)
+	{
+    perror("\n\nNo se pudo alocar memoria para el fat \n\n");
     abort();
     }
-
+	else
+	{
     fread(particion_fat, 1, tamanio_fat, archivo_bloque);
+	printf("\n\n Se aloco la memoria para el fat\n\n");
+	free(particion_fat);
+	}
 
-    fclose(archivo_bloque);
+	fclose(archivo_bloque);
 
-    printf("\nSe levanto archivo de bloque\n");
+    printf("\n\nSe levanto archivo de bloque\n\n");
 
 }          
 
