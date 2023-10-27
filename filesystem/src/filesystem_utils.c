@@ -52,8 +52,8 @@ void atender_clientes_filesystem(void* conexion) {
         break;
         case CREAR_ARCHIVO:
                log_info(filesystem_logger, "Crear Archivo: %s", config_valores_fcb.nombre_archivo);
-               //crear_fcb (tamanio = 0, bool_bloque_inicial = false);
-               //enviar_mensaje("OK");
+               int crear_archivo(char *nombre_archivo); //también le podríamos cambiar el nombre a crear_fcb pero como más les guste
+    		   //enviar_mensaje("OK");  revisar que el mensaje pide un int y aunque le pongo uno y se queja :(
         break;
         case TRUNCAR_ARCHIVO:
             // nombre_archivo = sacar_cadena_de_paquete(&stream);
@@ -280,6 +280,18 @@ int contarArchivosEnCarpeta(const char *carpeta, char ***vectoreRutas) {
 */
 
 //..................................FUNCIONES UTILES ARCHIVOS.....................................................................
+int crear_archivo (char *nombre_archivo) {
+    char *path_archivo = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
+    //if (!access (pathArchivo, F_OK)) return -1;
+    t_config *archivo_nuevo = config_create (path_archivo);
+    if (!archivo_nuevo) return -3; // si es un archivo que ya está creado que me devuelva -3 why not
+    config_set_value (archivo_nuevo, "NOMBRE_ARCHIVO", nombre_archivo);
+    config_set_value (archivo_nuevo, "TAMANIO_ARCHIVO", "0");
+	config_set_value (archivo_nuevo, "BLOQUE INICIAL", NULL);
+    config_destroy (archivo_nuevo);
+    free (path_archivo);
+    return 0;
+}
 
 int abrirArchivo(char *nombre, char **vectorDePaths,int cantidadPaths)
 {
