@@ -363,7 +363,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         //printf("num_interrupcion =  %d  \n", interrupcion); 
         if(hay_interrupcion() && tipo_interrupcion == 1) //&& seguir ejecutando?
         {
-            printf("\nDetectamos interrupcion\n");
+            //printf("\nDetectamos interrupcion\n");
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
