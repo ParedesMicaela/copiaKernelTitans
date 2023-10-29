@@ -54,5 +54,6 @@ void levantar_archivo_bloque(size_t tamanio_swap, size_t tamanio_fat);
 void levantar_fat(size_t tamanio_fat);
 void levantar_fcb(char* path);
 int crear_archivo (char *nombre_archivo);
+fcb *abrir_archivo (char *nombre_archivo);
 
 #endif

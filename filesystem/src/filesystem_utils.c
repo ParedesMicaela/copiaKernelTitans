@@ -279,10 +279,11 @@ int contarArchivosEnCarpeta(const char *carpeta, char ***vectoreRutas) {
 }
 */
 
-//..................................FUNCIONES UTILES ARCHIVOS.....................................................................
-int crear_archivo (char *nombre_archivo) {
+//------------------------------------FUNCIONES FS MARTIN ARCHIVOS UWU--------------------------------------------------------
+int crear_archivo (char *nombre_archivo) 
+{
     char *path_archivo = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
-    //if (!access (pathArchivo, F_OK)) return -1;
+    if (!access (path_archivo, F_OK)) return -1; // basicicamente en esta línea estoy viendo la existencia del archivo
     t_config *archivo_nuevo = config_create (path_archivo);
     if (!archivo_nuevo) return -3; // si es un archivo que ya está creado que me devuelva -3 why not
     config_set_value (archivo_nuevo, "NOMBRE_ARCHIVO", nombre_archivo);
@@ -291,8 +292,105 @@ int crear_archivo (char *nombre_archivo) {
     config_destroy (archivo_nuevo);
     free (path_archivo);
     return 0;
-}
+} //MARTINCHO TO DO: ACORDATE DE METER LOS CASES EN LAs FUNCIONES......LINEA 47 ARRANCA
 
+fcb *abrir_archivo (char *nombre_archivo)
+{
+	char *path_archivo = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
+	if (access (path_archivo, F_OK)) {
+		config_valores_fcb.tamanio_archivo = config_get_int_value(config, "TAMANIO_ARCHIVO");
+		log_info(filesystem_logger,("Tamanio del archivo: %d \n", config_valores_fcb.tamanio_archivo));
+        free (path_archivo); 
+        return NULL;
+    }
+	t_config *archivo = config_create (path_archivo);
+    if (!archivo) {
+        free (path_archivo);
+        return NULL;
+    }
+    fcb *archivo_FCB = malloc (sizeof (fcb)); 
+    archivo_FCB->nombre_archivo = string_duplicate (config_get_string_value (archivo_FCB, "NOMBRE_ARCHIVO"));
+    archivo_FCB->tamanio_archivo = config_get_int_value (archivo_FCB, "TAMANIO_ARCHIVO");
+    archivo_FCB->bloque_inicial = config_get_int_value (archivo_FCB, "BLOQUE_INICIAL");
+    
+    
+    config_destroy (archivo), free (path_archivo);
+    return archivo_FCB;
+	
+}
+/* TO DO terminar/revisar bien truncar_archivo
+int truncar_archivo (fcb* archivo, uint32_t tamanio_archivo) {
+    // Cantidad de bloques asignados al archivo de antemano. 
+    int cantBloquesAsignados = CANT_BLOQUES (archivo->tamanio_archivo);
+    // Cantidad de bloques a asignar.
+    int cantBloquesAAsignar = CANT_BLOQUES (tamanio_archivo);
+    // Si ya se asignaron los bloques necesarios terminar.
+    if (cantBloquesAsignados == cantBloquesAAsignar) {
+        archivo->tamanio_archivo = tamanio_archivo;
+        return 0;
+    }
+    // Si la cantidad requerida es mayor a la que permite acceder el puntero indirecto y el puntero directo terminar con error.
+    //if (cantBloquesAAsignar > tamanioBloques / TAMANIO_PUNTERO + 1) return -7;
+
+    //debug ("Variables: %d %d %d %d", cantBloquesAsignados, cantBloquesAAsignar, tamanio, archivo->tamanio);
+    
+    // Caso 1: Hay que asignar bloques.
+    if (tamanio_archivo > archivo->tamanio_archivo) {
+        // Si no hay bloques asignados, se le asigna un bloque directo y uno de punteros (indirecto).
+        if (!archivo->tamanio_archivo) {
+            //archivo->ptrDirecto = proximoBloqueLibre (),
+            cantBloquesAsignados++;
+            //archivo->ptrIndirecto = proximoBloqueLibre ();
+            // Si no hay bloques disponibles para asignar, se termina con error.
+            //if (archivo->ptrDirecto == UINT32_MAX || archivo->ptrIndirecto == UINT32_MAX) return -5;
+            //archivo->tamanio = tamanioBloques;
+        }
+
+    
+        
+
+        // Ciclo: Termina cuando se asignaron los bloques requeridos.
+        /*while (cantBloquesAsignados < cantBloquesAAsignar) { 
+            uint32_t proxBloque = proximoBloqueLibre ();
+            // Si se falla al copiar el puntero del bloque libre al puntero indirecto, se termina con error.
+            if (asignarBloqueAArchivo (archivo, proxBloque) < 0) return -3;
+            cantBloquesAsignados++, archivo->tamanio += tamanioBloques;
+        }
+    }
+
+    // Caso 2: Hay que eliminar bloques.
+    else {
+        // Eliminar bloques si hay en el puntero indirecto y hasta el anteultimo.
+        uint32_t ultBloque = ultimoBloqueDeArchivo (archivo);
+        while (cantBloquesAsignados > cantBloquesAAsignar && ultBloque != archivo->ptrDirecto) {
+            //debug ("Variables: %d %d %d %d", cantBloquesAsignados, cantBloquesAAsignar, ultBloque, archivo->tamanio);
+            eliminarBloque (ultBloque);
+            //debug ("Bloque %d eliminado.", ultimoBloqueDeArchivo (archivo));
+            eliminarPtr (archivo, cantBloquesAsignados - 2);
+            cantBloquesAsignados--, archivo->tamanio -= tamanioBloques;
+            ultBloque = ultimoBloqueDeArchivo (archivo);
+        }
+
+        // Segun cada caso, el ultimo puede ser el puntero directo o uno del puntero indirecto.
+        if (cantBloquesAAsignar == 0 && archivo->tamanio > 0) {
+            eliminarBloque (archivo->ptrDirecto);
+            archivo->ptrDirecto = 0;
+            eliminarBloque (archivo->ptrIndirecto);
+            archivo->ptrIndirecto = 0;
+        }
+    }
+    archivo->tamanio = tamanio;
+    msync(ptrBloques, tamanioBloques * cantBloques, MS_SYNC);
+    msync(ptrBitMap, tamanioBitmap, MS_SYNC);
+    if (actualizarFCB (archivo) < 0) return -4;
+    return 0;
+
+}
+*/
+  //MARTINCHO TO DO: ACORDATE DE METER LOS CASES EN LAs FUNCIONES......LINEA 47 ARRANCA
+
+//..................................FUNCIONES UTILES ARCHIVOS.....................................................................
+/*
 int abrirArchivo(char *nombre, char **vectorDePaths,int cantidadPaths)
 {
 	log_info(filesystem_logger,"Abrir Archivo: %s",nombre);
@@ -399,7 +497,7 @@ int truncarArchivo(char *nombre,char *carpeta, char **vectoreRutas, int cantidad
 	config_destroy(configArchivoActual);
 	return 1;
 }
-
+*/
 /*
 int escribirArchivo(char *nombreArchivo,size_t punteroSeek,size_t bytesAEscribir,int direccion,void *memoriaAEscribir)
 {
