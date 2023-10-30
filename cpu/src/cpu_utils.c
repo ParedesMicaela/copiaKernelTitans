@@ -363,7 +363,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         //printf("num_interrupcion =  %d  \n", interrupcion); 
         if(hay_interrupcion() && tipo_interrupcion == 1) //&& seguir ejecutando?
         {
-            printf("\nDetectamos interrupcion\n");
+            //printf("\nDetectamos interrupcion\n");
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
@@ -377,7 +377,18 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             pthread_mutex_unlock(&mutex_interrupcion);
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "finalizacion", "", 0);
             seguir_ejecutando = false;
+        }else if (hay_interrupcion() && tipo_interrupcion == 3) 
+        {
+            //log_info(cpu_logger, "Oh no hermano, tenemos Page Fault: PID %d - Número de página %d", contexto_ejecucion->pid, contexto_ejecucion->pag_pf);
+            printf("\nDetectamos interrupcion\n");
+            pthread_mutex_lock(&mutex_interrupcion);
+            interrupcion = 0;
+            pthread_mutex_unlock(&mutex_interrupcion);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0);
+            //como tengo page fault notificó al kernel y no puedo seguir ejecutando el proceso hasta manejar el page fault
+            seguir_ejecutando = false;
         }
+
 
         string_array_destroy(datos);
     }
@@ -427,8 +438,13 @@ void atender_interrupt(void *socket_servidor_interrupt)
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion += 1;
             pthread_mutex_unlock(&mutex_interrupcion);
-        }
-        else
+        }else if (paquete->codigo_operacion == PAGE_FAULT)
+        {
+            tipo_interrupcion = sacar_entero_de_paquete(&stream);
+            pthread_mutex_lock(&mutex_interrupcion);
+            interrupcion += 1;
+            pthread_mutex_unlock(&mutex_interrupcion);   
+        }else
         {
             printf("No recibi una interrupcion\n");
         }

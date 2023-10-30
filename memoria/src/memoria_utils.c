@@ -125,6 +125,17 @@ void manejo_conexiones(void* socket_cliente)
 		log_info(memoria_logger,"Estructuras eliminadas en memoria kernel-kyunn\n");
 		break;
 
+	case SOLUCIONAR_PAGE_FAULT:
+		pid = sacar_entero_de_paquete(&stream);		// ya tengo definido en FINALIZAR_MEMORIA el int pid, sino el make se quejaba :(
+		int pag_pf = sacar_entero_de_paquete(&stream);
+
+		log_info(memoria_logger,"Recibi un pedido para solucionar page fault uwu con PID %d - Pagina %d", pid, pag_pf);
+
+		/*El módulo deberá solicitar al módulo File System la página correspondiente y escribirla en la memoria principal.
+		En caso de que la memoria principal se encuentre llena,
+		se deberá seleccionar una página víctima utilizando el algoritmo de reemplazo.
+		Si la víctima se encuentra modificada, se deberá previamente escribir en SWAP.
+		*/
 	default:
 		break;
 	}

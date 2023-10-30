@@ -29,7 +29,7 @@ int crear_conexion(char *ip, char *puerto)
         perror("error");
     }
 
-    //freeaddrinfo(server_info);
+    freeaddrinfo(server_info);
 
     return socket_cliente;
 }
@@ -68,7 +68,7 @@ int iniciar_servidor(char *ip, char *puerto)
 
     listen(socket_servidor, SOMAXCONN);
 
-    //freeaddrinfo(servinfo);
+    freeaddrinfo(servinfo);
 
     return socket_servidor;
 }

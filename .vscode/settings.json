@@ -2,6 +2,8 @@
     "files.associations": {
         "kernel.h": "c",
         "cpu_utils.h": "c",
-        "socket.h": "c"
+        "socket.h": "c",
+        "list.h": "c",
+        "filesystem.h": "c"
     }
 }

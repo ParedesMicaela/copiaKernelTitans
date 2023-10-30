@@ -31,10 +31,11 @@ sem_t mutex_pid;
 
 // bool fRead;
 // bool fWrite;
-
+//t_pcb* proceso_en_exit_rr;
 int corriendo = 1;
 static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2);
 static void a_mimir(t_pcb* proceso);
+static void atender_round_robin(t_pcb* proceso_seleccionado);
 //====================================================== Planificadores ========================================================
 void inicializar_planificador()
 {
@@ -140,38 +141,12 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     char *algoritmo = config_valores_kernel.algoritmo_planificacion;
     if(strcmp(algoritmo, "RR") == 0)
     {
-        printf("\nDetectamos RR\n");
-        int quantum = config_valores_kernel.quantum;
-        usleep(1000 * quantum); // Simula la ejecución y pausa el proceso en milisegundos
-        quantum = 0;
-        
-        printf("\nComparamos si el proceso que nos dieron es el que se esta ejecutando\n");
-        
-        pthread_mutex_lock(&mutex_ready);
-        t_pcb *proceso_en_exec = list_get(dictionary_int_get(diccionario_colas, EXEC),0);
-        pthread_mutex_unlock(&mutex_ready);
+        pthread_t hilo_round_robin;
 
-        //si el que agarramos es el mismo que enviamos, significa que se quiere seguir ejecutando dps del quantum (nao nao)
-        if (proceso_en_exec->pid == proceso_seleccionado->pid )
-        {
-            log_info(kernel_logger, "\nPID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
-            
-            // Debes enviar una señal de desalojo al proceso en CPU.
-            t_paquete *paquete = crear_paquete(DESALOJO);
-            agregar_entero_a_paquete(paquete, 1);
-            enviar_paquete(paquete, socket_cpu_interrupt);
-            eliminar_paquete(paquete);
-        }
-        else
-        {
-            log_info(kernel_logger, "\n E que se esta ejecutando no es el mismo que mandamos. Estamos ejecutando Proceso con PID[%d] \n", proceso_en_exec->pid);
+        pthread_create(&hilo_round_robin, NULL, (void*)atender_round_robin, proceso_seleccionado);
+        pthread_detach(hilo_round_robin);
+    }
 
-        }
-    }
-    else
-    {
-    //printf("\nNo estamos en RR\n");
-    }
     /*despues la cpu nos va a devolver el contexto en caso de que haya finalizado el proceso
     haya pedido un recurso (wait/signal), por desalojo o por page fault*/
     char *devuelto_por = recibir_contexto(proceso_seleccionado);
@@ -207,6 +182,8 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso_seleccionado, READY, cola_READY);
         pthread_mutex_unlock(&mutex_ready);
+
+        proceso_en_ready();
     }
 
     /*aca lo usamos cuando matamos al proceso. Estaba ejecutando y lo sacamos de la cola y le disparamos
@@ -220,15 +197,51 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     if (string_equals_ignore_case(devuelto_por, "page_fault"))
     {
         //si tenemos page_fault, hay que bloquear el proceso
-        pthread_mutex_lock(&mutex_corriendo);
-        while (corriendo == 0) { // Sea 0
-           
-            pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
-        }
-        pthread_mutex_unlock(&mutex_corriendo);
+        detener_planificacion ();
         a_mimir(proceso_seleccionado);
     }
     free(devuelto_por);
+}
+
+static void atender_round_robin(t_pcb* proceso_seleccionado) {
+  
+        int quantum = config_valores_kernel.quantum;
+        usleep(1000 * quantum); // Simula la ejecución y pausa el proceso en milisegundos
+        quantum = 0;
+        t_pcb *proceso_en_exec = NULL;
+
+        printf("\nComparamos si el proceso que nos dieron es el que se esta ejecutando\n");
+        
+        pthread_mutex_lock(&mutex_exec);
+        int tam_cola_execute = list_size(cola_EXEC);
+        pthread_mutex_unlock(&mutex_exec);
+
+        if(tam_cola_execute > 0) {
+        pthread_mutex_lock(&mutex_exec);
+        t_pcb * hay_proceso_en_exec = list_get(dictionary_int_get(diccionario_colas, EXEC),0);
+        proceso_en_exec = hay_proceso_en_exec;
+        pthread_mutex_unlock(&mutex_exec);
+        }
+        pthread_mutex_unlock(&mutex_exec);
+
+        //si el que agarramos es el mismo que enviamos, significa que se quiere seguir ejecutando dps del quantum (nao nao)
+        if (proceso_en_exec != NULL && proceso_en_exec->pid == proceso_seleccionado->pid )
+        {
+            log_info(kernel_logger, "\nPID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
+            
+             // Desalojamos
+            pthread_mutex_lock(&mutex_exec);
+            list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso_seleccionado);
+            pthread_mutex_unlock(&mutex_exec);
+
+            // Debes enviar una señal de desalojo al proceso en CPU.
+            t_paquete *paquete = crear_paquete(DESALOJO);
+            agregar_entero_a_paquete(paquete, 1);
+            enviar_paquete(paquete, socket_cpu_interrupt);
+            eliminar_paquete(paquete);
+
+            //proceso_en_exit_rr = proceso_seleccionado;
+        }
 }
 
 static void a_mimir(t_pcb* proceso){
@@ -269,12 +282,15 @@ static void a_mimir(t_pcb* proceso){
 
 void proceso_en_exit(t_pcb *proceso)
 {
-
+    algoritmo algoritmo_elegido = obtener_algoritmo();
+    
+    if(algoritmo_elegido != RR) {
     //obtenemos el proceso de execute
     pthread_mutex_lock(&mutex_exec);
-    proceso = list_remove(dictionary_int_get(diccionario_colas, EXEC), 0);
+    list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
     pthread_mutex_unlock(&mutex_exec);
-
+    } 
+    
     //lo metemos en exit
     pthread_mutex_lock(&mutex_exit);
     meter_en_cola(proceso, EXIT, cola_EXIT);
@@ -282,7 +298,7 @@ void proceso_en_exit(t_pcb *proceso)
 
     // sacamos el proceso de la lista de exit
     pthread_mutex_lock(&mutex_exit);
-    proceso = list_remove(dictionary_int_get(diccionario_colas, EXIT), 0);
+    list_remove(dictionary_int_get(diccionario_colas, EXIT), 0);
     pthread_mutex_unlock(&mutex_exit);
 
     // le mandamos esto a memoria para que destruya las estructuras
@@ -312,8 +328,8 @@ void proceso_en_sleep(t_pcb *proceso)
 }
 
 void proceso_en_page_fault(t_pcb* proceso){
-        
-    log_info(kernel_logger, "Page Fault PID: %d - Pagina: <Página>", proceso->pid); // FALTA PAGINA
+
+    log_info(kernel_logger, "Page Fault PID: %d - Pagina: <%d>", proceso->pid, proceso->pagina_pf); // FALTA PAGINA
     /*Mover al proceso al estado Bloqueado. Este estado bloqueado será 
     independiente de todos los demás ya que solo afecta al proceso 
     y no compromete recursos compartidos.*/

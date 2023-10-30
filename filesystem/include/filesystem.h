@@ -39,8 +39,8 @@ typedef struct
 typedef struct 
 {
     char* nombre_archivo; //Puede ser  char nombre_archivo[256]
-    int tamanio_archivo; //Puede ser size_t
-    int bloque_inicial;
+    uint32_t tamanio_archivo; //Puede ser size_t
+    uint32_t bloque_inicial;
 } fcb;
 
 extern fcb config_valores_fcb;
@@ -52,6 +52,8 @@ void*conexion_inicial_memoria();
 void atender_clientes_filesystem(void* ); //lo cambie a un void, era int(int, int)
 void levantar_archivo_bloque(size_t tamanio_swap, size_t tamanio_fat);
 void levantar_fat(size_t tamanio_fat);
-void levantar_fcb();
+void levantar_fcb(char* path);
+int crear_archivo (char *nombre_archivo);
+fcb *abrir_archivo (char *nombre_archivo);
 
 #endif

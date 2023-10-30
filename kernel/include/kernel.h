@@ -1,8 +1,5 @@
 #ifndef KERNEL_H_
 #define KERNEL_H_
-#ifndef PAGE_FAULT
-#define PAGE_FAULT "page_fault"
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -167,5 +164,8 @@ void consola_iniciar_planificacion();
 void consola_modificar_multiprogramacion(int);
 void consola_proceso_estado();
 void detener_planificacion ();
+
+////======================================== File System ===========================================================================================================
+void atender_peticiones_al_fs();
 
 #endif

@@ -57,6 +57,7 @@ typedef struct
     int pid;
     int program_counter;
     int prioridad;
+    int pag_pf;
  	t_registros_cpu registros_cpu;
    t_recursos_asignados* recursos_asignados;  
 }t_contexto_ejecucion;
