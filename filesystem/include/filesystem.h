@@ -49,11 +49,24 @@ extern arch_config config_valores_filesystem;
 
 void cargar_configuracion(char*);
 void*conexion_inicial_memoria();
-void atender_clientes_filesystem(void* ); //lo cambie a un void, era int(int, int)
+void atender_clientes_filesystem(void* ); 
 void levantar_archivo_bloque(size_t tamanio_swap, size_t tamanio_fat);
 void levantar_fat(size_t tamanio_fat);
 void levantar_fcb(char* path);
 int crear_archivo (char *nombre_archivo);
 fcb *abrir_archivo (char *nombre_archivo);
+
+
+
+char* concatenarCadenas(const char* str1, const char* str2);
+int dividirRedondeando(int numero1 , int numero2);
+
+//..................................FUNCIONES UTILES ARCHIVOS.....................................................................
+
+int abrirArchivo(char *nombre, char **vectorDePaths,int cantidadPaths);
+
+int crearArchivo(char *nombre,char *carpeta, char ***vectoreRutas, int *cantidadPaths);
+
+int truncarArchivo(char *nombre,char *carpeta, char **vectoreRutas, int cantidadPaths, int tamanioNuevo);
 
 #endif
