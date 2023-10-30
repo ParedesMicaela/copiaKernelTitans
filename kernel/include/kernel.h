@@ -165,4 +165,7 @@ void consola_modificar_multiprogramacion(int);
 void consola_proceso_estado();
 void detener_planificacion ();
 
+////======================================== File System ===========================================================================================================
+void atender_peticiones_al_fs();
+
 #endif
