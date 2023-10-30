@@ -1,47 +1,140 @@
 #include "kernel.h"
 
 //aca implementamos la tabla de archivos globales
-typedef struct tabla_archivos {
-    FILE *ARCHIVO;      
-    char *nombre_archivo;
-    char tipo_apertura;
-    int tamanio;
+typedef struct archivo {
+    FILE *ARCHIVO;          //direccion de memoria del archivo      
+    char *nombre_archivo;   //nombre (identificador)
+    bool lockeado;          //para ver si esta lockeado o no (al pedo, porque creo que lo ponemos en una cola y listo)
+    //char tipo_apertura;   //esto puede ser que no sea necesario, pero como es de archivos abiertos capaz si
+    //int tamanio;          //tamanio en memoria... necesario?? 
     //recursos asignados??
     //algo mas??
     //ponerlo en kernel.h cuando termines
-} tabla_archivos;
+    archivo *siguiente;
+} archivo;
 
-tabla_archivos *tabla_archivos_abiertos = NULL; // Lista enlazada de archivos abiertos
-
+//tabla_archivos *lista_archivos = malloc(sizeof(tabla_archivos)); es dinamica???
+archivo tabla_archivos_abiertos;
+t_list tabla_archivos_abiertos;
+/*
+//en kernel.h
 //cola de locks (peticiones)
 t_list cola_locks_escritura; 
 t_list cola_locks_lectura;
 t_list cola_locks_bloqueados; // aca guardamos los que se bloquean, esperando a que se resuelva el que se esta ejecutando
+*/
 
 void atender_peticiones_al_fs()
 {
-    printf("\nEsperamos recibir paquete\n");
+    printf("\n\nEspero recibir paquete de CPU respecto a archivos\n\n");
     
     while(1)
     {
-        log_info(kernel_logger, "Espero recibir paquete");
-        
         //recibimos eltipo de isntrucicon y el paquete con todo adentro
         t_paquete *paquete = recibir_paquete(socket_cpu_dispatch);
         void *stream = paquete->buffer->stream;
-        log_info(kernel_logger, "Ya recibi paquete, ahora hariamos el switch");
+        
+        //recibimos nombre de archivo con el que vamos a trabajar
+        char* nombre_archivo = sacar_cadena_de_paquete(&stream);
+        
+        //recibimos contexto de ejecucion
+        int pid = sacar_entero_de_paquete(&stream);
+        int program_counter = sacar_entero_de_paquete(&stream);
+        int prioridad = sacar_entero_de_paquete(&stream);
+        int pag_pf = sacar_entero_de_paquete(&stream);
+        //registros de contexto
+        int AX = sacar_entero_de_paquete(&stream);
+        int BX = sacar_entero_de_paquete(&stream);
+        int CX = sacar_entero_de_paquete(&stream);
+        int DX = sacar_entero_de_paquete(&stream);
+        //recursos asignados de contexto
+        char nombre_recurso [50] = sacar_cadena_de_paquete(&stream);
+        int instancias_recurso = sacar_entero_de_paquete(&stream);
+    
 
+        printf("\n\nRecibi paquete de CPU\n\n");
         //el paquete tiene que tener ademas el nombre del archivo y el modo de apertura
-
-        /*
-        switch(archivo)
-            case fopen abrirArchivoKernel
-            case frwrite
-            case fseek
-        termina con cerrar archivokernel
-        */
-    }
+        
+        
+        switch(paquete->codigo_operacion)
+        {
+            archivo *archivo_abierto;
+            bool existe_en_tabla = false;
+            
+            case ABRIR_ARCHIVO:
+            {
+                //abrirArchivoKernel();
+                printf("\n\nKernel recibio paquete de CPU para abrir archivo\n\n");
+                
+                    for (int i = 0; i < list_size(tabla_archivos_abiertos); i++)
+                    {
+                        archivo_abierto = (archivo*)list_get(tabla_archivos_abiertos, i);
+                        if (strcmp(nombre_archivo, archivo_abierto->nombre_archivo) == 0)
+                        {
+                            existe_en_tabla = true;
+                            //
+                            break;
+                        }
+                        else
+                        {
+                            existe_en_tabla = false;
+                        }
+                    }
+                /*  fijarnos si existe en la tabla global
+                        si existe mandamos paquete a fs para que le haga F_OPEN
+                            esperamos OK
+                        si no existe mandamos paquete al fs para que lo cree
+                            esperamos que devuelva OK
+                            agregamos a la tabla
+                */
+                break;
+            }
+            case CREAR_ARCHIVO:
+	        {
+                //crearArchivoKernel();
+                printf("\n\nKernel recibio paquete de CPU para crear archivo\n\n");
+                /*
+                    fijarnos si existe en la tabla global
+                        si no existe, paquete al fs para que lo cree
+                            esperamos a que devuelva OK
+                        si existe, paquete al fs para que lo abra
+                            esperamos a que devuelva OK
+                */
+                break;
+            }
+            case TRUNCAR_ARCHIVO:
+            {
+                //truncarArchivoKernel();
+                printf("\n\nKernel recibio paquete de CPU para truncar archivo\n\n");
+                /*
+                    fijarnos si existe en la tabla global
+                        si existe lo agarramos
+                        si se esta escribiendo esperamos a que termine, mandar a cola de lockeados
+                        si no se esta escribiendo lockeamos este archivo (cambiar bool o meter en cola)
+                    si no existe lo creamos (hace falta esto?)
+                        paquete al fs para que lo cree
+                        paquete al fs para que lo abra
+                */
+                break;
+            }
+            /*
+            case LEER_ARCHIVO:
+            {
+                //leerArchivoKernel();
+                break;
+            }
+            case ESCRIBIR_ARCHIVO:
+            {
+                //escribirArchivoKernel();
+                break; 
+            }
+            */
+            //termina con cerrar archivokernel
+        }
+        
+        }
 }
+
 
 
 /*

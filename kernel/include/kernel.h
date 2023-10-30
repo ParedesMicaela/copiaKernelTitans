@@ -56,6 +56,11 @@ extern t_list *cola_BLOCKED;
 extern t_list *cola_EXEC;
 extern t_list *cola_EXIT;
 
+//cola de locks (peticiones)
+extern t_list *cola_locks_escritura; 
+extern t_list *cola_locks_lectura;
+//extern t_list *cola_locks_bloqueados;
+
 extern t_list *lista_recursos;
 extern int *instancias_del_recurso;
 extern int *instancias_maximas_del_recurso;
