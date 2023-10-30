@@ -1,6 +1,6 @@
 /*
 
-
+capaz es medio alpedo este archivo... lo dejo por las dudas
 F_OPEN: abrir o crear el archivo pasado por parámetro
     -Modo Lectura
         --se deberá validar si existe un lock de escritura activo

@@ -221,6 +221,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         int valor = -1;
         int tiempo = -1;
         int num_instruccion = -1;
+        t_paquete *paquete_para_kernel_archivo = NULL;
 
         switch (tipo_inst(datos[0]))
         {
@@ -308,6 +309,19 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             modo_apertura = datos[2];
+
+            //bloqueamos el proceso
+            
+            //una vez bloqueado el proceso mandamos el paquete
+            printf("\n\nArmamos paquete para enviar a CPU\n\n");
+            paquete_para_kernel_archivo = crear_paquete(ABRIR_ARCHIVO);
+            agregar_cadena_a_paquete(paquete_para_kernel_archivo, nombre_archivo);
+            agregar_cadena_a_paquete(paquete_para_kernel_archivo, modo_apertura);
+            //mandarle el contexto de ejecucion (creo)
+            enviar_paquete(paquete_para_kernel_archivo, socket_servidor_dispatch);
+            eliminar_paquete(paquete_para_kernel_archivo);
+            printf("\n\nEnviamos paquete a kernel para ABRIR ARCHIVO\n\n");
+
             mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
             break;
@@ -315,14 +329,60 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         case(F_CLOSE):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             nombre_archivo = datos[1];
+
+            //bloqueamos el proceso
+            
+            //una vez bloqueado el proceso mandamos el paquete
+            printf("\n\nArmamos paquete para enviar a CPU\n\n");
+            paquete_para_kernel_archivo = crear_paquete(CERRAR_ARCHIVO);
+            agregar_cadena_a_paquete(paquete_para_kernel_archivo, nombre_archivo);
+            //mandarle el contexto de ejecucion (creo)
+            enviar_paquete(paquete_para_kernel_archivo, socket_servidor_dispatch);
+            eliminar_paquete(paquete_para_kernel_archivo);
+            printf("\n\nEnviamos paquete a kernel para CERRAR ARCHIVO\n\n");
+
             mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
             break;
 
+        case(F_TRUNCATE):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
+            nombre_archivo = datos[1];
+            tamanio = atoi(datos[2]);
+
+            //bloqueamos el proceso
+            
+            //una vez bloqueado el proceso mandamos el paquete
+            printf("\n\nArmamos paquete para enviar a CPU\n\n");
+            paquete_para_kernel_archivo = crear_paquete(TRUNCAR_ARCHIVO);
+            agregar_cadena_a_paquete(paquete_para_kernel_archivo, nombre_archivo);
+            agregar_entero_a_paquete(paquete_para_kernel_archivo, tamanio);
+            //mandarle el contexto de ejecucion (creo)
+            enviar_paquete(paquete_para_kernel_archivo, socket_servidor_dispatch);
+            eliminar_paquete(paquete_para_kernel_archivo);
+            printf("\n\nEnviamos paquete a kernel para TRUNCAR ARCHIVO\n\n");
+
+            mostrar_valores(contexto_ejecucion);
+            contexto_ejecucion->program_counter += 1;
+            break;
+        
         case(F_SEEK):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             posicion = atoi(datos[2]);
+
+            //bloqueamos el proceso
+            
+            //una vez bloqueado el proceso mandamos el paquete
+            printf("\n\nArmamos paquete para enviar a CPU\n\n");
+            paquete_para_kernel_archivo = crear_paquete(BUSCAR_ARCHIVO);
+            agregar_cadena_a_paquete(paquete_para_kernel_archivo, nombre_archivo);
+            agregar_entero_a_paquete(paquete_para_kernel_archivo, posicion);
+            //mandarle el contexto de ejecucion (creo)
+            enviar_paquete(paquete_para_kernel_archivo, socket_servidor_dispatch);
+            eliminar_paquete(paquete_para_kernel_archivo);
+            printf("\n\nEnviamos paquete a kernel para POSICIONARNOS EN ARCHIVO\n\n");
+
             mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
             break;
@@ -343,14 +403,6 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             contexto_ejecucion->program_counter += 1;
             break;
 
-        case(F_TRUNCATE):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
-            nombre_archivo = datos[1];
-            tamanio = atoi(datos[2]);
-            mostrar_valores(contexto_ejecucion);
-            contexto_ejecucion->program_counter += 1;
-            break;
-        
         case (INSTRUCCION_EXIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit","", 0);

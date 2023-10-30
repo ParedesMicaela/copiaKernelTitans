@@ -38,78 +38,82 @@ void atender_clientes_filesystem(void* conexion) {
     char* informacion = NULL;
     int bloques_a_reservar = -1;
     int bloques_a_liberar = -1;
+	
+	while (1) //hace falta esto???
+	{
+		//recibe paquete que le envia el kernel cada que le llega algo de archivos
+		t_paquete* paquete = recibir_paquete(cliente_fd);
+		void* stream = paquete->buffer->stream;
 
-    t_paquete* paquete = recibir_paquete(cliente_fd);
-    void* stream = paquete->buffer->stream;
+		switch(paquete->codigo_operacion)
+		{
+			case ABRIR_ARCHIVO:
+					// nombre_archivo = sacar_cadena_de_paquete(&stream);
+					log_info(filesystem_logger, "Abrir Archivo: %s", nombre_archivo);
+					//if(existe(nombre_archivo)) { enviar_tamanio_archivo();}
+					//else (enviar_mensaje ("No existe"));
+			break;
+			case CREAR_ARCHIVO:
+				log_info(filesystem_logger, "Crear Archivo: %s", config_valores_fcb.nombre_archivo);
+				int crear_archivo(char *nombre_archivo); //también le podríamos cambiar el nombre a crear_fcb pero como más les guste
+				//enviar_mensaje("OK");  revisar que el mensaje pide un int y aunque le pongo uno y se queja :(
+			break;
+			case TRUNCAR_ARCHIVO:
+				// nombre_archivo = sacar_cadena_de_paquete(&stream);
+				// tamanio_archivo = sacar_entero_de_paquete(&stream);
+				log_info(filesystem_logger, "Truncar Archivo: %s- Tamaño: %d", nombre_archivo, tamanio_archivo);
+				//if(algo) {ampliar_tamanio_archivo (nombre_archivo, tamanio_archivo)}
+				//else {reducir_tamanio_archivo (nombre_archivo, tamanio_archivo)}
+			break;
+			case LEER_ARCHIVO:
+				// puntero_archivo = sacar_puntero_de_paquete(&stream);
+				// direccion_fisica = sacar_cadena_de_paquete(&stream);
+				log_info(filesystem_logger, "Leer Archivo: %s - Puntero: %p - Memoria: %s ", nombre_archivo, (void*)puntero_archivo, direccion_fisica);
+				/* informacion = leer_informacion(bloque)
+				t_paquete* paquete = crear_paquete(ESCRIBIR_INFORMACION);
+				agregar_cadena_a_paquete(paquete, informacion);
+				enviar_paquete(paquete, socket_memoria);
+				eliminar_paquete(paquete);
+				int respuesta = 0;
+				recv(socket_memoria, &respuesta,sizeof(int),0);
 
-    switch(paquete->codigo_operacion)
-    {
-        case ABRIR_ARCHIVO:
-                // nombre_archivo = sacar_cadena_de_paquete(&stream);
-                log_info(filesystem_logger, "Abrir Archivo: %s", nombre_archivo);
-                //if(existe(nombre_archivo)) { enviar_tamanio_archivo();}
-                //else (enviar_mensaje ("No existe"));
-        break;
-        case CREAR_ARCHIVO:
-               log_info(filesystem_logger, "Crear Archivo: %s", config_valores_fcb.nombre_archivo);
-               int crear_archivo(char *nombre_archivo); //también le podríamos cambiar el nombre a crear_fcb pero como más les guste
-    		   //enviar_mensaje("OK");  revisar que el mensaje pide un int y aunque le pongo uno y se queja :(
-        break;
-        case TRUNCAR_ARCHIVO:
-            // nombre_archivo = sacar_cadena_de_paquete(&stream);
-            // tamanio_archivo = sacar_entero_de_paquete(&stream);
-            log_info(filesystem_logger, "Truncar Archivo: %s- Tamaño: %d", nombre_archivo, tamanio_archivo);
-            //if(algo) {ampliar_tamanio_archivo (nombre_archivo, tamanio_archivo)}
-            //else {reducir_tamanio_archivo (nombre_archivo, tamanio_archivo)}
-        break;
-        case LEER_ARCHIVO:
-            // puntero_archivo = sacar_puntero_de_paquete(&stream);
-            // direccion_fisica = sacar_cadena_de_paquete(&stream);
-            log_info(filesystem_logger, "Leer Archivo: %s - Puntero: %p - Memoria: %s ", nombre_archivo, (void*)puntero_archivo, direccion_fisica);
-            /* informacion = leer_informacion(bloque)
-             t_paquete* paquete = crear_paquete(ESCRIBIR_INFORMACION);
-            agregar_cadena_a_paquete(paquete, informacion);
-            enviar_paquete(paquete, socket_memoria);
-            eliminar_paquete(paquete);
-            int respuesta = 0;
-            recv(socket_memoria, &respuesta,sizeof(int),0);
-
-            if (respuesta != 1)
-            {
-            log_error(kernel_logger, "No se pudieron crear estructuras en memoria");
-            }
-            enviar_mensaje ("Se leyó el archivo con exito");
-        */ 
-        break;
-        case ESCRIBIR_ARCHIVO:
-            // direccion_fisica = sacar_cadena_de_paquete(&stream);
-            // puntero_archivo = sacar_puntero_de_paquete(&stream);
-            log_info(filesystem_logger, "Escribir Archivo: %s - Puntero: %p - Memoria: %s ", nombre_archivo, (void*)puntero_archivo, direccion_fisica);
-                /* 
-             t_paquete* paquete = crear_paquete(LEER_INFORMACION);
-            agregar_cadena_a_paquete(paquete, direccion_fisica);
-            agregar_puntero_a_paquete(paquete, puntero_archivo);
-            enviar_paquete(paquete, socket_memoria);
-            eliminar_paquete(paquete);
-        */ 
-       break;
-       case INICIAR_PROCESO:
-            //bloques_a_reservar = sacar_entero_de_paquete(&stream);
-            // t_list* bloques_reservados = reservar_bloques(bloques_a_reservar);
-            /* t_paquete* paquete = crear_paquete(BLOQUES_RESERVADOS);
-            agregar_array_cadenas_a_paquete(paquete, bloques_reservados);
-            enviar_paquete(paquete, socket_memoria);
-            eliminar_paquete(paquete);*/
-        break;
-        case FINALIZAR_PROCESO:
-            //bloques_a_liberar = sacar_entero_de_paquete(&stream);
-            // liberar_bloques_swap(bloques_a_liberar);
-        break;
-        default:
-            log_warning(filesystem_logger, "Operacion desconocida \n");
-        break;
-    }
-    eliminar_paquete(paquete);
+				if (respuesta != 1)
+				{
+				log_error(kernel_logger, "No se pudieron crear estructuras en memoria");
+				}
+				enviar_mensaje ("Se leyó el archivo con exito");
+			*/ 
+			break;
+			case ESCRIBIR_ARCHIVO:
+				// direccion_fisica = sacar_cadena_de_paquete(&stream);
+				// puntero_archivo = sacar_puntero_de_paquete(&stream);
+				log_info(filesystem_logger, "Escribir Archivo: %s - Puntero: %p - Memoria: %s ", nombre_archivo, (void*)puntero_archivo, direccion_fisica);
+					/* 
+				t_paquete* paquete = crear_paquete(LEER_INFORMACION);
+				agregar_cadena_a_paquete(paquete, direccion_fisica);
+				agregar_puntero_a_paquete(paquete, puntero_archivo);
+				enviar_paquete(paquete, socket_memoria);
+				eliminar_paquete(paquete);
+			*/ 
+		break;
+		case INICIAR_PROCESO:
+				//bloques_a_reservar = sacar_entero_de_paquete(&stream);
+				// t_list* bloques_reservados = reservar_bloques(bloques_a_reservar);
+				/* t_paquete* paquete = crear_paquete(BLOQUES_RESERVADOS);
+				agregar_array_cadenas_a_paquete(paquete, bloques_reservados);
+				enviar_paquete(paquete, socket_memoria);
+				eliminar_paquete(paquete);*/
+			break;
+			case FINALIZAR_PROCESO:
+				//bloques_a_liberar = sacar_entero_de_paquete(&stream);
+				// liberar_bloques_swap(bloques_a_liberar);
+			break;
+			default:
+				log_warning(filesystem_logger, "Operacion desconocida \n");
+			break;
+		}
+		eliminar_paquete(paquete);
+	}
 }
 
 void levantar_fcb(char* path) {
@@ -279,7 +283,7 @@ int contarArchivosEnCarpeta(const char *carpeta, char ***vectoreRutas) {
 }
 */
 
-//------------------------------------FUNCIONES FS MARTIN ARCHIVOS UWU--------------------------------------------------------
+//------------------------------------FUNCIONES FS MARTIN ARCHIVOS UWU (sos un hdp... algodon de azucar)--------------------------------------------------------
 int crear_archivo (char *nombre_archivo) 
 {
     char *path_archivo = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
