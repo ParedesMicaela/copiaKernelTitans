@@ -39,6 +39,19 @@ typedef struct
 	char* algoritmo_reemplazo;
 } arch_config;
 
+typedef struct {
+    int numero_de_pagina;
+    int marco; //Revisar si es unit32_t
+    bool bit_de_presencia; //Puede ser un int de 1 o 0
+    bool bit_modificado; //Puede ser un int de 1 o 0
+    int posicion_swap; //Revisar si es unit32_t
+} entrada_t_pagina;
+
+typedef struct {
+    entrada_t_pagina* entradas; // Revisar
+    int tamanio;                 // Cantidad de entradas
+} t_pagina;
+
 typedef struct 
 {
 	int pid;

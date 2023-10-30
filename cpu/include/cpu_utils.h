@@ -24,9 +24,10 @@ extern int socket_servidor_dispatch;
 extern int socket_servidor_interrupt;
 extern int socket_cliente_dispatch;
 extern int socket_cliente_interrupt;
+extern int tam_pagina;
 
 //======================= Estructuras =======================
-typedef struct  // archivo de configuracion cpu
+typedef struct  
 {
    char* ip_cpu;
    char* ip_memoria;
@@ -36,15 +37,6 @@ typedef struct  // archivo de configuracion cpu
 } arch_config;
 
 extern arch_config config_valores_cpu;
-
-/*typedef struct registros_cpu
-{
-	uint32_t AX;
-	uint32_t BX;
-	uint32_t CX;
-	uint32_t DX;
-} t_registros_cpu; 
-*/
 
 typedef struct 
 {
@@ -70,5 +62,7 @@ void*conexion_inicial_memoria();
 void atender_dispatch(int, int );
 void atender_interrupt(void* );
 void finalizar_cpu();
+void mov_in(uint32_t registro, uint32_t direccion_logica);
+void mov_out(uint32_t direccion_logica, uint32_t registro);
 
 #endif

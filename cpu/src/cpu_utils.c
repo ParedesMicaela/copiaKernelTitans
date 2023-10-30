@@ -291,17 +291,19 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 
         case(MOV_IN):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
-            registro = datos[1];
-            //mostrar_valores(contexto_ejecucion);
+            registro = datos[1];;
             direccion_logica = atoi(datos[2]);
+            mov_in(registro, direccion_logica);
+            //mostrar_valores(contexto_ejecucion)
             contexto_ejecucion->program_counter += 1;
             break;
         
         case(MOV_OUT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[2];
-            //mostrar_valores(contexto_ejecucion);
             direccion_logica = atoi(datos[1]);
+            mov_out(direccion_logica, registro);
+            //mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
             break;
 

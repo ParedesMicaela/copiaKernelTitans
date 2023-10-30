@@ -73,8 +73,30 @@ void crear_memoria_principal(){
     return;
 }
 
-void crear_tablas_paginas_proceso(int pid_proceso,int tam_swap_pid){
+void crear_tablas_paginas_proceso(int pid, int tam_swap_pid){
+    
+    t_proceso_en_memoria* proceso_en_memoria = malloc(sizeof(t_proceso_en_memoria));
+    proceso_en_memoria->pid = pid;
+    proceso_en_memoria->paginas_en_memoria = list_create();
 
+    for(int j=0; j < cant_segmentos; j++)
+        {   
+            t_segmento_mem* segmento = malloc(sizeof(t_segmento_mem));            
+            segmento->tabla_de_paginas = list_create();
+            list_add(proceso_en_memoria->tabla_de_segmentos, segmento);
+            int entradas_por_tabla = config_get_int_value(config_memoria, "ENTRADAS_POR_TABLA");
 
+            log_info(logger_global, "Creacion tabla de paginas: PID: %d - Segmento: %d - TAMAÑO: %d paginas", pid, j, entradas_por_tabla);
 
+            for (int i=0; i < entradas_por_tabla; i++){
+                t_pagina* pagina = malloc(sizeof(t_pagina));
+                pagina->segmento = j;
+                pagina->bit_presencia_swap = 0;
+                pagina->numero_de_pagina = i;
+                list_add(segmento->tabla_de_paginas, pagina);
+            }
+        }
+
+    list_add(procesos_en_memoria, proceso_en_memoria);
+    return;
 }
