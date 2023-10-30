@@ -186,6 +186,13 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         proceso_en_ready();
     }
 
+    if (string_equals_ignore_case(devuelto_por, "f_open"))
+    {
+        manejo_de_f_open(proceso_seleccionado);
+        
+        // Lo mandamos a dormir
+        a_mimir(proceso_seleccionado);
+    }
     /*aca lo usamos cuando matamos al proceso. Estaba ejecutando y lo sacamos de la cola y le disparamos
     tiene sentido usarlo aca tambien, porque lo estamos sacando de la cola de exec*/
     if (string_equals_ignore_case(devuelto_por, "finalizacion"))

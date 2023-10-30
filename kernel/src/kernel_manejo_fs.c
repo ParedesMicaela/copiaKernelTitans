@@ -16,6 +16,8 @@ typedef struct archivo {
 //tabla_archivos *lista_archivos = malloc(sizeof(tabla_archivos)); es dinamica???
 archivo tabla_archivos_abiertos;
 t_list tabla_archivos_abiertos;
+
+
 /*
 //en kernel.h
 //cola de locks (peticiones)
@@ -24,56 +26,22 @@ t_list cola_locks_lectura;
 t_list cola_locks_bloqueados; // aca guardamos los que se bloquean, esperando a que se resuelva el que se esta ejecutando
 */
 
-void atender_peticiones_al_fs()
-{
-    printf("\n\nEspero recibir paquete de CPU respecto a archivos\n\n");
-    
-    while(1)
-    {
-        //recibimos eltipo de isntrucicon y el paquete con todo adentro
-        t_paquete *paquete = recibir_paquete(socket_cpu_dispatch);
-        void *stream = paquete->buffer->stream;
-        
-        //recibimos nombre de archivo con el que vamos a trabajar
-        char* nombre_archivo = sacar_cadena_de_paquete(&stream);
-        
-        //recibimos contexto de ejecucion
-        int pid = sacar_entero_de_paquete(&stream);
-        int program_counter = sacar_entero_de_paquete(&stream);
-        int prioridad = sacar_entero_de_paquete(&stream);
-        int pag_pf = sacar_entero_de_paquete(&stream);
-        //registros de contexto
-        int AX = sacar_entero_de_paquete(&stream);
-        int BX = sacar_entero_de_paquete(&stream);
-        int CX = sacar_entero_de_paquete(&stream);
-        int DX = sacar_entero_de_paquete(&stream);
-        //recursos asignados de contexto
-        char nombre_recurso [50] = sacar_cadena_de_paquete(&stream);
-        int instancias_recurso = sacar_entero_de_paquete(&stream);
-    
+archivo *archivo_abierto;
+bool existe_en_tabla = false;
 
-        printf("\n\nRecibi paquete de CPU\n\n");
-        //el paquete tiene que tener ademas el nombre del archivo y el modo de apertura
-        
-        
-        switch(paquete->codigo_operacion)
-        {
-            archivo *archivo_abierto;
-            bool existe_en_tabla = false;
-            
-            case ABRIR_ARCHIVO:
-            {
-                //abrirArchivoKernel();
-                printf("\n\nKernel recibio paquete de CPU para abrir archivo\n\n");
+void manejo_de_f_open(t_pcb* proceso) {
+
+//abrirArchivoKernel();
+
+printf("\n\nKernel recibio paquete de CPU para abrir archivo\n\n");
                 
-                    for (int i = 0; i < list_size(tabla_archivos_abiertos); i++)
-                    {
-                        archivo_abierto = (archivo*)list_get(tabla_archivos_abiertos, i);
-                        if (strcmp(nombre_archivo, archivo_abierto->nombre_archivo) == 0)
-                        {
-                            existe_en_tabla = true;
-                            //
-                            break;
+for (int i = 0; i < list_size(tabla_archivos_abiertos); i++)
+    {
+        archivo_abierto = (archivo*)list_get(tabla_archivos_abiertos, i);
+            if (strcmp(nombre_archivo, archivo_abierto->nombre_archivo) == 0)
+                {
+                        existe_en_tabla = true;
+                            // ocurre algo
                         }
                         else
                         {
@@ -86,11 +54,8 @@ void atender_peticiones_al_fs()
                         si no existe mandamos paquete al fs para que lo cree
                             esperamos que devuelva OK
                             agregamos a la tabla
-                */
-                break;
-            }
-            case CREAR_ARCHIVO:
-	        {
+                */  
+
                 //crearArchivoKernel();
                 printf("\n\nKernel recibio paquete de CPU para crear archivo\n\n");
                 /*
@@ -100,6 +65,20 @@ void atender_peticiones_al_fs()
                         si existe, paquete al fs para que lo abra
                             esperamos a que devuelva OK
                 */
+}
+        
+void manejo_de_f_create(t_pcb* proceso) 
+    
+        {
+          
+ 
+            {
+                
+                break;
+            }
+            case CREAR_ARCHIVO:
+	        {
+               
                 break;
             }
             case TRUNCAR_ARCHIVO:

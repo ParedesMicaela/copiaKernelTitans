@@ -312,18 +312,17 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 
             //bloqueamos el proceso
             
-            //una vez bloqueado el proceso mandamos el paquete
-            printf("\n\nArmamos paquete para enviar a CPU\n\n");
+            //mandamos el pawquete 
             paquete_para_kernel_archivo = crear_paquete(ABRIR_ARCHIVO);
             agregar_cadena_a_paquete(paquete_para_kernel_archivo, nombre_archivo);
             agregar_cadena_a_paquete(paquete_para_kernel_archivo, modo_apertura);
-            //mandarle el contexto de ejecucion (creo)
             enviar_paquete(paquete_para_kernel_archivo, socket_servidor_dispatch);
             eliminar_paquete(paquete_para_kernel_archivo);
-            printf("\n\nEnviamos paquete a kernel para ABRIR ARCHIVO\n\n");
-
-            mostrar_valores(contexto_ejecucion);
+            //mandarle el contexto de ejecucion (creo)
+            
             contexto_ejecucion->program_counter += 1;
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_open", recurso, 0);
+            seguir_ejecutando = false;
             break;
 
         case(F_CLOSE):
