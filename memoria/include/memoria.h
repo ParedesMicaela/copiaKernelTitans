@@ -42,21 +42,21 @@ typedef struct
 typedef struct {
     int numero_de_pagina;
     int marco; //Revisar si es unit32_t
-    bool bit_de_presencia; //Puede ser un int de 1 o 0
-    bool bit_modificado; //Puede ser un int de 1 o 0
+    int bit_de_presencia; //Puede ser un bool
+    int bit_modificado; //Puede ser un bool
     int posicion_swap; //Revisar si es unit32_t
 } entrada_t_pagina;
 
 typedef struct {
-    entrada_t_pagina* entradas; // Revisar
-    int tamanio;                 // Cantidad de entradas
+    entrada_t_pagina* entradas;
+    int tamanio;                 
 } t_pagina;
 
 typedef struct 
 {
 	int pid;
 	int tam_swap;
-	//t_list* paginas_en_memoria;
+	t_list* paginas_en_memoria;
 	char* path_proceso;
 } t_proceso_en_memoria;
 
