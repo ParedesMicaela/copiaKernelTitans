@@ -35,29 +35,6 @@ void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones, int inst_
     free(instrucciones);
 	eliminar_paquete(paquete);
 }
-/*
-char* leer_archivo_instrucciones(char* path_instrucciones) {
-
-    FILE* instr_f = fopen(path_instrucciones, "r");
-    char* una_cadena    = malloc(MAX_CHAR);
-    char* cadena_completa  = NULL; //malloc(MAX_CHAR);
-
-    if (instr_f == NULL) {
-        perror("no se pudo abrir el archivo de instrucciones");
-        exit(-1);
-    }
-
-    while (!feof(instr_f)) {
-        fgets(una_cadena, MAX_CHAR, instr_f);
-        string_append(&cadena_completa, una_cadena);
-    }
-
-    free(una_cadena);
-    fclose(instr_f);
-
-    return cadena_completa;
-}
-*/
 
 char* leer_archivo_instrucciones(char* path_instrucciones) {
     FILE* instr_f = fopen(path_instrucciones, "r");
@@ -111,13 +88,24 @@ char* buscar_path_proceso(int pid)
 }
 
 //============================================ Instrucciones de CPU =====================================================================
+/// Buscar Marco Pedido ///
+void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid) {
+    int marco;
+
+    marco = buscar_marco(pid, num_pagina);
+
+    t_paquete* paquete = crear_paquete(NUMERO_MARCO);
+    // El -1 lo vemos desde la cpu (Page Fault)
+    agregar_entero_a_paquete(paquete, marco);
+    enviar_paquete(paquete, socket_cpu);   
+    eliminar_paquete(paquete);
+}
+ // sacar entero sin signo de paquete
 
 /// @brief Lectura y escritura del espacio de usuario ///
 char* leer(int32_t direccion_fisica,int tamanio) {
 
-    int tiempo = config_valores_memoria.retardo_respuesta;
-
-	usleep(tiempo*1000); 
+	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
 	char* puntero_direccion_fisica = espacio_usuario + direccion_fisica; 
 
@@ -131,9 +119,7 @@ char* leer(int32_t direccion_fisica,int tamanio) {
 
 void escribir(char* valor, int32_t direccion_fisica, int tamanio){
 
-    int tiempo = config_valores_memoria.retardo_respuesta;
-
-	usleep(tiempo*1000); 
+	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
 	char* puntero_a_direccion_fisica = espacio_usuario + direccion_fisica; 
 

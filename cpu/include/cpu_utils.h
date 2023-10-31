@@ -25,6 +25,7 @@ extern int socket_servidor_interrupt;
 extern int socket_cliente_dispatch;
 extern int socket_cliente_interrupt;
 extern int tam_pagina;
+extern bool hay_page_fault;
 
 //======================= Estructuras =======================
 typedef struct  
@@ -62,7 +63,7 @@ void*conexion_inicial_memoria();
 void atender_dispatch(int, int );
 void atender_interrupt(void* );
 void finalizar_cpu();
-void mov_in(uint32_t registro, uint32_t direccion_logica);
-void mov_out(uint32_t direccion_logica, uint32_t registro);
-
+uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion);
+void mov_in(char* registro, uint32_t direccion_logica, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion);
+void mov_out(uint32_t direccion_logica, char* registro, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion);
 #endif
