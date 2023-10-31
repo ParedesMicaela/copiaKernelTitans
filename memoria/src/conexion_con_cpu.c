@@ -68,14 +68,14 @@ char* leer_archivo_instrucciones(char* path_instrucciones) {
 
 char* buscar_path_proceso(int pid)
 {
-    if (lista_procesos == NULL) {
+    if (procesos_en_memoria == NULL) {
         log_error(memoria_logger, "Error: lista_procesos esta vacia");
         return NULL;
     }
 
-    for (int i = 0; i < list_size(lista_procesos); i++)
+    for (int i = 0; i < list_size(procesos_en_memoria); i++)
     {
-        t_proceso_en_memoria* proceso = list_get(lista_procesos, i);
+        t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
 
         if (proceso != NULL && proceso->pid == pid)
         {

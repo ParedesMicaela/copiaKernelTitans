@@ -14,7 +14,7 @@ int main(void) {
     cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/memoria/cfg/memoria.config");
     log_info(memoria_logger,"Configuracion de memoria cargada correctamente\n");
 
-    lista_procesos = list_create();
+    creacion_espacio_usuario();
 
     log_info(memoria_logger,"Inicializando memoria\n");
 

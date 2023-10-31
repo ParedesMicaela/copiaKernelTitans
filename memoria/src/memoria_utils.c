@@ -1,7 +1,7 @@
 #include "memoria.h"
 
-t_list* lista_procesos;
-
+int cantidad_paginas_proceso;
+char* path_recibido = NULL;
 
 // CONFIGURACION //
 void cargar_configuracion(char* path){
@@ -76,51 +76,25 @@ void manejo_conexiones(void* socket_cliente)
 
 	case CREACION_ESTRUCTURAS_MEMORIA:
 
-    	t_proceso_en_memoria* proceso = malloc(sizeof(t_proceso_en_memoria));
-		
 		pid_proceso = sacar_entero_de_paquete(&stream);
-		int tam_swap_pid = sacar_entero_de_paquete(&stream);
+		cantidad_paginas_proceso = sacar_entero_de_paquete(&stream);
+		path_recibido = sacar_cadena_de_paquete(&stream);
 
-		//del kernel va a recibir un path que va a tener que leer para pasarle a la cpu la instruccion
-		char* path_recibido = sacar_cadena_de_paquete(&stream);
-
-		//aca cargamos los datos en nuestra estructura proceso
-		proceso->pid = pid_proceso;
-		proceso->tam_swap = tam_swap_pid;
-
-		/*el path va a ser distinto al del archivo de config entonces lo tengo que modificar
-	    no lo pongo en MANDAR_INSTRUCCIONES porque el kernel no me pide que le lea la instruccion, eso me lo pide la cpu
-		el kernel me dice solamente el path que necesito leerle a la cpu*/
+		//De esta manera la memoria le pasa el path a la CPU
 		config_valores_memoria.path_instrucciones = path_recibido;
-
-		/*decidi leer el path que me manda el kernel al principio, y guardar las instrucciones dentro de mi
-		estructura proceso para no tener que leer el archivo cada vez que tengo que mandar instrucciones. Si lo 
-		hago solamente al principio y guardo las instrucciones leidas en el path_proceso del proceso, me ahorro
-		tener que hacerlo todo el tiempo y ademas ya lo tengo todo leido y preparado para solamente devolver el
-		indice (program_counter) que me pide*/
-		char* instrucciones_leidas = leer_archivo_instrucciones(path_recibido);
-		
-		proceso->path_proceso = strdup(instrucciones_leidas);
-
 		log_info(memoria_logger, "PATH recibido: %s", config_valores_memoria.path_instrucciones );
 
-		//decidi hace una lista para buscar mas facil los datos de cada proceso
-		list_add(lista_procesos, (void*)proceso);
-
-		log_info(memoria_logger,"Recibi pedido de creacion de estructuras en memoria\n");
-		//crear_tablas_paginas_proceso(pid_proceso, tam_swap_pid);
+		//crear_tablas_paginas_proceso(pid_proceso, cantidad_paginas_proceso, path_recibido);
         int ok_creacion = 1;
         send(cliente, &ok_creacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras creadas en memoria kernel-kyunn\n");
-		//free(instrucciones_leidas);
-		//free(path_recibido);
 		break;
 
 	case FINALIZAR_EN_MEMORIA:
 		int pid = sacar_entero_de_paquete(&stream);
 		log_info(memoria_logger,"Recibi pedido de creacion de estructuras en memoria\n");
-		//funcion finalizar
-        int ok_finalizacion = 1;
+		//finalizar_en_memoria(pid, cliente);
+	    int ok_finalizacion = 1;
         send(cliente, &ok_finalizacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras eliminadas en memoria kernel-kyunn\n");
 		break;

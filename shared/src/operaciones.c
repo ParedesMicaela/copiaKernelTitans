@@ -54,34 +54,6 @@ t_paquete* recibir_paquete(int conexion)
 	}
 }
 
-/*
-t_paquete* recibir_paquete(int conexion)
-{
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    paquete->buffer = malloc(sizeof(t_buffer));
-    if (recv(conexion, &(paquete->codigo_operacion), sizeof(paquete->codigo_operacion), MSG_WAITALL) == -1) {
-        paquete->codigo_operacion = -1;
-        printf("recibir paquete recibio un menos 1\n");
-        return paquete;
-    }
-    if (paquete->codigo_operacion == FINALIZACION) {
-        return paquete;
-    }
-    if (recv(conexion, &(paquete->buffer->size), sizeof(paquete->buffer->size), MSG_WAITALL) != sizeof(paquete->buffer->size) ||
-        paquete->buffer->size <= 0) {
-        free(paquete->buffer);
-        free(paquete);
-        return NULL;
-    }
-    paquete->buffer->stream = malloc(paquete->buffer->size);
-    if (recv(conexion, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL) != paquete->buffer->size) {
-        eliminar_paquete(paquete);
-        return NULL;
-    }
-    return paquete;
-}
-*/
-
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
 	int bytes = paquete->buffer->size + 2*sizeof(int);
