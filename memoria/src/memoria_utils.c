@@ -46,6 +46,7 @@ void manejo_conexiones(void* socket_cliente)
 	int posicion_pedida = 0;
 	int pid_proceso = 0;
 	char* path_asignado = NULL;
+	uint32_t numero_pagina;
 
 	while(1){
 	t_paquete* paquete = recibir_paquete(cliente);
@@ -53,8 +54,7 @@ void manejo_conexiones(void* socket_cliente)
 
 	switch(paquete->codigo_operacion){		
 	case HANDSHAKE:
-
-		//va a recibir un handshake de la cpu y le va a tener que mandar como min el tam_pagina
+		//Mandamos por Handshake el tam_pagina
 		log_info(memoria_logger,"Me llego el handshake :)\n");
 		int entero = sacar_entero_de_paquete(&stream);
 		enviar_paquete_handshake(cliente);
@@ -125,8 +125,13 @@ void manejo_conexiones(void* socket_cliente)
 		log_info(memoria_logger,"Estructuras eliminadas en memoria kernel-kyunn\n");
 		break;
 
+	case TRADUCIR_PAGINA_A_MARCO:
+		numero_pagina = sacar_entero_sin_signo_de_paquete(&stream);
+		pid_proceso = sacar_entero_de_paquete(&stream);
+		enviar_respuesta_pedido_marco(cliente, numero_pagina, pid_proceso);
+		break;
 	case SOLUCIONAR_PAGE_FAULT:
-		pid = sacar_entero_de_paquete(&stream);		// ya tengo definido en FINALIZAR_MEMORIA el int pid, sino el make se quejaba :(
+		pid_proceso = sacar_entero_de_paquete(&stream);		// ya tengo definido en FINALIZAR_MEMORIA el int pid, sino el make se quejaba :(
 		int pag_pf = sacar_entero_de_paquete(&stream);
 
 		log_info(memoria_logger,"Recibi un pedido para solucionar page fault uwu con PID %d - Pagina %d", pid, pag_pf);

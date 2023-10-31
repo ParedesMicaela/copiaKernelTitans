@@ -31,6 +31,8 @@ static void pedir_instruccion(int socket_cliente_memoria,int posicion, int pid);
 static void recibir_instruccion(int socket_cliente_memoria);
 static bool hay_interrupcion();
 static void mostrar_valores (t_contexto_ejecucion* contexto);
+static bool requiere_traduccion(char* instruccion);
+
 
 //================================================== Configuracion =====================================================================
 
@@ -193,17 +195,13 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         //una vez que la recibo de memoria, la guardo en la var global de arriba
         recibir_instruccion(socket_cliente_memoria);
 
-     /*
+     
         //=============================================== DECODE =================================================================
-        // vemos si la instruccion requiere de una traducción de dirección lógica a dirección física
-        
         if(requiere_traduccion(instruccion))
         {
             log_info(cpu_logger,"%s requiere traduccion", instruccion);
-            //traducir_a_direccion_fisica(instruccion);
         }
-        
-*/
+
         //=============================================== EXECUTE =================================================================
 
         // toda esta parte la usamos para trabajar con registros (sumar,restar,poner)
@@ -293,7 +291,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[1];;
             direccion_logica = atoi(datos[2]);
-            mov_in(registro, direccion_logica);
+            mov_in(registro, direccion_logica, socket_cliente_memoria, contexto_ejecucion);
             //mostrar_valores(contexto_ejecucion)
             contexto_ejecucion->program_counter += 1;
             break;
@@ -302,7 +300,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[2];
             direccion_logica = atoi(datos[1]);
-            mov_out(direccion_logica, registro);
+            mov_out(direccion_logica, registro, socket_cliente_memoria, contexto_ejecucion); 
             //mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
             break;
@@ -450,18 +448,6 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 
 }
     
-//================================================== PAGE FAULT ===================================================================
-// verifica si se ha producido un page fault esto recién para el checkpoint 4
-/*bool hay_page_fault() {
-    //desallorar la lógica para el page fault
-    //return (interrupcion == PAGE_FAULT); // suponiendo que PAGE_FAULT es un valor que nos va a indicar page fault.
-}
-
-// nos va a decir el n° de página por el que se generó el page fault
-int obtener_numero_pagina(char *instruccion) {
-    
-}
-*/
 //================================================== Interrupt =====================================================================
 
 // este canal se va a usar para mensajes de interrupcion
@@ -682,6 +668,8 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
     eliminar_paquete(paquete);
 }
 
+//================================================== FUNCIONES_AUXILIARES =====================================================================
+
 static void mostrar_valores (t_contexto_ejecucion* contexto)
 {
     // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
@@ -691,3 +679,25 @@ static void mostrar_valores (t_contexto_ejecucion* contexto)
         log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d",contexto->recursos_asignados[i].nombre_recurso, contexto->recursos_asignados[i].instancias_recurso);
     }
 }
+
+static bool requiere_traduccion(char* instruccion)
+{
+    bool bandera = false;
+
+    if(string_starts_with(instruccion, "MOV_OUT") || string_starts_with(instruccion, "MOV_IN"))
+    {
+        bandera = true;
+    }
+
+    return bandera;
+}
+/*
+void page_fault_a_kernel() {
+devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0);
+        //program_counter--?
+        t_paquete* paquete = crear_paquete(PAGINA_CON_PAGE_FAULT);
+        agregar_entero_sin_signo_a_paquete(numero_pagina);
+        enviar_paquete(paqute, socket_cliente_dispatch);
+        eliminar_paquete(paquete);
+}
+*/

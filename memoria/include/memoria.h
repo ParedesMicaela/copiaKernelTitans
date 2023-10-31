@@ -24,7 +24,7 @@ extern t_config* config;
 extern int socket_memoria;
 extern int server_fd;
 extern void* espacio_usuario;
-
+extern t_list* lista_procesos;
 //ESTRUCTURAS
 typedef struct  
 {
@@ -32,36 +32,36 @@ typedef struct
 	char* puerto_escucha;
 	char* ip_filesystem;
 	char* puerto_filesystem;
-	int tam_pagina;
 	int tam_memoria;
+	int tam_pagina;
 	char* path_instrucciones;	
 	int retardo_respuesta;
 	char* algoritmo_reemplazo;
 } arch_config;
 
+extern arch_config config_valores_memoria;
+
 typedef struct {
     int numero_de_pagina;
     int marco; //Revisar si es unit32_t
-    bool bit_de_presencia; //Puede ser un int de 1 o 0
-    bool bit_modificado; //Puede ser un int de 1 o 0
+    int bit_de_presencia; //Puede ser un bool
+    int bit_modificado; //Puede ser un bool
     int posicion_swap; //Revisar si es unit32_t
 } entrada_t_pagina;
 
 typedef struct {
-    entrada_t_pagina* entradas; // Revisar
-    int tamanio;                 // Cantidad de entradas
+    entrada_t_pagina* entradas;
+    int tamanio;                 
 } t_pagina;
 
 typedef struct 
 {
 	int pid;
 	int tam_swap;
-	//t_list* paginas_en_memoria;
+	t_list* paginas_en_memoria;
 	char* path_proceso;
 } t_proceso_en_memoria;
 
-extern t_list* lista_procesos;
-extern arch_config config_valores_memoria;
 
 // FUNCIONES//
 int atender_clientes_memoria(int);
@@ -75,5 +75,8 @@ void liberar_espacio_usuario() ;
 char* leer_archivo_instrucciones(char* );
 char* buscar_path_proceso(int );
 
+/// @brief  TABLAS DE PAGINAS ///
+int buscar_marco(int pid, int num_pagina);
+void inicializar_la_tabla_de_paginas();
 
 #endif
