@@ -18,7 +18,7 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica, int socket_clien
     uint32_t direccion_fisica;
 
     // Calculamos numero_pagina y offset
-    numero_pagina = direccion_logica / tam_pagina;
+    numero_pagina = floor(direccion_logica / tam_pagina);
     offset = direccion_logica - (numero_pagina  * tam_pagina);
 
     //Llamos a la  Memoria, para conseguir el número de marco correspondiente a la página 
@@ -122,12 +122,14 @@ void mov_out(uint32_t direccion_logica, char* registro, int socket_cliente_memor
 
     direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, socket_cliente_memoria, contexto_ejecucion);
 
+    int valor = buscar_registro(registro);
+
     if(direccion_fisica != UINT32_MAX){    
-     enviar_paquete_WRITE(direccion_fisica, registro, contexto_ejecucion);
+     enviar_paquete_WRITE(direccion_fisica, valor, contexto_ejecucion);
 
     // NO se si tengo que hacer una devolucion de la memoria y el log_info lo hago del valor escrito
 
-    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %s \n", contexto_ejecucion->pid, "ESCRIBIR", direccion_fisica, "VALOR ESCRITO");
+    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "ESCRIBIR", direccion_fisica, valor);
     }
 }
 

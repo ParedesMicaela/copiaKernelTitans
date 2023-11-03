@@ -81,7 +81,7 @@ t_pagina* buscar_pagina(int pid, int num_pagina){
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid); 
 
     // página de la tabla del proceso
-    return list_get(proceso_en_memoria->paginas_en_memoria, num_pagina);
+    return list_get(proceso_en_memoria->paginas_en_memoria->entradas->numero_de_pagina, num_pagina);
 }
 
 int buscar_marco(int pid, int num_pagina){

@@ -45,6 +45,8 @@ void manejo_conexiones(void* socket_cliente)
 	int cliente = *(int*)socket_cliente;
 	int posicion_pedida = 0;
 	int pid_proceso = 0;
+	uint32_t valor_registro = 0;
+	uint32_t direccion_fisica = 0;
 	char* path_asignado = NULL;
 	uint32_t numero_pagina;
 
@@ -84,7 +86,7 @@ void manejo_conexiones(void* socket_cliente)
 		config_valores_memoria.path_instrucciones = path_recibido;
 		log_info(memoria_logger, "PATH recibido: %s", config_valores_memoria.path_instrucciones );
 
-		//crear_tablas_paginas_proceso(pid_proceso, cantidad_paginas_proceso, path_recibido);
+		crear_tablas_paginas_proceso(pid_proceso, cantidad_paginas_proceso, path_recibido);
         int ok_creacion = 1;
         send(cliente, &ok_creacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras creadas en memoria kernel-kyunn\n");
@@ -104,6 +106,16 @@ void manejo_conexiones(void* socket_cliente)
 		pid_proceso = sacar_entero_de_paquete(&stream);
 		enviar_respuesta_pedido_marco(cliente, numero_pagina, pid_proceso);
 		break;
+
+	case WRITE:
+		pid_proceso = sacar_entero_de_paquete(&stream);
+		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+		valor_registro = sacar_entero_sin_signo_de_paquete(&stream);
+		
+		escribir(valor_registro, direccion_fisica);
+
+		break;
+
 	case SOLUCIONAR_PAGE_FAULT:
 		pid_proceso = sacar_entero_de_paquete(&stream);		// ya tengo definido en FINALIZAR_MEMORIA el int pid, sino el make se quejaba :(
 		int pag_pf = sacar_entero_de_paquete(&stream);

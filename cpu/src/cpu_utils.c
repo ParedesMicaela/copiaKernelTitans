@@ -23,7 +23,6 @@ static void recibir_handshake(int socket_cliente_memoria);
 static void setear_registro(char *registro, int valor);
 static int sumar_registros(char *registro_destino, char *registro_origen);
 static int restar_registros(char *registro_destino, char *registro_origen);
-static int buscar_registro(char *registros);
 static int tipo_inst(char *instruccion);
 static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char* recurso, int tiempo);
 static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char* recurso, int tiempo);
@@ -194,18 +193,21 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
 
         //una vez que la recibo de memoria, la guardo en la var global de arriba
         recibir_instruccion(socket_cliente_memoria);
-
+        
+        char **datos = string_split(instruccion, " ");
      
         //=============================================== DECODE =================================================================
         if(requiere_traduccion(instruccion))
         {
             log_info(cpu_logger,"%s requiere traduccion", instruccion);
+            uint32_t direccion_logica = atoi(datos[1]);
+            uint32_t direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, socket_cliente_memoria, contexto_ejecucion);
+            datos[1] = direccion_fisica;
+            log_info(cpu_logger, "Se tradujo %d", direccion_fisica);
         }
-
         //=============================================== EXECUTE =================================================================
 
         // toda esta parte la usamos para trabajar con registros (sumar,restar,poner)
-        char **datos = string_split(instruccion, " ");
         free(instruccion);
         char *registro = NULL;
         char *registro_destino = NULL;
@@ -542,7 +544,7 @@ static int restar_registros(char *registro_destino, char *registro_origen)
     return absoluto;
 }
 
-static int buscar_registro(char *registros)
+int buscar_registro(char *registros)
 {
     int valor = -1;
 
@@ -687,6 +689,7 @@ static bool requiere_traduccion(char* instruccion)
     if(string_starts_with(instruccion, "MOV_OUT") || string_starts_with(instruccion, "MOV_IN"))
     {
         bandera = true;
+
     }
 
     return bandera;
