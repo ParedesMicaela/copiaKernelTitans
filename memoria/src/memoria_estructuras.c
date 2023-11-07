@@ -172,7 +172,67 @@ static void liberar_swap(t_pagina* paginas_a_liberar, int pid, int socket_fs) {
     eliminar_paquete(paquete);
 }
 
+//======================================================= Reemplazar Páginas =========================================================================================================
 
+/*
+void reemplazarPagina(){
+	
+	//BUSCO TODAS LAS PAGINAS QUE SE PUEDAN REEMPLAZAR
+	t_list* paginasEnMp = buscarPaginasMP(); 
+	
+	int noLock(t_pagina* pag){
+        
+		return (pag->lock == 0);
+	}
+	
+	t_list* paginasSinLock = list_filter(paginasEnMp, (void*)noLock);//FILTRO LAS QUE ESTAN LOCKEADAS -> ESTAS LAS NECESITO //TODO QUE PASA SI ESTAN TODAS LOCKEADAS???
+	
+	if(list_is_empty(paginasSinLock)){
+		log_error(logger, "No hay paginas para sacar de la memoria ppal");
+	}
+	
+	if(string_equals_ignore_case(config_valores.algoritmo_reemplazo, "LRU")){
+		reemplazarConLRU(paginasSinLock);
+	}
+	else if(string_equals_ignore_case(config_valores.algoritmo_reemplazo, "FIFO")){
+		reemplazarConFIFO(paginasSinLock);
+	}
+	
+	list_destroy(paginasEnMp);
+	list_destroy(paginasSinLock);	
+}
+
+
+//LRU
+void reemplazarConLRU(t_list* paginasEnMp){
+	
+	int masVieja(t_pagina* unaPag, t_pagina* otraPag){
+		
+		return (otraPag->tiempo_uso > unaPag->tiempo_uso); //LA QUE ESTA HACE MAS TIEMPO
+	}
+	
+	list_sort(paginasEnMp, (void*) masVieja); //FILTRO Y PONGO A LA MAS VIEJA PRIMERO -> ORDENA DE MAS VIEJA A MAS NIEVA
+	
+	//COMO REEMPLAZO SEGUN LRU, ELIJO LA PRIMERA QUE ES LA MAS VIEJA
+	t_pagina* paginaReemplazo = list_get(paginasEnMp, 0);
+	log_info(logger, "Voy a reemplazar la pagina %d que estaba en el frame %d", paginaReemplazo->id, paginaReemplazo->frame_ppal);
+	setLock(paginaReemplazo);
+	
+	//SI EL BIT DE MODIFICADO ES 1, LA GUARDO EM MV -> PORQUE TIENE CONTENIDO DIFERENTE A LO QUE ESTA EN MV
+	if(paginaReemplazo->modificado == 1)
+	{
+		guardarMemoriaVirtual(paginaReemplazo);
+	}
+	else
+	{
+		//EN LA MP, DESOCUPO EL FRAME EN EL BITMAP
+		desocuparFrame(paginaReemplazo->frame_ppal, MEM_PPAL);
+        //AHORA ESTA PAGINA YA NO ESTA EN MP, CAMBIO EL BIT DE PRESENCIA
+		paginaReemplazo->presencia = 0;
+		cleanLock(paginaReemplazo);
+	}
+}
+*/
 /*
 // Inicializamos el bit_array
 void inicializar_bit_array(int cantidad_paginas_proceso) {

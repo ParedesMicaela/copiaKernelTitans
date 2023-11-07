@@ -20,6 +20,7 @@ int main(void) {
 
     int server_memoria = iniciar_servidor(config_valores_memoria.ip_memoria,config_valores_memoria.puerto_escucha);
 
+    //Falta que se conecte con FS
     log_info(memoria_logger,"Servidor creado\n");
     log_info(memoria_logger, "Memoria lista para recibir al modulo cliente \n");
 
