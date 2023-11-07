@@ -37,23 +37,23 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* p
 
     t_proceso_en_memoria* proceso_en_memoria = malloc(sizeof(t_proceso_en_memoria));
     proceso_en_memoria->pid = pid;
-    proceso_en_memoria->cantidad_paginas_proceso = cantidad_paginas_proceso;
     proceso_en_memoria->bloques_reservados = list_create();
 
     // Leemos el path antes de guardarlo en el proceso en memoria
 	char* instrucciones_leidas = leer_archivo_instrucciones(path_recibido);
     proceso_en_memoria->path_proceso = strdup(instrucciones_leidas);
 
-    inicializar_la_tabla_de_paginas(cantidad_paginas_proceso);
+    inicializar_la_tabla_de_paginas(proceso_en_memoria, cantidad_paginas_proceso);
 
     list_add(procesos_en_memoria, (void*)proceso_en_memoria);
     
     log_info(memoria_logger, "PID: %d - Tamaño: %d", pid, cantidad_paginas_proceso);
 }
 
-void inicializar_la_tabla_de_paginas(int cantidad_paginas_proceso) {
-    t_pagina* tp = (t_pagina*)malloc(sizeof(t_pagina));
-    tp->cantidad_paginas_proceso = cantidad_paginas_proceso;
+void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad_paginas_proceso) {
+    proceso->paginas_en_memoria = (t_pagina*)malloc(sizeof(t_pagina));
+    t_pagina* tp = proceso->paginas_en_memoria;
+    tp->cantidad_entradas = cantidad_paginas_proceso;
     tp->entradas = (entrada_t_pagina*)malloc(sizeof(entrada_t_pagina) * cantidad_paginas_proceso);
 
     for (int i = 0; i < cantidad_paginas_proceso; i++) {
@@ -120,7 +120,7 @@ entrada_t_pagina* buscar_pagina(int pid, int num_pagina){
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid); 
 
     // Iterar las entradas
-    for(int i = 0; i < proceso_en_memoria->paginas_en_memoria->cantidad_paginas_proceso; i++)
+    for(int i = 0; i < proceso_en_memoria->paginas_en_memoria->cantidad_entradas; i++)
     {
         // Si matchea el numero de pagina con la entrada, devuelvo la entrada
         if (proceso_en_memoria->paginas_en_memoria->entradas[i].numero_de_pagina == num_pagina)

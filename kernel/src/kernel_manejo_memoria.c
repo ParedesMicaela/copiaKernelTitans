@@ -87,7 +87,7 @@ void atender_page_fault(t_pcb *proceso)
 
     //acá no haría falta agregarle el motivo de bloqueo, medio redundante sería
     agregar_entero_a_paquete(paquete,proceso->pid);
-    agregar_entero_a_paquete(paquete,proceso->pagina_pf);
+    agregar_entero_a_paquete(paquete,proceso->pagina_pedida);
     
 
     enviar_paquete(paquete, socket_memoria);
@@ -96,7 +96,7 @@ void atender_page_fault(t_pcb *proceso)
 
 
     // acá esperamos que memoria no mande el final de page fault
-    int* a = malloc(sizeof(int));
+    int a = 0;
     recv(socket_memoria, &a,sizeof(int),0);
 
     log_info(kernel_logger, "Volvio del tratamiento de Page Fault, proceso:  %d", proceso -> pid);

@@ -24,13 +24,12 @@ static void setear_registro(char *registro, int valor);
 static int sumar_registros(char *registro_destino, char *registro_origen);
 static int restar_registros(char *registro_destino, char *registro_origen);
 static int tipo_inst(char *instruccion);
-static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char* recurso, int tiempo);
-static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char* recurso, int tiempo);
+static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char* recurso, int tiempo, int numero_pagina);
+static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char* recurso, int tiempo, int numero_pagina);
 static void pedir_instruccion(int socket_cliente_memoria,int posicion, int pid);
 static void recibir_instruccion(int socket_cliente_memoria);
 static bool hay_interrupcion();
 static void mostrar_valores (t_contexto_ejecucion* contexto);
-static bool requiere_traduccion(char* instruccion);
 
 
 //================================================== Configuracion =====================================================================
@@ -171,19 +170,13 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
 void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memoria, t_contexto_ejecucion *contexto_ejecucion)
 {
     bool seguir_ejecutando = true;
-/*
-    //implementación para el page_fault (checkpoint 4)
-    //antes de seguir_ejecutando me fijo si hay page fault
-    if (hay_page_fault()) 
-    {
-        log_info(cpu_logger, "Oh no hermano, tenemos Page Fault: PID %d - Número de página %d", contexto_ejecucion->pid, obtener_numero_pagina(instruccion));
-        devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0);
-        //como tengo page fault notificó al kernel y no puedo seguir ejecutando el proceso hasta manejar el page fault
-        seguir_ejecutando = false;
-    }
-*/
+    bool ejecuto_instruccion = true;
+    uint32_t direccion_logica_aux;
+    int numero_pagina_aux;
+
     while (seguir_ejecutando) // definir con cuentas voy, definir con program counter
     {
+        uint32_t direccion_fisica;
 
         //=============================================== FETCH =================================================================
         log_info(cpu_logger, "PID: %d - FETCH - Program Counter: %d", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
@@ -197,14 +190,36 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         char **datos = string_split(instruccion, " ");
      
         //=============================================== DECODE =================================================================
-        if(requiere_traduccion(instruccion))
+
+        if(string_starts_with(instruccion, "MOV_OUT"))
         {
-            log_info(cpu_logger,"%s requiere traduccion", instruccion);
-            uint32_t direccion_logica = atoi(datos[1]);
-            uint32_t direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, socket_cliente_memoria, contexto_ejecucion);
-            datos[1] = direccion_fisica;
-            log_info(cpu_logger, "Se tradujo %d", direccion_fisica);
+
+        log_info(cpu_logger,"%s requiere traduccion", instruccion);
+        uint32_t direccion_logica = atoi(datos[1]);
+        direccion_logica_aux = direccion_logica;
+        direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, socket_cliente_memoria, contexto_ejecucion);
+        log_info(cpu_logger, "Se tradujo %d", direccion_fisica);  
+
+        }else if(string_starts_with(instruccion, "MOV_IN") || string_starts_with(instruccion, "F_READ") || string_starts_with(instruccion, "F_WRITE")){
+            
+        log_info(cpu_logger,"%s requiere traduccion", instruccion);
+        uint32_t direccion_logica = atoi(datos[2]);
+        direccion_logica_aux = direccion_logica;
+        direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, socket_cliente_memoria, contexto_ejecucion);
+        log_info(cpu_logger, "Se tradujo %d", direccion_fisica);      
+
         }
+
+        if (hay_page_fault) 
+        {
+            int numero_pagina = floor(direccion_logica_aux / tam_pagina);
+            numero_pagina_aux = numero_pagina;
+            log_info(cpu_logger, "Page Fault: PID %d - Pagina %d", contexto_ejecucion->pid, numero_pagina);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0, numero_pagina);
+            seguir_ejecutando = false;
+            ejecuto_instruccion = false;
+        }
+        
         //=============================================== EXECUTE =================================================================
 
         // toda esta parte la usamos para trabajar con registros (sumar,restar,poner)
@@ -215,7 +230,6 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         char *recurso = NULL;
         char* modo_apertura = NULL;
         char* nombre_archivo = NULL;
-        uint32_t direccion_logica = 0;
         uint32_t posicion = 0;
         int tamanio = -1;
         int valor = -1;
@@ -267,7 +281,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             tiempo = atoi(datos[1]);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "", tiempo); 
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "", tiempo, -1); 
             seguir_ejecutando = false;
             break;
 
@@ -276,7 +290,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             recurso = datos[1];
             //mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso, 0);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso, 0, -1);
             seguir_ejecutando = false;
             break;
 
@@ -285,26 +299,28 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             recurso = datos[1];
             //mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal", recurso, 0);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal", recurso, 0, -1);
             seguir_ejecutando = false;
             break;
 
         case(MOV_IN):
+            if(ejecuto_instruccion){
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[1];;
-            direccion_logica = atoi(datos[2]);
-            mov_in(registro, direccion_logica, socket_cliente_memoria, contexto_ejecucion);
+            mov_in(registro, direccion_fisica, socket_cliente_memoria, contexto_ejecucion);
             //mostrar_valores(contexto_ejecucion)
             contexto_ejecucion->program_counter += 1;
+            }
             break;
         
         case(MOV_OUT):
+            if(ejecuto_instruccion){
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[2];
-            direccion_logica = atoi(datos[1]);
-            mov_out(direccion_logica, registro, socket_cliente_memoria, contexto_ejecucion); 
+            mov_out(direccion_fisica, registro, socket_cliente_memoria, contexto_ejecucion); 
             //mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
+            }
             break;
 
         case(F_OPEN):
@@ -323,7 +339,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             //mandarle el contexto de ejecucion (creo)
             
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_open", recurso, 0);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_open", recurso, 0, -1);
             seguir_ejecutando = false;
             break;
 
@@ -391,7 +407,6 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         case(F_READ):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
-            direccion_logica = atoi(datos[2]);
             mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
             break;
@@ -399,14 +414,13 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         case(F_WRITE):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
-            direccion_logica = atoi(datos[2]);
             mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
             break;
 
         case (INSTRUCCION_EXIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit","", 0);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit","", 0, -1);
             // eliminar_todas_las_entradas(contexto_ejecucion->pid);
             seguir_ejecutando = false;
             break;
@@ -420,7 +434,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "desalojo", "", 0);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "desalojo", "", 0, -1);
             seguir_ejecutando = false;
         }else if (hay_interrupcion() && tipo_interrupcion == 2)
         {
@@ -428,7 +442,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "finalizacion", "", 0);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "finalizacion", "", 0, -1);
             seguir_ejecutando = false;
         }else if (hay_interrupcion() && tipo_interrupcion == 3) 
         {
@@ -437,7 +451,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0, numero_pagina_aux);
             //como tengo page fault notificó al kernel y no puedo seguir ejecutando el proceso hasta manejar el page fault
             seguir_ejecutando = false;
         }
@@ -639,19 +653,19 @@ static int tipo_inst(char *instruccion)
 /*vamos a devolver el contexto al kernel en las instrucciones exit, sleep. Lo modifique para que podamos
 pedir recursos por aca tambien, en vez de hacer una funcion aparte. Si no pedimos un recurso entonces ponemos
 "" en el ultimo parametro y fuee. */
-static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char *recurso, int tiempo)
+static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char *recurso, int tiempo, int numero_pagina)
 {
     // aca nosotros agregamos las modificaciones de los registros
     (contexto_ejecucion->registros_cpu.AX) = AX;
     (contexto_ejecucion->registros_cpu.BX) = BX;
     (contexto_ejecucion->registros_cpu.CX) = CX;
     (contexto_ejecucion->registros_cpu.DX) = DX;
-    enviar_contexto(socket_cliente, contexto_ejecucion, motivo, recurso, tiempo);
+    enviar_contexto(socket_cliente, contexto_ejecucion, motivo, recurso, tiempo, numero_pagina);
     log_info(cpu_logger, "Devolvi el contexto ejecucion al kernel por motivo de: %s \n", motivo);
 
 }
 
-static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo)
+static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo, int numero_pagina)
 {
     t_paquete *paquete = crear_paquete(PCB);
 
@@ -664,6 +678,7 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
     agregar_cadena_a_paquete(paquete, motivo);
     agregar_cadena_a_paquete(paquete, recurso);
     agregar_entero_a_paquete(paquete, tiempo);
+    agregar_entero_a_paquete(paquete, numero_pagina);
 
     // agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_que_bloquear);
     enviar_paquete(paquete, socket_cliente);
@@ -682,18 +697,11 @@ static void mostrar_valores (t_contexto_ejecucion* contexto)
     }
 }
 
-static bool requiere_traduccion(char* instruccion)
-{
-    bool bandera = false;
 
-    if(string_starts_with(instruccion, "MOV_OUT") || string_starts_with(instruccion, "MOV_IN"))
-    {
-        bandera = true;
 
-    }
 
-    return bandera;
-}
+
+
 /*
 void page_fault_a_kernel() {
 devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0);

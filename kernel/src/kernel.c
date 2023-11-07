@@ -52,7 +52,7 @@ int main(void)
     pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);
     pthread_create(&corto_plazo, NULL, (void* ) planificador_corto_plazo, NULL);
     pthread_create(&consola, NULL, (void* ) inicializar_consola_interactiva, NULL);
-    pthread_create(&peticiones_fs, NULL, (void* ) atender_peticiones_al_fs, NULL);
+    //pthread_create(&peticiones_fs, NULL, (void* ) atender_peticiones_al_fs, NULL);
    
    using_history(); // Inicializar la historia de comando
 

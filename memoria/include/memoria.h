@@ -51,13 +51,12 @@ typedef struct {
 
 typedef struct {
     entrada_t_pagina* entradas;
-    int cantidad_paginas_proceso;                 
+    int cantidad_entradas;                 
 } t_pagina;
 
 typedef struct 
 {
 	int pid;
-	int cantidad_paginas_proceso;
 	t_pagina* paginas_en_memoria;
 	char* path_proceso;
 	t_list* bloques_reservados;

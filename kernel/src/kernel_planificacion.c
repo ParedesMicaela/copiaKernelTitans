@@ -188,7 +188,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 
     if (string_equals_ignore_case(devuelto_por, "f_open"))
     {
-        manejo_de_f_open(proceso_seleccionado);
+        //manejo_de_f_open(proceso_seleccionado);
         
         // Lo mandamos a dormir
         a_mimir(proceso_seleccionado);
@@ -336,7 +336,7 @@ void proceso_en_sleep(t_pcb *proceso)
 
 void proceso_en_page_fault(t_pcb* proceso){
 
-    log_info(kernel_logger, "Page Fault PID: %d - Pagina: <%d>", proceso->pid, proceso->pagina_pf); // FALTA PAGINA
+    log_info(kernel_logger, "Page Fault PID: %d - Pagina: %d", proceso->pid, proceso->pagina_pedida); // FALTA PAGINA
     /*Mover al proceso al estado Bloqueado. Este estado bloqueado será 
     independiente de todos los demás ya que solo afecta al proceso 
     y no compromete recursos compartidos.*/

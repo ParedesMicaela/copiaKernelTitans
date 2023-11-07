@@ -143,7 +143,7 @@ typedef struct
 	char* recurso_pedido; 
 	int sleep;
 	char* motivo_bloqueo; // en el GECK se utiliza una t_list por bloqueados, que me serviriía un montón para el page fault, anyways...
-	int pagina_pf;
+	int pagina_pedida;
 	
 
 	//esto lo pongo aca para que cada proceso guarde su path y no haya lio al ejecutar mas de 1 proceso
