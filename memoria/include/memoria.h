@@ -51,7 +51,7 @@ typedef struct {
 
 typedef struct {
     entrada_t_pagina* entradas;
-    int tamanio;                 
+    int cantidad_paginas_proceso;                 
 } t_pagina;
 
 typedef struct 
@@ -60,6 +60,7 @@ typedef struct
 	int cantidad_paginas_proceso;
 	t_pagina* paginas_en_memoria;
 	char* path_proceso;
+	t_list* bloques_reservados;
 } t_proceso_en_memoria;
 
 
@@ -79,11 +80,12 @@ void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid)
 /// @brief ESPACIO USUARIO ///
 void creacion_espacio_usuario();
 void liberar_espacio_usuario() ;
-void escribir(int32_t* valor, int32_t direccion_fisica);
+void escribir(uint32_t* valor, uint32_t direccion_fisica);
 
 /// @brief  TABLAS DE PAGINAS ///
 int buscar_marco(int pid, int num_pagina);
 void inicializar_la_tabla_de_paginas();
+void inicializar_swap_proceso(int pid_proceso, int cantidad_paginas_proceso, int socket_fs);
 void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* path_recibido);
 void finalizar_en_memoria(int pid, int socket_fs);
 

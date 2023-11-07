@@ -103,6 +103,18 @@ void agregar_array_cadenas_a_paquete(t_paquete* paquete, char** palabras)
 	}
 }
 
+void agregar_lista_de_cadenas_a_paquete(t_paquete* paquete, t_list* palabras)
+{
+	int cant_elementos = list_size(palabras);
+	agregar_entero_a_paquete(paquete,cant_elementos);
+
+	for(int i=0; i<cant_elementos; i++)
+	{
+		char* palabra = list_get(palabras, i);
+		agregar_cadena_a_paquete(paquete, palabra);		
+	}
+}
+
 char* sacar_cadena_de_paquete(void** stream)
 {
 	int tamanio_cadena = -1;
@@ -147,6 +159,21 @@ char** sacar_array_cadenas_de_paquete(void** stream)
 	for(int i=0; i<cant_elementos; i++)
 	{
 		string_array_push(&varias_palabras, sacar_cadena_de_paquete(stream));
+	}
+
+	return varias_palabras;
+}
+
+t_list* sacar_lista_de_cadenas_de_paquete(void** stream) 
+{
+	t_list* varias_palabras =  list_create();
+
+	int cant_elementos = sacar_entero_de_paquete(stream);
+
+	for(int i=0; i<cant_elementos; i++)
+	{
+		char* cadena = sacar_cadena_de_paquete(stream);
+		list_add(varias_palabras, cadena);
 	}
 
 	return varias_palabras;

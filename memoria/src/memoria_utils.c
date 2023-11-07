@@ -25,8 +25,7 @@ void cargar_configuracion(char* path){
 // ATENDER CLIENTES CON HILOS//
 int atender_clientes_memoria(int socket_servidor){
 
-	//int socket_cliente = malloc(sizeof(int));
-	int socket_cliente = esperar_cliente(socket_servidor); // se conecta primero cpu
+	int socket_cliente = esperar_cliente(socket_servidor); 
 
 	if(socket_cliente != -1){
 		log_info(memoria_logger, "Se conecto un cliente \n");
@@ -35,7 +34,7 @@ int atender_clientes_memoria(int socket_servidor){
 		pthread_detach(hilo_cliente);
 		return 1;
 	}else {
-		log_error(memoria_logger, "Error al escuchar clientes... Finalizando servidor \n"); // log para fallo de comunicaciones
+		log_error(memoria_logger, "Error al escuchar clientes... Finalizando servidor \n"); 
 	}
 	return 0;
 }
@@ -49,6 +48,7 @@ void manejo_conexiones(void* socket_cliente)
 	uint32_t direccion_fisica = 0;
 	char* path_asignado = NULL;
 	uint32_t numero_pagina;
+	int socket_fs; //Ver como se matchea
 
 	while(1){
 	t_paquete* paquete = recibir_paquete(cliente);
@@ -87,6 +87,8 @@ void manejo_conexiones(void* socket_cliente)
 		log_info(memoria_logger, "PATH recibido: %s", config_valores_memoria.path_instrucciones );
 
 		crear_tablas_paginas_proceso(pid_proceso, cantidad_paginas_proceso, path_recibido);
+		inicializar_swap_proceso(pid_proceso,cantidad_paginas_proceso, socket_fs);
+
         int ok_creacion = 1;
         send(cliente, &ok_creacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras creadas en memoria kernel-kyunn\n");
@@ -95,7 +97,7 @@ void manejo_conexiones(void* socket_cliente)
 	case FINALIZAR_EN_MEMORIA:
 		int pid = sacar_entero_de_paquete(&stream);
 		log_info(memoria_logger,"Recibi pedido de creacion de estructuras en memoria\n");
-		//finalizar_en_memoria(pid, cliente);
+		//finalizar_en_memoria(pid, socket_fs);
 	    int ok_finalizacion = 1;
         send(cliente, &ok_finalizacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras eliminadas en memoria kernel-kyunn\n");
@@ -112,7 +114,7 @@ void manejo_conexiones(void* socket_cliente)
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 		valor_registro = sacar_entero_sin_signo_de_paquete(&stream);
 		
-		escribir(valor_registro, direccion_fisica);
+		escribir(&valor_registro, direccion_fisica);
 
 		break;
 

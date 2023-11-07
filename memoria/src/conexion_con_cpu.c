@@ -117,13 +117,13 @@ char* leer(int32_t direccion_fisica,int tamanio) {
 
 }
 
-void escribir(int32_t* valor, int32_t direccion_fisica){
+void escribir(uint32_t* valor, uint32_t direccion_fisica){
 
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
 	char* puntero_a_direccion_fisica = espacio_usuario + direccion_fisica; 
 
-	memcpy(puntero_a_direccion_fisica, valor, valor+1);
+	memcpy(puntero_a_direccion_fisica, valor, sizeof(uint32_t));
 
-	free(valor); 
+	free(valor); //REVISAR
 }

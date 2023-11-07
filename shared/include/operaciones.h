@@ -37,6 +37,8 @@ typedef enum
 	PAGE_FAULT,
 	SOLUCIONAR_PAGE_FAULT,
 	TRADUCIR_PAGINA_A_MARCO,
+	INICIALIZAR_SWAP,
+	LISTA_BLOQUES_RESERVADOS,
 	NUMERO_MARCO,
 	READ,
 	VALOR_READ,
@@ -171,6 +173,7 @@ void agregar_entero_a_paquete(t_paquete* ,int );
 void agregar_entero_sin_signo_a_paquete(t_paquete* , uint32_t);
 void agregar_cadena_a_paquete(t_paquete* , char* );
 void agregar_array_cadenas_a_paquete(t_paquete* , char** );
+void agregar_lista_de_cadenas_a_paquete(t_paquete* , t_list*);
 void agregar_a_paquete(t_paquete* , void* , int );
 void* serializar_paquete(t_paquete* , int );
 void free_array (char ** );
@@ -179,6 +182,7 @@ char* sacar_cadena_de_paquete(void** );
 int sacar_entero_de_paquete(void** );
 uint32_t sacar_entero_sin_signo_de_paquete(void** );
 char** sacar_array_cadenas_de_paquete(void** );
+t_list* sacar_lista_de_cadenas_de_paquete(void**);
 void enviar_paquete(t_paquete* , int );
 void eliminar_paquete(t_paquete* );
 
