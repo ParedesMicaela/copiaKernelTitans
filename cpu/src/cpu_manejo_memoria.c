@@ -41,7 +41,7 @@ static int traducir_pagina_a_marco(uint32_t numero_pagina, int socket_cliente_me
     pedir_numero_frame(numero_pagina, socket_cliente_memoria, contexto_ejecucion);
     log_info(cpu_logger, "Página enviada a memoria \n");
     int numero_marco = numero_marco_pagina(socket_cliente_memoria);
-
+    log_info(cpu_logger, "PID: %d - OBTENER MARCO - Página: %d - Marco: %d \n", contexto_ejecucion->pid, numero_pagina, numero_marco);
     return numero_marco;
 }
 
@@ -59,7 +59,6 @@ static int numero_marco_pagina(int socket_cliente_memoria) {
     t_paquete* paquete = recibir_paquete(socket_cliente_memoria);
     void* stream = paquete->buffer->stream;
 
-    printf("codig: %d", paquete->codigo_operacion );
     if (paquete->codigo_operacion == NUMERO_MARCO)
     {
         numero_marco = sacar_entero_de_paquete(&stream);
