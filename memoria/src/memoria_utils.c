@@ -113,10 +113,18 @@ void manejo_conexiones(void* socket_cliente)
 		pid_proceso = sacar_entero_de_paquete(&stream);
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 		valor_registro = sacar_entero_sin_signo_de_paquete(&stream);
-		
-		escribir(&valor_registro, direccion_fisica);
 
+		escribir(&valor_registro, direccion_fisica, cliente);
+		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso, "ESCRIBIR", direccion_fisica);
 		break;
+
+	case READ:
+		pid_proceso = sacar_entero_de_paquete(&stream);
+		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+		uint32_t valor_a_enviar = leer(direccion_fisica);
+		enviar_valor_de_lectura(valor_a_enviar, cliente);
+		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso, "LEER", direccion_fisica);
+
 
 	case SOLUCIONAR_PAGE_FAULT:
 		pid_proceso = sacar_entero_de_paquete(&stream);

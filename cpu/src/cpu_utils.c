@@ -20,7 +20,6 @@ int tipo_interrupcion = -1;
 //======================= Funciones Internas ==============================================================================
 static void enviar_handshake(int socket_cliente_memoria);
 static void recibir_handshake(int socket_cliente_memoria);
-static void setear_registro(char *registro, int valor);
 static int sumar_registros(char *registro_destino, char *registro_origen);
 static int restar_registros(char *registro_destino, char *registro_origen);
 static int tipo_inst(char *instruccion);
@@ -522,7 +521,7 @@ static bool hay_interrupcion()
     return seguir_ejecutando;
 }
 //================================================== REGISTROS =====================================================================
-static void setear_registro(char *registros, int valor)
+void setear_registro(char *registros, int valor)
 {
     if (string_equals_ignore_case(registros, "AX"))
         AX = valor;

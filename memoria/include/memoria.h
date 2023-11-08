@@ -79,7 +79,9 @@ void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid)
 /// @brief ESPACIO USUARIO ///
 void creacion_espacio_usuario();
 void liberar_espacio_usuario() ;
-void escribir(uint32_t* valor, uint32_t direccion_fisica);
+void escribir(uint32_t* valor, uint32_t direccion_fisica, int socket_cpu);
+uint32_t leer(uint32_t direccion_fisica);
+void enviar_valor_de_lectura(uint32_t valor, int socket_cpu);
 
 /// @brief  TABLAS DE PAGINAS ///
 int buscar_marco(int pid, int num_pagina);

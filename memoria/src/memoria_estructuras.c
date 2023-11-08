@@ -23,7 +23,7 @@ void creacion_espacio_usuario() {
         perror ("No se pudo alocar memoria al espacio de usuario.");
         abort();
     }
-	liberar_espacio_usuario(); //atexit? 
+	//liberar_espacio_usuario(); atexit? 
 }
 
 void liberar_espacio_usuario() {
