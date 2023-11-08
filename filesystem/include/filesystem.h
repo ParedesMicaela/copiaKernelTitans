@@ -16,6 +16,7 @@ extern t_config *config;
 extern t_log *filesystem_logger;
 extern int socket_memoria; 
 extern int server_fd;
+extern t_list *bloques_reservados;
 
 //STRUCTS//
 typedef struct  
@@ -39,9 +40,15 @@ typedef struct
 typedef struct 
 {
     char* nombre_archivo; //Puede ser  char nombre_archivo[256]
-    uint32_t tamanio_archivo; //Puede ser size_t
+    int tamanio_archivo; //Puede ser size_t uint32_t
     uint32_t bloque_inicial;
 } fcb;
+
+// Define la estructura de un bloque de swap
+
+typedef struct {
+    uint8_t* data;  //tam bloque es de 64, usamos uint8_t para todo el archivo
+} bloque_swap;
 
 extern fcb config_valores_fcb;
 
@@ -55,8 +62,10 @@ void levantar_fat(size_t tamanio_fat);
 void levantar_fcb(char* path);
 int crear_archivo (char *nombre_archivo);
 fcb *abrir_archivo (char *nombre_archivo);
-
-
+t_list* reservar_bloques(int cantidad_bloques);
+void liberar_bloques(t_list* bloques_a_liberar);
+void liberar_bloque_individual(bloque_swap* bloque);
+bloque_swap* crear_bloque_swap(int tam_bloque);
 
 char* concatenarCadenas(const char* str1, const char* str2);
 int dividirRedondeando(int numero1 , int numero2);

@@ -1,6 +1,7 @@
 #include "filesystem.h"
 
 fcb config_valores_fcb;
+t_list* bloques_reservados;
 //..................................CONFIGURACIONES.....................................................................
 
 void cargar_configuracion(char* path) {
@@ -36,8 +37,9 @@ void atender_clientes_filesystem(void* conexion) {
     FILE* puntero_archivo = NULL;
     char* direccion_fisica = NULL;
     char* informacion = NULL;
+	int pid =-1;
     int bloques_a_reservar = -1;
-    int bloques_a_liberar = -1;
+    t_list* bloques_a_liberar = NULL;
 	
 	while (1) //hace falta esto???
 	{
@@ -96,17 +98,26 @@ void atender_clientes_filesystem(void* conexion) {
 				eliminar_paquete(paquete);
 			*/ 
 		break;
-		case INICIAR_PROCESO:
-				//bloques_a_reservar = sacar_entero_de_paquete(&stream);
-				// t_list* bloques_reservados = reservar_bloques(bloques_a_reservar);
-				/* t_paquete* paquete = crear_paquete(BLOQUES_RESERVADOS);
-				agregar_array_cadenas_a_paquete(paquete, bloques_reservados);
-				enviar_paquete(paquete, socket_memoria);
-				eliminar_paquete(paquete);*/
+		case INICIALIZAR_SWAP:		
+				bloques_reservados = list_create();
+				pid = sacar_entero_de_paquete(&stream);
+				bloques_a_reservar = sacar_entero_de_paquete(&stream);
+				bloques_reservados = reservar_bloques(bloques_a_reservar); // bloques_reservados es el list de los bloque
+				if(bloques_reservados != NULL)
+				{
+					t_paquete* paquete = crear_paquete (LISTA_BLOQUES_RESERVADOS);
+					agregar_lista_de_cadenas_a_paquete(paquete, bloques_reservados);
+					enviar_paquete(paquete, socket_memoria); 
+					eliminar_paquete(paquete);
+				} else{
+					log_info(filesystem_logger,"No se pudieron reservar los bloques");
+				}
 			break;
-			case FINALIZAR_PROCESO:
-				//bloques_a_liberar = sacar_entero_de_paquete(&stream);
-				// liberar_bloques_swap(bloques_a_liberar);
+			case LIBERAR_SWAP:
+				bloques_a_liberar = list_create();
+				pid = sacar_entero_de_paquete(&stream);
+				bloques_a_liberar = sacar_lista_de_cadenas_de_paquete(&stream); 
+				liberar_bloques(bloques_a_liberar);
 			break;
 			default:
 				log_warning(filesystem_logger, "Operacion desconocida \n");
@@ -302,7 +313,6 @@ fcb *abrir_archivo (char *nombre_archivo)
 {
 	char *path_archivo = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
 	if (access (path_archivo, F_OK)) {
-		config_valores_fcb.tamanio_archivo = config_get_int_value(config, "TAMANIO_ARCHIVO");
 		log_info(filesystem_logger,("Tamanio del archivo: %d \n", config_valores_fcb.tamanio_archivo));
         free (path_archivo); 
         return NULL;
@@ -313,15 +323,60 @@ fcb *abrir_archivo (char *nombre_archivo)
         return NULL;
     }
     fcb *archivo_FCB = malloc (sizeof (fcb)); 
-    archivo_FCB->nombre_archivo = string_duplicate (config_get_string_value (archivo_FCB, "NOMBRE_ARCHIVO"));
-    archivo_FCB->tamanio_archivo = config_get_int_value (archivo_FCB, "TAMANIO_ARCHIVO");
-    archivo_FCB->bloque_inicial = config_get_int_value (archivo_FCB, "BLOQUE_INICIAL");
+    archivo_FCB->nombre_archivo = string_duplicate (config_valores_fcb.nombre_archivo);
+    archivo_FCB->tamanio_archivo = config_valores_fcb.tamanio_archivo;
+    archivo_FCB->bloque_inicial = config_valores_fcb.bloque_inicial;
     
     
     config_destroy (archivo), free (path_archivo);
     return archivo_FCB;
 	
 }
+t_list* reservar_bloques(int cantidad_bloques) {
+    t_list* bloques_reservados = list_create();
+
+    for (int i = 0; i < cantidad_bloques; i++) {
+		int tam_bloque = config_valores_filesystem.tam_bloque = config_get_int_value(config, "TAM_BLOQUE");
+        bloque_swap* nuevo_bloque = crear_bloque_swap(tam_bloque);
+        if (nuevo_bloque != NULL) {
+            list_add(bloques_reservados, nuevo_bloque);
+        } else {
+            // Si no se pudo reservar un bloque, liberamos los bloques previamente reservados
+            liberar_bloques(bloques_reservados);
+            return NULL;
+        }
+    }
+
+    return bloques_reservados;
+}
+
+ bloque_swap* crear_bloque_swap(int tam_bloque) {
+    bloque_swap* bloque = malloc(sizeof(bloque_swap));
+    if (bloque != NULL) {
+        bloque->data = malloc(tam_bloque);
+        if (bloque->data == NULL) {
+            free(bloque);
+            return NULL; 
+        }
+    }
+    return bloque;
+}
+
+void liberar_bloques(t_list* bloques_a_liberar) {
+    if (bloques_a_liberar != NULL) {
+        list_iterate(bloques_a_liberar, (void (*)(void*))liberar_bloque_individual);
+        list_destroy(bloques_a_liberar);
+    }
+}
+
+// Función para liberar un bloque de swap
+void liberar_bloque_individual(bloque_swap* bloque) {
+    if (bloque != NULL) {
+        free(bloque->data);
+        free(bloque);
+    }
+}
+
 /* TO DO terminar/revisar bien truncar_archivo
 int truncar_archivo (fcb* archivo, uint32_t tamanio_archivo) {
     // Cantidad de bloques asignados al archivo de antemano. 
@@ -354,7 +409,7 @@ int truncar_archivo (fcb* archivo, uint32_t tamanio_archivo) {
         
 
         // Ciclo: Termina cuando se asignaron los bloques requeridos.
-        /*while (cantBloquesAsignados < cantBloquesAAsignar) { 
+        while (cantBloquesAsignados < cantBloquesAAsignar) { 
             uint32_t proxBloque = proximoBloqueLibre ();
             // Si se falla al copiar el puntero del bloque libre al puntero indirecto, se termina con error.
             if (asignarBloqueAArchivo (archivo, proxBloque) < 0) return -3;
