@@ -47,6 +47,7 @@ typedef enum
 	VALOR_READ,
 	WRITE,
 	DESALOJO,
+	POSICIONARSE_ARCHIVO,
 	ABRIR_ARCHIVO,
 	CREAR_ARCHIVO,
 	TRUNCAR_ARCHIVO,
@@ -134,31 +135,22 @@ typedef struct
 	int program_counter;
  	t_registros_cpu registros_cpu;
 	int prioridad;
-
-	//en el estado vamos a ir viendo en que parte del ciclo de instruccion esta
 	estado estado_pcb;
 	int quantum;
 	t_recurso* recursos_asignados;
-
-	/*el proceso me va a pedir un recurso a la vez, entonces puedo hacer esta variable
-	que empiece en NULL y despues si me pide un recurso, lo pongo aca y luego lo vacio nuevamente para que pueda pedir mas.
-	Capaz nos sirve para el deadlock despues*/
 	char* recurso_pedido; 
 	int sleep;
-	char* motivo_bloqueo; // en el GECK se utiliza una t_list por bloqueados, que me serviriía un montón para el page fault, anyways...
+	char* motivo_bloqueo; 
 	int pagina_pedida;
-	
-
-	//esto lo pongo aca para que cada proceso guarde su path y no haya lio al ejecutar mas de 1 proceso
 	char* path_proceso;
-	
+	char* nombre_archivo;
+    char* modo_apertura;
+    int posicion;
+    uint32_t direccion_fisica_proceso;
+    int tamanio_archivo;
 	//t_dictionary *archivosAbiertos;
-	//acá le vamos agregando todo lo que vayamos necesitando en el pcb
-	//pthread_mutex_t *mutex;
-	//aca NO vamos a poner las cosas con las que se relaciona el proceso en memoria (tam paginas por ejemplo)
-	//vamos a ponerlo en memoria pero despues
 
-}t_pcb; //declaro el pcb
+}t_pcb; 
 
 //======================================================= Operaciones ======================================================================================================
 int recibir_operacion(int);
@@ -177,6 +169,7 @@ void agregar_entero_sin_signo_a_paquete(t_paquete* , uint32_t);
 void agregar_cadena_a_paquete(t_paquete* , char* );
 void agregar_array_cadenas_a_paquete(t_paquete* , char** );
 void agregar_lista_de_cadenas_a_paquete(t_paquete* , t_list*);
+void agregar_puntero_a_paquete(t_paquete* , void* , uint32_t);
 void agregar_a_paquete(t_paquete* , void* , int );
 void* serializar_paquete(t_paquete* , int );
 void free_array (char ** );
@@ -186,6 +179,7 @@ int sacar_entero_de_paquete(void** );
 uint32_t sacar_entero_sin_signo_de_paquete(void** );
 char** sacar_array_cadenas_de_paquete(void** );
 t_list* sacar_lista_de_cadenas_de_paquete(void**);
+void* sacar_puntero_de_paquete(void** );
 void enviar_paquete(t_paquete* , int );
 void eliminar_paquete(t_paquete* );
 

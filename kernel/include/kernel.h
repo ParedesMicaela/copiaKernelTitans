@@ -146,7 +146,6 @@ void mensaje_deadlock_detectado(t_pcb* , char* );
 void liberar_todos_recurso(t_pcb* );
 
 //================================================ Destruir ==================================================================================================================
-void finalizar_kernel();
 void eliminar_pcb(t_pcb *);
 void eliminar_registros_pcb(t_registros_cpu);
 void eliminar_recursos_asignados(t_pcb* );
@@ -172,5 +171,13 @@ void detener_planificacion ();
 
 ////======================================== File System ===========================================================================================================
 void atender_peticiones_al_fs();
+bool es_una_operacion_con_archivos(char* motivo_bloqueo);
+bool buscar_en_tabla_de_archivos_abiertos(char* nombre_a_buscar);
+void fopen_kernel_filesystem();
+void fclose_kernel_filesystem();
+void fseek_kernel_filesystem();
+void fread_kernel_filesystem();
+void fwrite_kernel_filesystem();
+void ftruncate_kernel_filesystem();
 
 #endif

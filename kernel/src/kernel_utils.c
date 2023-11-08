@@ -26,13 +26,12 @@ void cargar_configuracion(char* path) {
       config_valores_kernel.instancias_recursos = config_get_array_value(config, "INSTANCIAS_RECURSOS");
 }
 
-//================================================== Manejo de Clientes =====================================================================
-
-void finalizar_kernel(){
-  log_info(kernel_logger,"Finalizando el modulo Kernel");
-  log_destroy(kernel_logger);
-  liberar_conexion(server_fd);
-  liberar_conexion(socket_memoria);
-  liberar_conexion(socket_cpu_dispatch);
-  liberar_conexion(socket_cpu_interrupt);
+//================================================== + Lindo =====================================================================
+bool es_una_operacion_con_archivos(char* motivo_bloqueo) {
+    return string_equals_ignore_case(motivo_bloqueo, "F_OPEN") 
+        || string_equals_ignore_case(motivo_bloqueo, "F_WRITE") 
+        || string_equals_ignore_case(motivo_bloqueo, "F_SEEK")
+        || string_equals_ignore_case(motivo_bloqueo, "F_TRUNCATE")
+        || string_equals_ignore_case(motivo_bloqueo, "F_READ")
+        || string_equals_ignore_case(motivo_bloqueo, "F_CLOSE");
 }

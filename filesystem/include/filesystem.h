@@ -78,4 +78,10 @@ int crearArchivo(char *nombre,char *carpeta, char ***vectoreRutas, int *cantidad
 
 int truncarArchivo(char *nombre,char *carpeta, char **vectoreRutas, int cantidadPaths, int tamanioNuevo);
 
+//..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
+
+//fcb *abrir_archivo (char *nombre_archivo);
+char *leer_archivo(char *nombre_archivo, FILE *puntero_archivo, char *direccion_fisica);
+int escribirArchivo(char *nombreArchivo, FILE *puntero_archivo, size_t bytesAEscribir, void *memoriaAEscribir);
+
 #endif

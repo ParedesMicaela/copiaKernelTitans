@@ -115,6 +115,19 @@ void agregar_lista_de_cadenas_a_paquete(t_paquete* paquete, t_list* palabras)
 	}
 }
 
+void agregar_puntero_a_paquete(t_paquete* paquete, void* puntero, uint32_t tamanio_puntero)
+{
+    paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t) + tamanio_puntero);
+
+    memcpy(paquete->buffer->stream + paquete->buffer->size, &tamanio_puntero, sizeof(uint32_t));
+    paquete->buffer->size += sizeof(uint32_t);
+
+    if (tamanio_puntero > 0) {
+        memcpy(paquete->buffer->stream + paquete->buffer->size, puntero, tamanio_puntero);
+        paquete->buffer->size += tamanio_puntero;
+    }
+}
+
 char* sacar_cadena_de_paquete(void** stream)
 {
 	int tamanio_cadena = -1;
@@ -177,6 +190,23 @@ t_list* sacar_lista_de_cadenas_de_paquete(void** stream)
 	}
 
 	return varias_palabras;
+}
+
+void* sacar_puntero_de_paquete(void** stream)
+{
+    void* puntero = NULL;
+    uint32_t tamanio_puntero = 0;
+
+    memcpy(&tamanio_puntero, *stream, sizeof(uint32_t));
+    *stream += sizeof(uint32_t);
+
+    if (tamanio_puntero > 0) {
+        puntero = malloc(tamanio_puntero);
+        memcpy(puntero, *stream, tamanio_puntero);
+        *stream += tamanio_puntero;
+    }
+
+    return puntero;
 }
 
 void eliminar_paquete(t_paquete* paquete)

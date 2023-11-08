@@ -23,8 +23,8 @@ static void recibir_handshake(int socket_cliente_memoria);
 static int sumar_registros(char *registro_destino, char *registro_origen);
 static int restar_registros(char *registro_destino, char *registro_origen);
 static int tipo_inst(char *instruccion);
-static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char* recurso, int tiempo, int numero_pagina);
-static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char* recurso, int tiempo, int numero_pagina);
+static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char* recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int posicion, uint32_t direccion_fisica_proceso, int tamanio_archivo);
+static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int posicion, uint32_t direccion_fisica_proceso, int tamanio_archivo);
 static void pedir_instruccion(int socket_cliente_memoria,int posicion, int pid);
 static void recibir_instruccion(int socket_cliente_memoria);
 static bool hay_interrupcion();
@@ -215,7 +215,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             int numero_pagina = floor(direccion_logica_aux / tam_pagina);
             numero_pagina_aux = numero_pagina;
             log_info(cpu_logger, "Page Fault: PID %d - Pagina %d", contexto_ejecucion->pid, numero_pagina);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0, numero_pagina);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0, numero_pagina, "", "", -1 , 0, -1);
             seguir_ejecutando = false;
             ejecuto_instruccion = false;
         }
@@ -235,7 +235,6 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         int valor = -1;
         int tiempo = -1;
         int num_instruccion = -1;
-        t_paquete *paquete_para_kernel_archivo = NULL;
 
         switch (tipo_inst(datos[0]))
         {
@@ -281,7 +280,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             tiempo = atoi(datos[1]);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "", tiempo, -1); 
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "", tiempo, -1, "", "", -1 , 0, -1); 
             seguir_ejecutando = false;
             break;
 
@@ -290,7 +289,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             recurso = datos[1];
             //mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso, 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso, 0, -1, "", "", -1 , 0, -1);
             seguir_ejecutando = false;
             break;
 
@@ -299,7 +298,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             recurso = datos[1];
             //mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal", recurso, 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal", recurso, 0, -1, "", "", -1 , 0, -1);
             seguir_ejecutando = false;
             break;
 
@@ -328,38 +327,18 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             nombre_archivo = datos[1];
             modo_apertura = datos[2];
 
-            //bloqueamos el proceso
-            
-            //mandamos el pawquete 
-            paquete_para_kernel_archivo = crear_paquete(ABRIR_ARCHIVO);
-            agregar_cadena_a_paquete(paquete_para_kernel_archivo, nombre_archivo);
-            agregar_cadena_a_paquete(paquete_para_kernel_archivo, modo_apertura);
-            enviar_paquete(paquete_para_kernel_archivo, socket_servidor_dispatch);
-            eliminar_paquete(paquete_para_kernel_archivo);
-            //mandarle el contexto de ejecucion (creo)
-            
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_open", "", 0, -1, nombre_archivo, modo_apertura, -1, 0, -1);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_open", recurso, 0, -1);
             seguir_ejecutando = false;
             break;
 
         case(F_CLOSE):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             nombre_archivo = datos[1];
-
-            //bloqueamos el proceso
             
-            //una vez bloqueado el proceso mandamos el paquete
-            printf("\n\nArmamos paquete para enviar a CPU\n\n");
-            paquete_para_kernel_archivo = crear_paquete(CERRAR_ARCHIVO);
-            agregar_cadena_a_paquete(paquete_para_kernel_archivo, nombre_archivo);
-            //mandarle el contexto de ejecucion (creo)
-            enviar_paquete(paquete_para_kernel_archivo, socket_servidor_dispatch);
-            eliminar_paquete(paquete_para_kernel_archivo);
-            printf("\n\nEnviamos paquete a kernel para CERRAR ARCHIVO\n\n");
-
-            mostrar_valores(contexto_ejecucion);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_close", "", 0, -1, nombre_archivo, "", -1, 0, -1);
             contexto_ejecucion->program_counter += 1;
+            seguir_ejecutando = false;
             break;
 
         case(F_TRUNCATE):
@@ -367,20 +346,9 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             nombre_archivo = datos[1];
             tamanio = atoi(datos[2]);
 
-            //bloqueamos el proceso
-            
-            //una vez bloqueado el proceso mandamos el paquete
-            printf("\n\nArmamos paquete para enviar a CPU\n\n");
-            paquete_para_kernel_archivo = crear_paquete(TRUNCAR_ARCHIVO);
-            agregar_cadena_a_paquete(paquete_para_kernel_archivo, nombre_archivo);
-            agregar_entero_a_paquete(paquete_para_kernel_archivo, tamanio);
-            //mandarle el contexto de ejecucion (creo)
-            enviar_paquete(paquete_para_kernel_archivo, socket_servidor_dispatch);
-            eliminar_paquete(paquete_para_kernel_archivo);
-            printf("\n\nEnviamos paquete a kernel para TRUNCAR ARCHIVO\n\n");
-
-            mostrar_valores(contexto_ejecucion);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_truncate", "", 0, -1, nombre_archivo, "", -1, 0, tamanio);
             contexto_ejecucion->program_counter += 1;
+            seguir_ejecutando = false;
             break;
         
         case(F_SEEK):
@@ -388,53 +356,45 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             nombre_archivo = datos[1];
             posicion = atoi(datos[2]);
 
-            //bloqueamos el proceso
-            
-            //una vez bloqueado el proceso mandamos el paquete
-            printf("\n\nArmamos paquete para enviar a CPU\n\n");
-            paquete_para_kernel_archivo = crear_paquete(BUSCAR_ARCHIVO);
-            agregar_cadena_a_paquete(paquete_para_kernel_archivo, nombre_archivo);
-            agregar_entero_a_paquete(paquete_para_kernel_archivo, posicion);
-            //mandarle el contexto de ejecucion (creo)
-            enviar_paquete(paquete_para_kernel_archivo, socket_servidor_dispatch);
-            eliminar_paquete(paquete_para_kernel_archivo);
-            printf("\n\nEnviamos paquete a kernel para POSICIONARNOS EN ARCHIVO\n\n");
-
-            mostrar_valores(contexto_ejecucion);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_seek", "", 0, -1, nombre_archivo, "", posicion, 0, -1);
             contexto_ejecucion->program_counter += 1;
+            seguir_ejecutando = false;
             break;
 
         case(F_READ):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
-            mostrar_valores(contexto_ejecucion);
+            
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_read", "", 0, -1, nombre_archivo, "", -1, direccion_fisica, -1);
             contexto_ejecucion->program_counter += 1;
+            seguir_ejecutando = false;
             break;
 
         case(F_WRITE):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
-            mostrar_valores(contexto_ejecucion);
+
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_write", "", 0, -1, nombre_archivo, "", -1, direccion_fisica, -1);
             contexto_ejecucion->program_counter += 1;
+            seguir_ejecutando = false;
             break;
 
         case (INSTRUCCION_EXIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit","", 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit","", 0, -1, "", "", -1 , 0, -1);
             // eliminar_todas_las_entradas(contexto_ejecucion->pid);
             seguir_ejecutando = false;
             break;
         } 
 
         //CHECK INTERRUPT
-        //printf("num_interrupcion =  %d  \n", interrupcion); 
-        if(hay_interrupcion() && tipo_interrupcion == 1) //&& seguir ejecutando?
+        if(hay_interrupcion() && tipo_interrupcion == 1) 
         {
             //printf("\nDetectamos interrupcion\n");
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "desalojo", "", 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "desalojo", "", 0, -1, "", "", -1 , 0, -1);
             seguir_ejecutando = false;
         }else if (hay_interrupcion() && tipo_interrupcion == 2)
         {
@@ -442,7 +402,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "finalizacion", "", 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "finalizacion", "", 0, -1, "", "", -1 , 0, -1);
             seguir_ejecutando = false;
         }else if (hay_interrupcion() && tipo_interrupcion == 3) 
         {
@@ -451,7 +411,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0, numero_pagina_aux);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0, numero_pagina_aux, "", "", -1 , 0, -1);
             //como tengo page fault notificó al kernel y no puedo seguir ejecutando el proceso hasta manejar el page fault
             seguir_ejecutando = false;
         }
@@ -653,19 +613,19 @@ static int tipo_inst(char *instruccion)
 /*vamos a devolver el contexto al kernel en las instrucciones exit, sleep. Lo modifique para que podamos
 pedir recursos por aca tambien, en vez de hacer una funcion aparte. Si no pedimos un recurso entonces ponemos
 "" en el ultimo parametro y fuee. */
-static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char *recurso, int tiempo, int numero_pagina)
+static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char *recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int posicion, uint32_t direccion_fisica_proceso, int tamanio_archivo)
 {
     // aca nosotros agregamos las modificaciones de los registros
     (contexto_ejecucion->registros_cpu.AX) = AX;
     (contexto_ejecucion->registros_cpu.BX) = BX;
     (contexto_ejecucion->registros_cpu.CX) = CX;
     (contexto_ejecucion->registros_cpu.DX) = DX;
-    enviar_contexto(socket_cliente, contexto_ejecucion, motivo, recurso, tiempo, numero_pagina);
+    enviar_contexto(socket_cliente, contexto_ejecucion, motivo, recurso, tiempo, numero_pagina, nombre_archivo, modo_apertura, posicion, direccion_fisica_proceso, tamanio_archivo);
     log_info(cpu_logger, "Devolvi el contexto ejecucion al kernel por motivo de: %s \n", motivo);
 
 }
 
-static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo, int numero_pagina)
+static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int posicion, uint32_t direccion_fisica_proceso, int tamanio_archivo )
 {
     t_paquete *paquete = crear_paquete(PCB);
 
@@ -679,6 +639,11 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
     agregar_cadena_a_paquete(paquete, recurso);
     agregar_entero_a_paquete(paquete, tiempo);
     agregar_entero_a_paquete(paquete, numero_pagina);
+    agregar_cadena_a_paquete(paquete, nombre_archivo);
+    agregar_cadena_a_paquete(paquete, modo_apertura);
+    agregar_entero_a_paquete(paquete, posicion);
+    agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica_proceso);
+    agregar_entero_a_paquete(paquete, tamanio_archivo);
 
     // agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_que_bloquear);
     enviar_paquete(paquete, socket_cliente);
@@ -697,18 +662,3 @@ static void mostrar_valores (t_contexto_ejecucion* contexto)
     }
 }
 
-
-
-
-
-
-/*
-void page_fault_a_kernel() {
-devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0);
-        //program_counter--?
-        t_paquete* paquete = crear_paquete(PAGINA_CON_PAGE_FAULT);
-        agregar_entero_sin_signo_a_paquete(numero_pagina);
-        enviar_paquete(paqute, socket_cliente_dispatch);
-        eliminar_paquete(paquete);
-}
-*/

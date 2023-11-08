@@ -122,7 +122,7 @@ void mov_out(uint32_t direccion_fisica, char* registro, int socket_cliente_memor
     if(direccion_fisica != UINT32_MAX){    
      enviar_paquete_WRITE(direccion_fisica, valor, contexto_ejecucion);
 
-    int se_ha_escrito = 1
+    int se_ha_escrito = 1;
     recv(socket_cliente_memoria, &se_ha_escrito, sizeof(int), 0);
 
     log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "ESCRIBIR", direccion_fisica, valor);
