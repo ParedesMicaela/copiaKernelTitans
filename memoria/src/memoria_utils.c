@@ -119,16 +119,22 @@ void manejo_conexiones(void* socket_cliente)
 		break;
 
 	case SOLUCIONAR_PAGE_FAULT:
-		pid_proceso = sacar_entero_de_paquete(&stream);		// ya tengo definido en FINALIZAR_MEMORIA el int pid, sino el make se quejaba :(
+		pid_proceso = sacar_entero_de_paquete(&stream);
 		int pag_pf = sacar_entero_de_paquete(&stream);
 
-		log_info(memoria_logger,"Recibi un pedido para solucionar page fault uwu con PID %d - Pagina %d", pid, pag_pf);
+		log_info(memoria_logger,"Recibi un pedido para solucionar page fault uwu con PID %d - Pagina %d", pid_proceso, pag_pf);
 
-		/*El módulo deberá solicitar al módulo File System la página correspondiente y escribirla en la memoria principal.
-		En caso de que la memoria principal se encuentre llena,
-		se deberá seleccionar una página víctima utilizando el algoritmo de reemplazo.
-		Si la víctima se encuentra modificada, se deberá previamente escribir en SWAP.
-		*/
+		//enviar_pedido_pagina_para_escritura(pid_proceso, pag_pf, socket_filesystem);
+
+		//t_pagina* pagina_recibida = recibir_pagina_para_escritura(socket_filesystem);
+
+		escribir_en_memoria_principal();
+
+		int a = 1;
+        send(cliente, &a, sizeof(int), 0);
+		log_info(memoria_logger,"Page fault solucionado\n");
+		break;
+		
 	default:
 		break;
 	}

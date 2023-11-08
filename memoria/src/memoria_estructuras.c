@@ -174,6 +174,38 @@ static void liberar_swap(t_pagina* paginas_a_liberar, int pid, int socket_fs) {
 
 //======================================================= Reemplazar Páginas =========================================================================================================
 
+void escribir_en_memoria_principal(){
+
+    /*intenta escribir en memoria y si esta llena, reemplaza
+    if(memoria_llena){
+        reemplazar_pagina(pagina_recibida);
+    }
+    
+    int numero_pagina = sacar_entero_de_paquete(&stream);
+    int marco = sacar_entero_de_paquete(&stream);
+    int posicion_swap = sacar_entero_de_paquete(&stream);
+    int pid = sacar_entero_de_paquete(&stream);
+    */
+
+    int numero_pagina = 0;
+    int marco = 0;
+    int posicion_swap = 16;
+    int pid = 1;
+
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
+
+    t_pagina* tp = proceso->paginas_en_memoria;
+
+    tp->entradas[0].numero_de_pagina = numero_pagina;
+    tp->entradas[0].marco = marco;
+    tp->entradas[0].bit_de_presencia = 1;
+    tp->entradas[0].bit_modificado = 1;
+    tp->entradas[0].posicion_swap = posicion_swap; 
+
+}
+
+
+
 /*
 void reemplazarPagina(){
 	

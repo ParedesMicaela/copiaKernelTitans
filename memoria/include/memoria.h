@@ -87,5 +87,8 @@ void inicializar_la_tabla_de_paginas();
 void inicializar_swap_proceso(int pid_proceso, int cantidad_paginas_proceso, int socket_fs);
 void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* path_recibido);
 void finalizar_en_memoria(int pid, int socket_fs);
+void escribir_en_memoria_principal();
+void enviar_pedido_pagina_para_escritura(int pid, int pag_pf, int socket_filesystem);
+t_pagina* recibir_pagina_para_escritura(int socket_filesystem);
 
 #endif

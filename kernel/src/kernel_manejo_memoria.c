@@ -78,31 +78,18 @@ op_code esperar_respuesta_memoria(int socket_memoria) {
 
 void atender_page_fault(t_pcb *proceso)
 {
-    //de momento vacío, será más interesante en el checkpoint 4
-    /*2.- Solicitar al módulo memoria que se cargue en memoria principal la página correspondiente,
-    la misma será obtenida desde el mensaje recibido de la CPU.*/
-    //genial, entonces debo mandarle un mensaje (paquete a memoria) :D
-    //log_info(kernel_logger, "PID: %d - Bloqueado por: Page Fault", proceso-> pid);
     t_paquete* paquete = crear_paquete(SOLUCIONAR_PAGE_FAULT);
 
     //acá no haría falta agregarle el motivo de bloqueo, medio redundante sería
     agregar_entero_a_paquete(paquete,proceso->pid);
     agregar_entero_a_paquete(paquete,proceso->pagina_pedida);
-    
 
     enviar_paquete(paquete, socket_memoria);
     eliminar_paquete(paquete);
-    //acá tendría que eliminar el paquete?
-
 
     // acá esperamos que memoria no mande el final de page fault
     int a = 0;
     recv(socket_memoria, &a,sizeof(int),0);
 
     log_info(kernel_logger, "Volvio del tratamiento de Page Fault, proceso:  %d", proceso -> pid);
-
-
-
-
-
 }

@@ -337,17 +337,10 @@ void proceso_en_sleep(t_pcb *proceso)
 void proceso_en_page_fault(t_pcb* proceso){
 
     log_info(kernel_logger, "Page Fault PID: %d - Pagina: %d", proceso->pid, proceso->pagina_pedida); // FALTA PAGINA
-    /*Mover al proceso al estado Bloqueado. Este estado bloqueado será 
-    independiente de todos los demás ya que solo afecta al proceso 
-    y no compromete recursos compartidos.*/
+
     atender_page_fault(proceso);
-    //liberacion_recursos(proceso); ver bien esto porque me hace ruido
-    //entonces al proceso bloqueado le debo liberar los recursos
-    //si bloqueo un proceso debo aumentar el grado de multiprogramación
-    //sem_post(&grado_multiprogramacion); lo mismo que a liberar recursos
 
-
-    //en el .4 se menciona que se coloca al proceso en ready después de solucionar el page fault
+    //una vez se atienda, el proceso vuelve a ready
     obtener_siguiente_blocked(proceso);
 }
 

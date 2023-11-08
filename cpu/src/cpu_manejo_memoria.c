@@ -2,6 +2,7 @@
 
 int page_fault = -1;
 bool hay_page_fault = false;
+
 //======================= Funciones Internas ==============================================================================
 static int traducir_pagina_a_marco(uint32_t numero_pagina, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion);
 static void pedir_numero_frame(uint32_t numero_pagina, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion);
@@ -57,6 +58,8 @@ static int numero_marco_pagina(int socket_cliente_memoria) {
 
     t_paquete* paquete = recibir_paquete(socket_cliente_memoria);
     void* stream = paquete->buffer->stream;
+
+    printf("codig: %d", paquete->codigo_operacion );
     if (paquete->codigo_operacion == NUMERO_MARCO)
     {
         numero_marco = sacar_entero_de_paquete(&stream);

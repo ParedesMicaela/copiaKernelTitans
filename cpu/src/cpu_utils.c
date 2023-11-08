@@ -173,6 +173,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
     bool ejecuto_instruccion = true;
     uint32_t direccion_logica_aux;
     int numero_pagina_aux;
+    hay_page_fault = false;
 
     while (seguir_ejecutando) // definir con cuentas voy, definir con program counter
     {
