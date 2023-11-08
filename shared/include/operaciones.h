@@ -37,6 +37,11 @@ typedef enum
 	PAGE_FAULT,
 	SOLUCIONAR_PAGE_FAULT,
 	TRADUCIR_PAGINA_A_MARCO,
+	INICIALIZAR_SWAP,
+	LISTA_BLOQUES_RESERVADOS,
+	PAGINA_PARA_ESCRITURA,
+	ESCRIBIR_PAGINA_SWAP,
+	PEDIR_PAGINA_PARA_ESCRITURA,
 	NUMERO_MARCO,
 	READ,
 	VALOR_READ,
@@ -49,6 +54,7 @@ typedef enum
 	ESCRIBIR_ARCHIVO,
 	INICIAR_PROCESO,
 	FINALIZAR_PROCESO,
+	LIBERAR_SWAP,
 	CERRAR_ARCHIVO,
 	BUSCAR_ARCHIVO
 } op_code;
@@ -140,7 +146,7 @@ typedef struct
 	char* recurso_pedido; 
 	int sleep;
 	char* motivo_bloqueo; // en el GECK se utiliza una t_list por bloqueados, que me serviriía un montón para el page fault, anyways...
-	int pagina_pf;
+	int pagina_pedida;
 	
 
 	//esto lo pongo aca para que cada proceso guarde su path y no haya lio al ejecutar mas de 1 proceso
@@ -170,6 +176,7 @@ void agregar_entero_a_paquete(t_paquete* ,int );
 void agregar_entero_sin_signo_a_paquete(t_paquete* , uint32_t);
 void agregar_cadena_a_paquete(t_paquete* , char* );
 void agregar_array_cadenas_a_paquete(t_paquete* , char** );
+void agregar_lista_de_cadenas_a_paquete(t_paquete* , t_list*);
 void agregar_a_paquete(t_paquete* , void* , int );
 void* serializar_paquete(t_paquete* , int );
 void free_array (char ** );
@@ -178,6 +185,7 @@ char* sacar_cadena_de_paquete(void** );
 int sacar_entero_de_paquete(void** );
 uint32_t sacar_entero_sin_signo_de_paquete(void** );
 char** sacar_array_cadenas_de_paquete(void** );
+t_list* sacar_lista_de_cadenas_de_paquete(void**);
 void enviar_paquete(t_paquete* , int );
 void eliminar_paquete(t_paquete* );
 

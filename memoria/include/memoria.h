@@ -24,7 +24,7 @@ extern t_config* config;
 extern int socket_memoria;
 extern int server_fd;
 extern void* espacio_usuario;
-extern t_list* lista_procesos;
+extern t_list* procesos_en_memoria;
 //ESTRUCTURAS
 typedef struct  
 {
@@ -51,32 +51,46 @@ typedef struct {
 
 typedef struct {
     entrada_t_pagina* entradas;
-    int tamanio;                 
+    int cantidad_entradas;                 
 } t_pagina;
 
 typedef struct 
 {
 	int pid;
-	int tam_swap;
-	t_list* paginas_en_memoria;
+	t_pagina* paginas_en_memoria;
 	char* path_proceso;
+	t_list* bloques_reservados;
 } t_proceso_en_memoria;
 
 
-// FUNCIONES//
+//======================================================= FUNCIONES =========================================================================================================
+/// CONEXIONES y CONFIG ///
 int atender_clientes_memoria(int);
 void manejo_conexiones(void* );
-//void manejo_conexiones(int );
 void cargar_configuracion(char* );
+
+/// @brief CPU + INSTRUCCIONES ///
 void enviar_paquete_handshake(int );
 void enviar_paquete_instrucciones(int , char* , int );
-void crear_tablas_paginas_proceso(int, int );
-void liberar_espacio_usuario() ;
 char* leer_archivo_instrucciones(char* );
 char* buscar_path_proceso(int );
+void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid);
+
+/// @brief ESPACIO USUARIO ///
+void creacion_espacio_usuario();
+void liberar_espacio_usuario() ;
+void escribir(uint32_t* valor, uint32_t direccion_fisica, int socket_cpu);
+uint32_t leer(uint32_t direccion_fisica);
+void enviar_valor_de_lectura(uint32_t valor, int socket_cpu);
 
 /// @brief  TABLAS DE PAGINAS ///
 int buscar_marco(int pid, int num_pagina);
 void inicializar_la_tabla_de_paginas();
+void inicializar_swap_proceso(int pid_proceso, int cantidad_paginas_proceso, int socket_fs);
+void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* path_recibido);
+void finalizar_en_memoria(int pid, int socket_fs);
+void escribir_en_memoria_principal();
+void enviar_pedido_pagina_para_escritura(int pid, int pag_pf, int socket_filesystem);
+t_pagina* recibir_pagina_para_escritura(int socket_filesystem);
 
 #endif

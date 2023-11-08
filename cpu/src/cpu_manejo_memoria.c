@@ -2,6 +2,7 @@
 
 int page_fault = -1;
 bool hay_page_fault = false;
+
 //======================= Funciones Internas ==============================================================================
 static int traducir_pagina_a_marco(uint32_t numero_pagina, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion);
 static void pedir_numero_frame(uint32_t numero_pagina, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion);
@@ -18,7 +19,7 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica, int socket_clien
     uint32_t direccion_fisica;
 
     // Calculamos numero_pagina y offset
-    numero_pagina = direccion_logica / tam_pagina;
+    numero_pagina = floor(direccion_logica / tam_pagina);
     offset = direccion_logica - (numero_pagina  * tam_pagina);
 
     //Llamos a la  Memoria, para conseguir el número de marco correspondiente a la página 
@@ -57,6 +58,8 @@ static int numero_marco_pagina(int socket_cliente_memoria) {
 
     t_paquete* paquete = recibir_paquete(socket_cliente_memoria);
     void* stream = paquete->buffer->stream;
+
+    printf("codig: %d", paquete->codigo_operacion );
     if (paquete->codigo_operacion == NUMERO_MARCO)
     {
         numero_marco = sacar_entero_de_paquete(&stream);
@@ -73,20 +76,16 @@ static int numero_marco_pagina(int socket_cliente_memoria) {
 
 /// FUNCIONES DE CPU Y KERNEL ///
 
-void mov_in(char* registro, uint32_t direccion_logica, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion) {
-
-    uint32_t direccion_fisica = UINT32_MAX;
-
-    direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, socket_cliente_memoria, contexto_ejecucion);
+void mov_in(char* registro, uint32_t direccion_fisica, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion) {
 
     if(direccion_fisica!=UINT32_MAX){
      enviar_paquete_READ(direccion_fisica, contexto_ejecucion);
 
     int valor = recibir_valor_a_insertar(socket_cliente_memoria);
 
-    //setear_registro(registro,valor);
+    setear_registro(registro,valor);
     
-    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %s \n", contexto_ejecucion->pid, "LEER", direccion_fisica, "VALOR_LEIDO");
+    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %s \n", contexto_ejecucion->pid, "LEER", direccion_fisica, valor);
     }
 }
 
@@ -116,18 +115,17 @@ static uint32_t recibir_valor_a_insertar(int socket_cliente_memoria) {
     eliminar_paquete(paquete);
 }
 
-void mov_out(uint32_t direccion_logica, char* registro, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion) { 
+void mov_out(uint32_t direccion_fisica, char* registro, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion) { 
 
-    uint32_t direccion_fisica = UINT32_MAX;
-
-    direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, socket_cliente_memoria, contexto_ejecucion);
+    int valor = buscar_registro(registro);
 
     if(direccion_fisica != UINT32_MAX){    
-     enviar_paquete_WRITE(direccion_fisica, registro, contexto_ejecucion);
+     enviar_paquete_WRITE(direccion_fisica, valor, contexto_ejecucion);
 
-    // NO se si tengo que hacer una devolucion de la memoria y el log_info lo hago del valor escrito
+    int se_ha_escrito = 1
+    recv(socket_cliente_memoria, &se_ha_escrito, sizeof(int), 0);
 
-    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %s \n", contexto_ejecucion->pid, "ESCRIBIR", direccion_fisica, "VALOR ESCRITO");
+    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "ESCRIBIR", direccion_fisica, valor);
     }
 }
 

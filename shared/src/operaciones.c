@@ -54,34 +54,6 @@ t_paquete* recibir_paquete(int conexion)
 	}
 }
 
-/*
-t_paquete* recibir_paquete(int conexion)
-{
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    paquete->buffer = malloc(sizeof(t_buffer));
-    if (recv(conexion, &(paquete->codigo_operacion), sizeof(paquete->codigo_operacion), MSG_WAITALL) == -1) {
-        paquete->codigo_operacion = -1;
-        printf("recibir paquete recibio un menos 1\n");
-        return paquete;
-    }
-    if (paquete->codigo_operacion == FINALIZACION) {
-        return paquete;
-    }
-    if (recv(conexion, &(paquete->buffer->size), sizeof(paquete->buffer->size), MSG_WAITALL) != sizeof(paquete->buffer->size) ||
-        paquete->buffer->size <= 0) {
-        free(paquete->buffer);
-        free(paquete);
-        return NULL;
-    }
-    paquete->buffer->stream = malloc(paquete->buffer->size);
-    if (recv(conexion, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL) != paquete->buffer->size) {
-        eliminar_paquete(paquete);
-        return NULL;
-    }
-    return paquete;
-}
-*/
-
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
 	int bytes = paquete->buffer->size + 2*sizeof(int);
@@ -131,6 +103,18 @@ void agregar_array_cadenas_a_paquete(t_paquete* paquete, char** palabras)
 	}
 }
 
+void agregar_lista_de_cadenas_a_paquete(t_paquete* paquete, t_list* palabras)
+{
+	int cant_elementos = list_size(palabras);
+	agregar_entero_a_paquete(paquete,cant_elementos);
+
+	for(int i=0; i<cant_elementos; i++)
+	{
+		char* palabra = list_get(palabras, i);
+		agregar_cadena_a_paquete(paquete, palabra);		
+	}
+}
+
 char* sacar_cadena_de_paquete(void** stream)
 {
 	int tamanio_cadena = -1;
@@ -175,6 +159,21 @@ char** sacar_array_cadenas_de_paquete(void** stream)
 	for(int i=0; i<cant_elementos; i++)
 	{
 		string_array_push(&varias_palabras, sacar_cadena_de_paquete(stream));
+	}
+
+	return varias_palabras;
+}
+
+t_list* sacar_lista_de_cadenas_de_paquete(void** stream) 
+{
+	t_list* varias_palabras =  list_create();
+
+	int cant_elementos = sacar_entero_de_paquete(stream);
+
+	for(int i=0; i<cant_elementos; i++)
+	{
+		char* cadena = sacar_cadena_de_paquete(stream);
+		list_add(varias_palabras, cadena);
 	}
 
 	return varias_palabras;

@@ -52,6 +52,12 @@ int iniciar_servidor(char *ip, char *puerto)
 
     getaddrinfo(NULL, puerto, &hints, &servinfo);
 
+    int resultado = getaddrinfo(NULL, puerto, &hints, &servinfo);
+    if (resultado != 0) {
+        fprintf(stderr, "Error en getaddrinfo: %s\n", gai_strerror(resultado));
+        exit(1);
+    }
+
     // Creamos el socket de escucha del servidor
 
     int socket_servidor = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);

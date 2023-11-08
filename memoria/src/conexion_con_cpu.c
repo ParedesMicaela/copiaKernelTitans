@@ -68,14 +68,14 @@ char* leer_archivo_instrucciones(char* path_instrucciones) {
 
 char* buscar_path_proceso(int pid)
 {
-    if (lista_procesos == NULL) {
+    if (procesos_en_memoria == NULL) {
         log_error(memoria_logger, "Error: lista_procesos esta vacia");
         return NULL;
     }
 
-    for (int i = 0; i < list_size(lista_procesos); i++)
+    for (int i = 0; i < list_size(procesos_en_memoria); i++)
     {
-        t_proceso_en_memoria* proceso = list_get(lista_procesos, i);
+        t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
 
         if (proceso != NULL && proceso->pid == pid)
         {
@@ -100,30 +100,38 @@ void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid)
     enviar_paquete(paquete, socket_cpu);   
     eliminar_paquete(paquete);
 }
- // sacar entero sin signo de paquete
 
 /// @brief Lectura y escritura del espacio de usuario ///
-char* leer(int32_t direccion_fisica,int tamanio) {
-
-	usleep(1000 * config_valores_memoria.retardo_respuesta); 
-
-	char* puntero_direccion_fisica = espacio_usuario + direccion_fisica; 
-
-	char* valor = malloc(sizeof(char)*tamanio); 
-	
-	memcpy(valor, puntero_direccion_fisica, tamanio);
-
-	return valor; 
-
-}
-
-void escribir(char* valor, int32_t direccion_fisica, int tamanio){
+void escribir(uint32_t* valor, uint32_t direccion_fisica, int socket_cpu){
 
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
 	char* puntero_a_direccion_fisica = espacio_usuario + direccion_fisica; 
 
-	memcpy(puntero_a_direccion_fisica, valor, tamanio);
+	memcpy(puntero_a_direccion_fisica, valor, sizeof(uint32_t));
 
-	free(valor); 
+    int se_ha_escrito = 1;
+    send(socket_cpu, &se_ha_escrito, sizeof(int), 0); 
 }
+
+uint32_t leer(uint32_t direccion_fisica) {
+
+	usleep(1000 * config_valores_memoria.retardo_respuesta); 
+
+	char* puntero_direccion_fisica = espacio_usuario + direccion_fisica; 
+
+    uint32_t valor;
+	memcpy(&valor, puntero_direccion_fisica, sizeof(uint32_t));
+
+	return valor; 
+
+}
+
+void enviar_valor_de_lectura(uint32_t valor, int socket_cpu) {
+    t_paquete* paquete = crear_paquete(VALOR_READ);
+    agregar_entero_a_paquete(paquete, valor);
+    enviar_paquete(paquete, socket_cpu);   
+    eliminar_paquete(paquete);
+}
+
+

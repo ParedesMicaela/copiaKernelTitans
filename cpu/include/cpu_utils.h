@@ -55,7 +55,7 @@ typedef struct
    t_recursos_asignados* recursos_asignados;  
 }t_contexto_ejecucion;
 
-//======================= Funciones =======================
+//======================= Funciones AUXILIARES =======================
 void cargar_configuracion(char*);
 void realizar_handshake(int);
 void ciclo_de_instruccion(int, int, t_contexto_ejecucion*);
@@ -63,7 +63,12 @@ void*conexion_inicial_memoria();
 void atender_dispatch(int, int );
 void atender_interrupt(void* );
 void finalizar_cpu();
+
+//======================= MEMORIA + REGISTROS=======================
+int buscar_registro(char *registros);
 uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion);
 void mov_in(char* registro, uint32_t direccion_logica, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion);
 void mov_out(uint32_t direccion_logica, char* registro, int socket_cliente_memoria, t_contexto_ejecucion* contexto_ejecucion);
+void setear_registro(char *registro, int valor);
+
 #endif

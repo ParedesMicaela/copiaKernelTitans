@@ -139,6 +139,7 @@ char* recibir_contexto(t_pcb* proceso)
     char* recurso_pedido = NULL;
     char* prueba_leak = NULL;
     int sleep_pedido = 0;
+    int pagina_pedida = -1;
     
     //si lo que recibimos es en efecto un pcb, lo abrimos
 	if(paquete->codigo_operacion == PCB)
@@ -152,6 +153,7 @@ char* recibir_contexto(t_pcb* proceso)
         motivo_de_devolucion = sacar_cadena_de_paquete(&stream);
         recurso_pedido = sacar_cadena_de_paquete(&stream); 
         sleep_pedido = sacar_entero_de_paquete(&stream);
+        pagina_pedida = sacar_entero_de_paquete(&stream);
 
     }
     else{
@@ -164,6 +166,7 @@ char* recibir_contexto(t_pcb* proceso)
     proceso->recurso_pedido = recurso_pedido;
     proceso->sleep = sleep_pedido;
     proceso->motivo_bloqueo = motivo_de_devolucion;
+    proceso->pagina_pedida = pagina_pedida;
 
 	//proceso->registros_cpu = registros;
 
