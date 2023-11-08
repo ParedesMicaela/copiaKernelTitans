@@ -119,6 +119,27 @@ void atender_clientes_filesystem(void* conexion) {
 				bloques_a_liberar = sacar_lista_de_cadenas_de_paquete(&stream); 
 				liberar_bloques(bloques_a_liberar);
 			break;
+			case PEDIR_PAGINA_PARA_ESCRITURA:
+				/*
+				pid = sacar_entero_de_paquete(&stream);
+				pag_pf = sacar_entero_de_paquete(&stream);
+				//hace lo que tenga que hacer la página con el swap
+				buscar_pag (pag_pf); función que me retorna la página recibida que después se agrega en el paquete
+				t_paquete* paquete = crear_paquete(PAGINA_PARA_ESCRITURA);
+				agregar_pagina_a_paquete(paquete, pagina); //medio raro ponerle recibida pero es lo que recibe la memoria después de este paquete
+				enviar_paquete(paquete, socket_memoria);
+				eliminar_paquete(paquete);
+				*/
+			break;
+			case ESCRIBIR_PAGINA_SWAP:
+				/*
+				pag_a_escribir = sacar_pagina_de_paquete(&stream);
+				//hace lo que tenga que hacer con la página
+				//será un void ya que no queremos que devuelva nada, simplemente la escriba
+				escribir_pag(pag_a_escribir);
+				//boquita es el + grande
+				*/
+			break;
 			default:
 				log_warning(filesystem_logger, "Operacion desconocida \n");
 			break;

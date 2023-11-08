@@ -154,7 +154,11 @@ char* recibir_contexto(t_pcb* proceso)
         recurso_pedido = sacar_cadena_de_paquete(&stream); 
         sleep_pedido = sacar_entero_de_paquete(&stream);
         pagina_pedida = sacar_entero_de_paquete(&stream);
-
+        proceso->nombre_archivo = sacar_cadena_de_paquete(&stream);
+        proceso->modo_apertura = sacar_cadena_de_paquete(&stream);
+        proceso->posicion = sacar_entero_de_paquete(&stream);
+        proceso->direccion_logica = sacar_cadena_de_paquete(&stream);
+        proceso->tamanio_archivo = sacar_entero_de_paquete(&stream);
     }
     else{
         log_error(kernel_logger, "\nFalla al recibir PCB, se cierra el Kernel \n");

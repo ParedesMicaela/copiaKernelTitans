@@ -188,9 +188,26 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 
     if (string_equals_ignore_case(devuelto_por, "f_open"))
     {
-        //manejo_de_f_open(proceso_seleccionado);
-        
-        // Lo mandamos a dormir
+        a_mimir(proceso_seleccionado);
+    }
+    if (string_equals_ignore_case(devuelto_por, "f_close"))
+    {
+        a_mimir(proceso_seleccionado);
+    }
+    if (string_equals_ignore_case(devuelto_por, "f_seek"))
+    {
+        a_mimir(proceso_seleccionado);
+    }
+    if (string_equals_ignore_case(devuelto_por, "f_read"))
+    {
+        a_mimir(proceso_seleccionado);
+    }
+    if (string_equals_ignore_case(devuelto_por, "f_write"))
+    {
+        a_mimir(proceso_seleccionado);
+    }
+    if (string_equals_ignore_case(devuelto_por, "f_truncate"))
+    {
         a_mimir(proceso_seleccionado);
     }
     /*aca lo usamos cuando matamos al proceso. Estaba ejecutando y lo sacamos de la cola y le disparamos
@@ -283,7 +300,15 @@ static void a_mimir(t_pcb* proceso){
             log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", proceso->motivo_bloqueo);
             abort();
         }  
-    }   
+    } else if (string_equals_ignore_case(proceso->motivo_bloqueo, "f_open") || string_equals_ignore_case(proceso->motivo_bloqueo, "f_write") || string_equals_ignore_case(proceso->motivo_bloqueo, "f_close")) {
+        pthread_t peticiones_fs;
+        if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
+            pthread_detach(peticiones_fs);
+        } else {
+            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", proceso->motivo_bloqueo);
+            abort();
+        }  
+    }
 }
 
 
