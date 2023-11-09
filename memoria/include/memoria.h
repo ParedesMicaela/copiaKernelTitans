@@ -21,7 +21,7 @@
 //VARIABLES GLOBALES
 extern t_log* memoria_logger;
 extern t_config* config;
-extern int socket_memoria;
+extern int socket_filesystem;
 extern int server_fd;
 extern void* espacio_usuario;
 extern t_list* procesos_en_memoria;
@@ -89,8 +89,10 @@ void inicializar_la_tabla_de_paginas();
 void inicializar_swap_proceso(int pid_proceso, int cantidad_paginas_proceso, int socket_fs);
 void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* path_recibido);
 void finalizar_en_memoria(int pid, int socket_fs);
-void escribir_en_memoria_principal();
-void enviar_pedido_pagina_para_escritura(int pid, int pag_pf, int socket_filesystem);
-t_pagina* recibir_pagina_para_escritura(int socket_filesystem);
+void escribir_en_memoria_principal(int numero_de_pagina, int marco, int posicion_swap, int pid);
+void enviar_pedido_pagina_para_escritura(int pid, int pag_pf);
+void recibir_pagina_para_escritura();
+t_proceso_en_memoria* buscar_proceso_en_memoria(int pid);
+
 
 #endif

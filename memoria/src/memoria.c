@@ -3,7 +3,7 @@
 //VARIABLES GLOBALES
 t_log* memoria_logger;
 t_config* config;
-int socket_memoria;
+int socket_filesystem;
 int server_fd;
 arch_config config_valores_memoria;
 
@@ -19,6 +19,9 @@ int main(void) {
     log_info(memoria_logger,"Inicializando memoria\n");
 
     int server_memoria = iniciar_servidor(config_valores_memoria.ip_memoria,config_valores_memoria.puerto_escucha);
+
+    // COMUNICACIÓN FILESYSTEM //
+	socket_filesystem = crear_conexion(config_valores_memoria.ip_filesystem, config_valores_memoria.puerto_filesystem);
 
     //Falta que se conecte con FS
     log_info(memoria_logger,"Servidor creado\n");

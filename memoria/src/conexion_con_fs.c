@@ -1,32 +1,46 @@
 #include "memoria.h"
 
-void enviar_pedido_pagina_para_escritura(int pid, int pag_pf, int socket_filesystem){
-
-    t_paquete* paquete = crear_paquete(PEDIR_PAGINA_PARA_ESCRITURA);
-    agregar_entero_a_paquete(paquete,pid);
-    agregar_entero_a_paquete(paquete,pag_pf);
+void enviar_pedido_pagina_para_escritura(int pid, int pag_pf)
+{
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
+    t_pagina* pagina = proceso->paginas_en_memoria;
+    t_paquete *paquete = crear_paquete(PEDIR_PAGINA_PARA_ESCRITURA);
     
+    agregar_entero_a_paquete(paquete, pid);
+    agregar_entero_a_paquete(paquete, pagina->entradas[pag_pf].marco);
+    agregar_entero_a_paquete(paquete, pagina->entradas[pag_pf].numero_de_pagina);
+    agregar_entero_a_paquete(paquete, pagina->entradas[pag_pf].posicion_swap);
+
     enviar_paquete(paquete, socket_filesystem);
     eliminar_paquete(paquete);
 }
 
-t_pagina* recibir_pagina_para_escritura(int socket_filesystem){
+void recibir_pagina_para_escritura()
+ {
+    t_paquete* paquete = recibir_paquete(socket_filesystem);
+    void* stream = paquete->buffer->stream;
+    int numero_de_pagina;
+    int marco; 
+    int posicion_swap;     
+    int pid;
     
-    t_paquete *paquete = recibir_paquete(socket_filesystem);
-    void *stream = paquete->buffer->stream;
-
-    if (paquete->codigo_operacion == PAGINA_PARA_ESCRITURA)
-    {
-        //t_pagina* pagina_recibida = sacar_pagina_de_paquete(&stream);
-        //return pagina_recibida;
+	if(paquete->codigo_operacion == PAGINA_PARA_ESCRITURA)
+	{
+        numero_de_pagina = sacar_entero_de_paquete(&stream);
+        marco = sacar_entero_de_paquete(&stream);
+        posicion_swap = sacar_entero_de_paquete(&stream);
+        pid = sacar_entero_de_paquete(&stream);
     }
-    else
-    {
-        log_error(memoria_logger,"Falla al recibir las pagina solicitada\n");
+    else{
+        log_error(memoria_logger, "Falla al recibir página, se cierra la Memoria \n");
         abort();
     }
+
+    
     eliminar_paquete(paquete);
-    return NULL;
+
+    escribir_en_memoria_principal(numero_de_pagina, marco, posicion_swap, pid);
+
 }
 
 void escribir_en_swap(t_pagina* pagina, int socket_filesystem){

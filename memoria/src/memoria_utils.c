@@ -48,7 +48,6 @@ void manejo_conexiones(void* socket_cliente)
 	uint32_t direccion_fisica = 0;
 	char* path_asignado = NULL;
 	uint32_t numero_pagina;
-	int socket_fs; //Ver como se matchea
 
 	while(1){
 	t_paquete* paquete = recibir_paquete(cliente);
@@ -97,7 +96,7 @@ void manejo_conexiones(void* socket_cliente)
 	case FINALIZAR_EN_MEMORIA:
 		int pid = sacar_entero_de_paquete(&stream);
 		log_info(memoria_logger,"Recibi pedido de creacion de estructuras en memoria\n");
-		//finalizar_en_memoria(pid, socket_fs);
+		finalizar_en_memoria(pid);
 	    int ok_finalizacion = 1;
         send(cliente, &ok_finalizacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras eliminadas en memoria kernel-kyunn\n");
@@ -132,11 +131,9 @@ void manejo_conexiones(void* socket_cliente)
 
 		log_info(memoria_logger,"Recibi un pedido para solucionar page fault uwu con PID %d - Pagina %d", pid_proceso, pag_pf);
 
-		//enviar_pedido_pagina_para_escritura(pid_proceso, pag_pf, socket_filesystem);
+		enviar_pedido_pagina_para_escritura(pid_proceso, pag_pf);
 
-		//t_pagina* pagina_recibida = recibir_pagina_para_escritura(socket_filesystem);
-
-		escribir_en_memoria_principal();
+		recibir_pagina_para_escritura();
 
 		int a = 1;
         send(cliente, &a, sizeof(int), 0);
