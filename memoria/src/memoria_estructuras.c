@@ -10,7 +10,7 @@ t_bitarray* status_tabla_paginas = NULL;
 
 t_list* bloques_reservados;
 //================================================= Funciones Internas ================================================
-static void liberar_swap(t_pagina* paginas_a_liberar, int pid, int socket_fs);
+static void liberar_swap(t_pagina* paginas_a_liberar, int pid);
 static void recibir_listado_bloques_reservados(int socket_fs, int pid);
 static void enviar_inicializar_swap_a_filesystem (int pid, int cantidad_paginas_proceso, int socket_fs);
 //================================================= Creacion Estructuras ====================================================
@@ -155,19 +155,25 @@ void solucionar_page_fault(int num_pagina, int socket_fs) {
 
 //======================================================= FINALIZAR_PROCESO =========================================================================================================
 
-void finalizar_en_memoria(int pid, int socket_fs) {
+void finalizar_en_memoria(int pid) {
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid);
-    liberar_swap(proceso_en_memoria->paginas_en_memoria, pid, socket_fs);
+    t_pagina* paginas = proceso_en_memoria->paginas_en_memoria;
+
+    liberar_swap(paginas, pid);
     //Hace falta un send o response?
     list_remove_element(procesos_en_memoria,proceso_en_memoria);
     free(procesos_en_memoria); 
 }
 
-static void liberar_swap(t_pagina* paginas_a_liberar, int pid, int socket_fs) {
+static void liberar_swap(t_pagina* paginas_a_liberar, int pid) {
     t_paquete* paquete = crear_paquete(LIBERAR_SWAP);
-    //agregar_array_cadenas_a_paquete(paquete, paginas_a_liberar); TODO 
     agregar_entero_a_paquete(paquete, pid);
-    enviar_paquete(paquete, socket_fs);
+    
+    for(int i = 0; i < paginas_a_liberar->cantidad_entradas; i++) {
+    agregar_lista_de_cadenas_a_paquete(paquete, paginas_a_liberar->entradas[i].numero_de_pagina);  
+    }
+    
+    enviar_paquete(paquete, socket_filesystem);
     eliminar_paquete(paquete);
 }
 
