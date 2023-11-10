@@ -43,10 +43,21 @@ void recibir_pagina_para_escritura()
 
 }
 
-void escribir_en_swap(t_pagina* pagina, int socket_filesystem){
+void escribir_en_swap(int pid, int cantidad_paginas_proceso){
     
     t_paquete* paquete = crear_paquete(ESCRIBIR_PAGINA_SWAP);
-    //agregar_pagina_a_paquete(paquete,pagina);
+
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
+    t_pagina* pagina = proceso->paginas_en_memoria;
+    
+    agregar_entero_a_paquete(paquete, pid);
+    agregar_entero_a_paquete(paquete, cantidad_paginas_proceso);
+
+     for (int i = 0; i < cantidad_paginas_proceso; ++i) {
+    agregar_entero_a_paquete(paquete, pagina->entradas[i].marco);
+    agregar_entero_a_paquete(paquete, pagina->entradas[i].numero_de_pagina);
+    agregar_entero_a_paquete(paquete, pagina->entradas[i].posicion_swap);
+    }
     
     enviar_paquete(paquete, socket_filesystem);
     eliminar_paquete(paquete);

@@ -42,7 +42,7 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* p
 	char* instrucciones_leidas = leer_archivo_instrucciones(path_recibido);
     proceso_en_memoria->path_proceso = strdup(instrucciones_leidas);
 
-    inicializar_la_tabla_de_paginas(proceso_en_memoria, cantidad_paginas_proceso);
+    //inicializar_la_tabla_de_paginas(proceso_en_memoria, cantidad_paginas_proceso);
 
     list_add(procesos_en_memoria, (void*)proceso_en_memoria);
     
@@ -168,9 +168,12 @@ void finalizar_en_memoria(int pid) {
 static void liberar_swap(t_pagina* paginas_a_liberar, int pid) {
     t_paquete* paquete = crear_paquete(LIBERAR_SWAP);
     agregar_entero_a_paquete(paquete, pid);
-    
+    agregar_entero_a_paquete(paquete, paginas_a_liberar->cantidad_entradas);
+
     for(int i = 0; i < paginas_a_liberar->cantidad_entradas; i++) {
-    agregar_lista_de_cadenas_a_paquete(paquete, paginas_a_liberar->entradas[i].numero_de_pagina);  
+    agregar_entero_a_paquete(paquete, paginas_a_liberar->entradas[i].marco);
+    agregar_entero_a_paquete(paquete, paginas_a_liberar->entradas[i].numero_de_pagina);
+    agregar_entero_a_paquete(paquete, paginas_a_liberar->entradas[i].posicion_swap); 
     }
     
     enviar_paquete(paquete, socket_filesystem);

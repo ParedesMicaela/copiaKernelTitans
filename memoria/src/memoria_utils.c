@@ -86,7 +86,7 @@ void manejo_conexiones(void* socket_cliente)
 		log_info(memoria_logger, "PATH recibido: %s", config_valores_memoria.path_instrucciones );
 
 		crear_tablas_paginas_proceso(pid_proceso, cantidad_paginas_proceso, path_recibido);
-		//inicializar_swap_proceso(pid_proceso,cantidad_paginas_proceso, socket_fs);
+		//inicializar_swap_proceso(pid_proceso,cantidad_paginas_proceso);
 
         int ok_creacion = 1;
         send(cliente, &ok_creacion, sizeof(int), 0);
