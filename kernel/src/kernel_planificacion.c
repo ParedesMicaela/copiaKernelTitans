@@ -33,12 +33,15 @@ sem_t mutex_pid;
 // bool fWrite;
 //t_pcb* proceso_en_exit_rr;
 int corriendo = 1;
+int id_evento_cpu;
 static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2);
 static void a_mimir(t_pcb* proceso);
-static void atender_round_robin(t_pcb* proceso_seleccionado);
+static void atender_round_robin(int* evento_para_interrupt);
 //====================================================== Planificadores ========================================================
 void inicializar_planificador()
 {
+    id_evento_cpu = 0;
+
     // creamos todas las colas que vamos a usar
     inicializar_colas();
     log_info(kernel_logger, "Iniciando colas.. \n");
@@ -133,26 +136,32 @@ void proceso_en_ready()
 
 void proceso_en_execute(t_pcb *proceso_seleccionado)
 {
-    // le enviamos el pcb a la cpu para que ejecute y recibimos el pcb resultado de su ejecucion
-    enviar_pcb_a_cpu(proceso_seleccionado);
-    //printf("\nEnviamos pcb a cpu para que empieze a ejecutar\n");
-
-    //si es rr y termina el quantum tenemos que desalojar    
-    char *algoritmo = config_valores_kernel.algoritmo_planificacion;
-    if(strcmp(algoritmo, "RR") == 0)
+    //si es rr hay que ver los tiempos  
+    if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR") == 0)
     {
+        id_evento_cpu++;
+
         pthread_t hilo_round_robin;
 
-        pthread_create(&hilo_round_robin, NULL, (void*)atender_round_robin, proceso_seleccionado);
+        int* evento_para_interrupt = malloc(sizeof(int));
+
+        memcpy(evento_para_interrupt, &id_evento_cpu, sizeof(int));
+        
+        pthread_create(&hilo_round_robin, NULL, (void*)atender_round_robin, evento_para_interrupt);
         pthread_detach(hilo_round_robin);
+
+        log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
     }
 
-    /*despues la cpu nos va a devolver el contexto en caso de que haya finalizado el proceso
-    haya pedido un recurso (wait/signal), por desalojo o por page fault*/
+     // La CPU despues nos dice pq regresa
+    enviar_pcb_a_cpu(proceso_seleccionado);
+
+    //La CPU nos dice pq finalizo
     char *devuelto_por = recibir_contexto(proceso_seleccionado);
 
-    /*aca usamos el proceso_en_exit para el mejor de los casos, cuando un proceso estaba ejecutando
-    y termina su ejecucion con exit*/
+    id_evento_cpu++;
+
+    // Observamos los motivos de devolucion
     if (string_equals_ignore_case(devuelto_por, "exit"))
     {
        detener_planificacion();
@@ -183,7 +192,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         meter_en_cola(proceso_seleccionado, READY, cola_READY);
         pthread_mutex_unlock(&mutex_ready);
 
-        proceso_en_ready();
+        //proceso_en_ready();
     }
 
     if (string_equals_ignore_case(devuelto_por, "f_open"))
@@ -227,45 +236,23 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     free(devuelto_por);
 }
 
-static void atender_round_robin(t_pcb* proceso_seleccionado) {
+static void atender_round_robin(int* evento_para_interrupt) {
   
-        int quantum = config_valores_kernel.quantum;
-        usleep(1000 * quantum); // Simula la ejecución y pausa el proceso en milisegundos
-        quantum = 0;
-        t_pcb *proceso_en_exec = NULL;
+        int local_evento_interrupt;
+       
+        memcpy(&local_evento_interrupt, evento_para_interrupt, sizeof(int));
 
-        printf("\nComparamos si el proceso que nos dieron es el que se esta ejecutando\n");
-        
-        pthread_mutex_lock(&mutex_exec);
-        int tam_cola_execute = list_size(cola_EXEC);
-        pthread_mutex_unlock(&mutex_exec);
-
-        if(tam_cola_execute > 0) {
-        pthread_mutex_lock(&mutex_exec);
-        t_pcb * hay_proceso_en_exec = list_get(dictionary_int_get(diccionario_colas, EXEC),0);
-        proceso_en_exec = hay_proceso_en_exec;
-        pthread_mutex_unlock(&mutex_exec);
-        }
-        pthread_mutex_unlock(&mutex_exec);
-
-        //si el que agarramos es el mismo que enviamos, significa que se quiere seguir ejecutando dps del quantum (nao nao)
-        if (proceso_en_exec != NULL && proceso_en_exec->pid == proceso_seleccionado->pid )
-        {
-            log_info(kernel_logger, "\nPID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
+        usleep(1000 * config_valores_kernel.quantum); 
             
-             // Desalojamos
-            pthread_mutex_lock(&mutex_exec);
-            list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso_seleccionado);
-            pthread_mutex_unlock(&mutex_exec);
-
+        if (local_evento_interrupt == id_evento_cpu)
+        {
             // Debes enviar una señal de desalojo al proceso en CPU.
             t_paquete *paquete = crear_paquete(DESALOJO);
             agregar_entero_a_paquete(paquete, 1);
             enviar_paquete(paquete, socket_cpu_interrupt);
             eliminar_paquete(paquete);
 
-            //proceso_en_exit_rr = proceso_seleccionado;
-        }
+        } 
 }
 
 static void a_mimir(t_pcb* proceso){
