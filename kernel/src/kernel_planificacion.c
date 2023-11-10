@@ -87,9 +87,8 @@ void planificador_largo_plazo()
         // metemos el proceso en la cola de ready
         pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso_nuevo, READY, cola_READY);
+        mostrar_lista_pcb(cola_READY,"READY");
         pthread_mutex_unlock(&mutex_ready);
-
-        mostrar_lista_pcb(cola_READY, "READY");
 
          /*le avisamos al corto plazo que puede empezar a planificar. Aca solamente vamos a poner el proceso
         en la cola de ready pero no vamos a elegir cual va a ejecutar el de corto plazo porque no hacemos eso
@@ -111,18 +110,18 @@ void planificador_corto_plazo()
 
         detener_planificacion();
  
-        proceso_en_ready();
+        obtener_siguiente_ready();
 
     }
 }
 
 //======================================================== Estados ==================================================================
 
-// aca agarramos el proceso que nos devuelve obtener_siguiente_ready y lo mandamos a ejecutar
-void proceso_en_ready()
+// aca agarramos el proceso que nos devuelve obtener_siguiente_ready_segun_algoritmo y lo mandamos a ejecutar
+void obtener_siguiente_ready()
 {
-    // creamos un proceso, que va a ser el elegido por obtener_siguiente_ready
-    t_pcb *siguiente_proceso = obtener_siguiente_ready();
+    // creamos un proceso, que va a ser el elegido por obtener_siguiente_ready_segun_algoritmo
+    t_pcb *siguiente_proceso = obtener_siguiente_ready_segun_algoritmo();
 
     log_info(kernel_logger, "PID[%d] ingresando a EXEC\n", siguiente_proceso->pid);
 
@@ -190,9 +189,10 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         // Lo agregamos nuevamente a la cola de Ready
         pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso_seleccionado, READY, cola_READY);
+        mostrar_lista_pcb(cola_READY,"READY");
         pthread_mutex_unlock(&mutex_ready);
 
-        //proceso_en_ready();
+        obtener_siguiente_ready();
     }
 
     if (string_equals_ignore_case(devuelto_por, "f_open"))
@@ -371,38 +371,33 @@ t_pcb *obtener_siguiente_new()
 
 /*esta funcion la voy a poner para que me haga todo el calculo de que proceso deberia ir primero dependiendo
 del algoritmo que estoy usando. Y la pongo aca porque es mas facil solamente poner una linea en la parte de
-proceso_en_ready, que hacer todo este calculo alla arriba.*/
-t_pcb *obtener_siguiente_ready()
+obtener_siguiente_ready, que hacer todo este calculo alla arriba.*/
+t_pcb *obtener_siguiente_ready_segun_algoritmo()
 {
     // creamos un proceso para seleccionar
     t_pcb *proceso_seleccionado;
 
-    int tamanio_cola_ready = 0;
-    int ejecutando = 0;
+    int tamanio_cola_ready;
+    int tamanio_cola_exec;
 
-    /*necesito saber la cantidad de procesos que estan listos para ejecutar y para eso bloqueo sino capaz
-    cuento y al final resulta que entraron 4 procesos mas*/
+    //obtenemos el tamanio de la cola ready
     pthread_mutex_lock(&mutex_ready);
     tamanio_cola_ready = list_size(cola_READY);
     pthread_mutex_unlock(&mutex_ready);
 
-    // despues vemos cual seria el grado maximo pero supongamos que es esto
     int grado = config_valores_kernel.grado_multiprogramacion_ini;
 
-    /*el grado de multiprogramacion es el que yo tengo que fijarme para saber si puedo admitir mas procesos
-    en ready, o no. Entonces para saber eso necesito saber cuantos procesos estan esperando en ready
-    y cuantos procesos estan ejecutando justo ahora. Con eso puedo comparar con el grado de multi que tengo
-    y ver si podemos meter un proceso mas.*/
+    //obtenemos el algoritmo
     algoritmo algoritmo_elegido = obtener_algoritmo();
 
-    // obtenemos el tamaño de la cola de ejecutando, nuevamente pongo un semaforo
+    //obtenemos el tamaño de la cola de ejecutando
     pthread_mutex_lock(&mutex_exec);
-    ejecutando = list_size(cola_EXEC);
+    tamanio_cola_exec = list_size(cola_EXEC);
     pthread_mutex_unlock(&mutex_exec);
 
-    /*vemos si todavia hay procesos en ready y si el grado de multiprogramacion me permite ejecutar
-    los procesos que estoy ejecutando justo ahora con un proceso mas*/
-    if (tamanio_cola_ready >= 0 && ejecutando < grado)
+    /*si todavia hay procesos en ready y si el grado de multiprogramacion me permite ejecutar
+    los procesos que estoy ejecutando*/
+    if (tamanio_cola_ready >= 0 && tamanio_cola_exec < grado)
     {
         switch (algoritmo_elegido)
         {
@@ -420,7 +415,7 @@ t_pcb *obtener_siguiente_ready()
         }
     }
 
-    // devolvemos el proceso seleccionado segun el algoritmo que elegimos
+    //segun el algoritmo
     return proceso_seleccionado;
 }
 
@@ -464,19 +459,17 @@ void obtener_siguiente_blocked(t_pcb* proceso)
     //aca ya de una lo mandamos a ready porque sabemos que en el diagrama va directo a ready
     pthread_mutex_lock(&mutex_ready);
     meter_en_cola(proceso, READY, cola_READY);
+    mostrar_lista_pcb(cola_READY,"READY");
     pthread_mutex_unlock(&mutex_ready);
 
     log_info(kernel_logger, "PID[%d] sale de BLOCKED para meterse en READY\n", proceso->pid);
 
-    proceso_en_ready();
+    obtener_siguiente_ready();
 }
 
 t_pcb *obtener_siguiente_FIFO()
 {
     log_info(kernel_logger, "Inicio la planificacion FIFO \n");
-
-    //mostramos los que estan en ready
-    mostrar_lista_pcb(cola_READY, "READY");
 
     /*voy a seleccionar el primer proceso que esta en ready usando esta funcion porque me retorna el proceso
     que le pido y tambien me lo borra. Como FIFO va a ejecutar todo hasta terminar, me biene barbaro*/
@@ -570,14 +563,8 @@ t_pcb *obtener_siguiente_PRIORIDADES()
 
 t_pcb *obtener_siguiente_RR()
 {
-    //es lo mismo que FIFO
     log_info(kernel_logger, "Inicio la planificacion RR \n");
 
-    //mostramos los que estan en ready
-    mostrar_lista_pcb(cola_READY, "READY");
-
-    /*voy a seleccionar el primer proceso que esta en ready usando esta funcion porque me retorna el proceso
-    que le pido y tambien me lo borra. Como FIFO va a ejecutar todo hasta terminar, me biene barbaro*/
     pthread_mutex_lock(&mutex_ready);
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
     pthread_mutex_unlock(&mutex_ready);
