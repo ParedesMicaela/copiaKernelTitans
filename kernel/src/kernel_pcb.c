@@ -137,7 +137,6 @@ char* recibir_contexto(t_pcb* proceso)
     void* stream = paquete->buffer->stream;
     int program_counter =-1;
     char* recurso_pedido = NULL;
-    char* prueba_leak = NULL;
     int sleep_pedido = 0;
     int pagina_pedida = -1;
     
@@ -183,6 +182,7 @@ void eliminar_pcb(t_pcb* proceso)
         free(proceso->path_proceso);
     }
      if (proceso->recurso_pedido != NULL) {
+        //log_info(kernel_logger, "Tengo el recurso %s" ,proceso->recurso_pedido);
         free(proceso->recurso_pedido);
     }
 }
@@ -196,7 +196,7 @@ void eliminar_recursos_asignados(t_pcb* proceso) {
 void liberar_todos_recurso(t_pcb* proceso)
 {
     //por cada recurso asignado que tiene el proceso, tengo que liberarlo y ver si ese recurso tiene procesos esperando
-    int tamanio_asignados = string_array_size(proceso->recursos_asignados->nombre_recurso);
+    //int tamanio_asignados = string_array_size(proceso->recursos_asignados->nombre_recurso);
     int instancias = 0;
     char* recurso_asig = NULL;
 
@@ -229,12 +229,15 @@ void liberar_todos_recurso(t_pcb* proceso)
                 strcpy(pcb_desbloqueado->recursos_asignados[indice_pedido].nombre_recurso, recurso_asig);
                 pcb_desbloqueado->recursos_asignados[indice_pedido].instancias_recurso++;
                 pcb_desbloqueado->recurso_pedido = NULL;           
-                //obtener_siguiente_blocked(pcb_desbloqueado);
+             
 
+                obtener_siguiente_blocked(pcb_desbloqueado);
+                /*
                 deteccion_deadlock(pcb_desbloqueado, recurso_asig);
                 if(!hay_deadlock){
-                    obtener_siguiente_blocked(pcb_desbloqueado);
+                    
                 }
+                */
             }
         }
     }
