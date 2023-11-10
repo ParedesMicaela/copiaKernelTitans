@@ -15,6 +15,7 @@
 extern t_config *config;
 extern t_log *filesystem_logger;
 extern int socket_memoria; 
+extern int socket_kernel;
 extern int server_fd;
 extern t_list *bloques_reservados;
 
@@ -61,7 +62,7 @@ void levantar_archivo_bloque(size_t tamanio_swap, size_t tamanio_fat);
 void levantar_fat(size_t tamanio_fat);
 void levantar_fcb(char* path);
 int crear_archivo (char *nombre_archivo);
-fcb *abrir_archivo (char *nombre_archivo);
+void abrir_archivo (char *nombre_archivo, int socket_kernel);
 t_list* reservar_bloques(int cantidad_bloques);
 void liberar_bloques(t_list* bloques_a_liberar);
 void liberar_bloque_individual(bloque_swap* bloque);

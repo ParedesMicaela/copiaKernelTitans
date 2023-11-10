@@ -50,10 +50,9 @@ void atender_clientes_filesystem(void* conexion) {
 		switch(paquete->codigo_operacion)
 		{
 			case ABRIR_ARCHIVO:
-					// nombre_archivo = sacar_cadena_de_paquete(&stream);
-					log_info(filesystem_logger, "Abrir Archivo: %s", nombre_archivo);
-					//if(existe(nombre_archivo)) { enviar_tamanio_archivo();}
-					//else (enviar_mensaje ("No existe"));
+				nombre_archivo = sacar_cadena_de_paquete(&stream);
+				log_info(filesystem_logger, "Abrir Archivo: %s", nombre_archivo);
+				abrir_archivo(nombre_archivo, cliente_fd);
 			break;
 			case CREAR_ARCHIVO:
 				log_info(filesystem_logger, "Crear Archivo: %s", config_valores_fcb.nombre_archivo);
@@ -141,13 +140,13 @@ void atender_clientes_filesystem(void* conexion) {
 				*/
 			break;
 			default:
-				log_warning(filesystem_logger, "Operacion desconocida \n");
+				printf("Operacion desconocida \n");
 			break;
 		}
 		eliminar_paquete(paquete);
 	}
 }
-
+/*
 void levantar_fcb(char* path) {
 
 	config = config_create(path); //Leo el archivo de configuracion
@@ -163,7 +162,7 @@ void levantar_fcb(char* path) {
 		abort();
 	  }
 }
-
+*/
 void levantar_fat(size_t tamanio_fat) {
     char* path = config_valores_filesystem.path_fat;
     FILE* archivo_fat = fopen(path, "rb+");
@@ -330,29 +329,63 @@ int crear_archivo (char *nombre_archivo)
     return 0;
 } //MARTINCHO TO DO: ACORDATE DE METER LOS CASES EN LAs FUNCIONES......LINEA 47 ARRANCA
 
-fcb *abrir_archivo (char *nombre_archivo)
+fvoid abrir_archivo (char *nombre_archivo, int socket_kernel)
 {
-	char *path_archivo = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
-	if (access (path_archivo, F_OK)) {
-		log_info(filesystem_logger,("Tamanio del archivo: %d \n", config_valores_fcb.tamanio_archivo));
-        free (path_archivo); 
-        return NULL;
-    }
-	t_config *archivo = config_create (path_archivo);
-    if (!archivo) {
-        free (path_archivo);
-        return NULL;
-    }
-    fcb *archivo_FCB = malloc (sizeof (fcb)); 
-    archivo_FCB->nombre_archivo = string_duplicate (config_valores_fcb.nombre_archivo);
-    archivo_FCB->tamanio_archivo = config_valores_fcb.tamanio_archivo;
-    archivo_FCB->bloque_inicial = config_valores_fcb.bloque_inicial;
-    
-    
-    config_destroy (archivo), free (path_archivo);
-    return archivo_FCB;
+	log_info(filesystem_logger,"entre\n");
+	// /home/utnso/tp-2023-2c-KernelTitans/filesystem/fs/fat.dat
+	char *path_archivo =  path_archivo, config_valores_filesystem.path_fcb + "/" + nombre_archivo  + ".dat" ;
+	//char *path_archivo = string_from_format ("%s/%s.dat", config_valores_filesystem.path_fcb, nombre_archivo);
+	
+	printf("entramos al path: %s", path_archivo);
+
+	if (!access (path_archivo, F_OK)) //verifica que exista
+	{
+		log_info(filesystem_logger,"Tamanio del archivo (que ya existe): %d \n", config_valores_fcb.tamanio_archivo);
+		
+		int tamanio = config_valores_fcb.tamanio_archivo;
+		t_paquete *paquete = crear_paquete(ARCHIVO_EXISTE);
+		agregar_entero_a_paquete(paquete, tamanio);
+
+		//deberiamos mandar el puntero con la direccion del 1er bloque (creo) al kernel (para fseek,ftruncate,etc)
+
+		enviar_paquete(paquete, socket_kernel);
+		eliminar_paquete(paquete);
+
+
+		//free (path_archivo); 
+        //return NULL;
+    }else // el archivo no existe
+	{
+		
+		t_config *archivo = config_create (path_archivo);
+		if (!archivo) {
+			free (path_archivo);
+			return NULL;
+		}
+		
+		//falta creaer estructura
+		fcb *archivo_FCB = malloc (sizeof (fcb)); //esta seria la direccion que mandamos a kernel 
+		archivo_FCB->nombre_archivo = string_duplicate (config_valores_fcb.nombre_archivo);
+		archivo_FCB->tamanio_archivo = config_valores_fcb.tamanio_archivo;
+		archivo_FCB->bloque_inicial = config_valores_fcb.bloque_inicial;
+		
+		log_info(filesystem_logger,"Tamanio del archivo (que acabamos de crear): %d \n", config_valores_fcb.tamanio_archivo);
+		
+		int tamanio = config_valores_fcb.tamanio_archivo;
+		t_paquete *paquete = crear_paquete(ARCHIVO_CREADO);
+		agregar_entero_a_paquete(paquete, tamanio);
+		//deberiamos mandar el puntero con la direccion del 1er bloque (creo) al kernel (para fseek,ftruncate,etc)
+
+		enviar_paquete(paquete, socket_kernel);
+		eliminar_paquete(paquete);
+
+		config_destroy (archivo); //wtf ke es esto
+		free (path_archivo);
+		//return archivo_FCB;
+	}
 	
 }
+
 t_list* reservar_bloques(int cantidad_bloques) {
     t_list* bloques_reservados = list_create();
 

@@ -33,7 +33,7 @@ int main(void)
     tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
     
     log_info(filesystem_logger,"\n Empezamo \n");
-    levantar_fcb(config_valores_filesystem.path_fcb);
+    //levantar_fcb(config_valores_filesystem.path_fcb);
     log_info(filesystem_logger,"\n Levanto fcb \n");
     levantar_fat(tamanio_fat);
     log_info(filesystem_logger,"\n Levanto al gordo \n");

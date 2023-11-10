@@ -46,6 +46,8 @@ int main(void)
 
    log_info(kernel_logger, "Kernel listo para recibir al modulo cliente \n");
 
+    iniciar_tabla_archivos_abiertos();
+
     inicializar_planificador();
     
     pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);

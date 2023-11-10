@@ -160,7 +160,7 @@ char* recibir_contexto(t_pcb* proceso)
         proceso->tamanio_archivo = sacar_entero_de_paquete(&stream);
     }
     else{
-        log_error(kernel_logger, "\nFalla al recibir PCB, se cierra el Kernel \n");
+        log_error(kernel_logger, "Falla al recibir PCB, se cierra el Kernel \n");
         abort();
     }
 
@@ -170,7 +170,7 @@ char* recibir_contexto(t_pcb* proceso)
     proceso->motivo_bloqueo = motivo_de_devolucion;
     proceso->pagina_pedida = pagina_pedida;
 
-    log_info(kernel_logger, "\nRecibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
+    log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
 
     eliminar_paquete(paquete);
     return motivo_de_devolucion;

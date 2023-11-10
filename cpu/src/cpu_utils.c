@@ -434,7 +434,7 @@ void atender_interrupt(void *socket_servidor_interrupt)
     while (1)
     {
         t_paquete *paquete = recibir_paquete(conexion);
-        log_info(cpu_logger, "Recibi un aviso por interrupt del kernel");
+        printf("Recibi un aviso por interrupt del kernel");
         void *stream = paquete->buffer->stream;
 
         if (paquete->codigo_operacion == DESALOJO)

@@ -60,6 +60,8 @@ extern t_list *cola_EXIT;
 extern t_list *cola_locks_escritura; 
 extern t_list *cola_locks_lectura;
 //extern t_list *cola_locks_bloqueados;
+extern t_list* tabla_global_archivos_abiertos;
+
 
 extern t_list *lista_recursos;
 extern int *instancias_del_recurso;
@@ -70,6 +72,8 @@ extern char **nombres_recursos;
 
 extern int corriendo;
 extern bool hay_deadlock;
+extern bool existe_en_tabla;
+
 //==============================================================================================================================
 
 typedef struct
@@ -92,6 +96,28 @@ typedef struct
 
 extern arch_config_kernel config_valores_kernel;
 
+typedef struct archivo {   
+    char *nombre_archivo;  
+    int tamanio;
+    //int *puntero; 
+    bool lock_escritura;
+    t_list* cola_solicitudes;
+} t_archivo;
+
+/*
+typedef struct lock_escritura {
+    bool estado;        //con esto sabemos si lo estan escribiendo
+    archivo *archivo;   //con esto sabemos a que archivo estan escribiendo
+} lock_escritura;
+*/
+
+/*
+    //char tipo_apertura;   //esto puede ser que no sea necesario, pero como es de archivos abiertos capaz si
+    //int tamanio;          //tamanio en memoria... necesario?? 
+    //recursos asignados??
+    //algo mas??
+    //ponerlo en kernel.h cuando termines
+*/
 //============================================= Inicializacion =====================================================================
 void cargar_configuracion(char *);
 void manejar_conexion(int);
@@ -170,14 +196,17 @@ void consola_proceso_estado();
 void detener_planificacion ();
 
 ////======================================== File System ===========================================================================================================
-void atender_peticiones_al_fs();
+void atender_peticiones_al_fs(t_pcb* proceso);
 bool es_una_operacion_con_archivos(char* motivo_bloqueo);
-bool buscar_en_tabla_de_archivos_abiertos(char* nombre_a_buscar);
+t_archivo* buscar_en_tabla_de_archivos_abiertos(char* nombre_a_buscar);
 void fopen_kernel_filesystem();
 void fclose_kernel_filesystem();
 void fseek_kernel_filesystem();
 void fread_kernel_filesystem();
 void fwrite_kernel_filesystem();
 void ftruncate_kernel_filesystem();
+void iniciar_tabla_archivos_abiertos();
+void enviar_solicitud_fs(char* nombre_arch, op_code operacion);
+void agregar_archivo_tgaa(char* nombre_archivo, int tamanio);
 
 #endif

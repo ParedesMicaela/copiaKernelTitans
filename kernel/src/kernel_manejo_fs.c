@@ -1,212 +1,190 @@
-
 #include "kernel.h"
 
 sem_t instruccion_tipo_archivo;
 
-//aca implementamos la tabla de archivos globales
-typedef struct archivo {
-    FILE *ARCHIVO;          //direccion de memoria del archivo      
-    char *nombre_archivo;   //nombre (identificador)
-    int *puntero;           
-} archivo;
-
-typedef struct lock_escritura {
-    bool estado;        //con esto sabemos si lo estan escribiendo
-    archivo *archivo;   //con esto sabemos a que archivo estan escribiendo
-} lock_escritura;
-
-
-/*
-    //char tipo_apertura;   //esto puede ser que no sea necesario, pero como es de archivos abiertos capaz si
-    //int tamanio;          //tamanio en memoria... necesario?? 
-    //recursos asignados??
-    //algo mas??
-    //ponerlo en kernel.h cuando termines
-*/
-
-//archivo *lista_archivos = malloc(sizeof(tabla_archivos)); es dinamica???
-t_list *archivos_abiertos; // o es local??
+t_list *tabla_global_archivos_abiertos;
+bool existe_en_tabla = true;
  
 t_list *cola_locks_lectura; //tiene a todos los archivos que se estan leyendo
 t_list *cola_locks_escritura_bloqueados; // aca se guardan los archivos que quieren escribirse
-
-/*
-archivo *archivo_nuevo = malloc(sizeof(archivo));
-archivo_nuevo->nombre_archivo = nombre_archivo_devuelto;
-archivo_nuevo->ARCHIVO = malloc(sizeof(FILE));          //direccion de memoria del archivo      
-char *nombre_archivo;                                   //nombre (identificador)
-bool lockeado;                                          //para ver si esta lockeado o no (al pedo, porque creo que lo ponemos en una cola y listo)
-archivo *siguiente = NULL;
-list_add(archivos_abiertos, archivo_nuevo);
-*/
 op_code devuelto_por=-1;
 
-void atender_peticiones_al_fs()
+
+static int tipo_motivo(char *motivo);
+//=============================================================================================================
+
+void iniciar_tabla_archivos_abiertos()
 {
-    
-    //while(1) creo que esto no va porque creamos un hilo por cada peticion
-    //{
-        printf("\n\nEspero recibir paquete de CPU respecto a archivos\n\n");
+    tabla_global_archivos_abiertos = list_create();
+}
 
-        sem_wait(&instruccion_tipo_archivo);
-        
-        //ahora sacamos todo de la estructura del kernel.h, la que llenamos en kernel plani.c
-        //faltara algo??
-        
-        //int pid_devuelto = necesitamos pid???
-        int program_counter = contexto_ejecucion_manejo_archivos.program_counter;
-        int AX = contexto_ejecucion_manejo_archivos.registros_cpu.AX;
-        int BX = contexto_ejecucion_manejo_archivos.registros_cpu.BX;
-        int CX = contexto_ejecucion_manejo_archivos.registros_cpu.CX;
-        int DX = contexto_ejecucion_manejo_archivos.registros_cpu.DX;
-        char* motivo = contexto_ejecucion_manejo_archivos.motivo_de_devolucion;
-        char** datos = contexto_ejecucion_manejo_archivos.datos_instruccion;
-        printf("\n\nSacamos piola los datos\n\n");  
-        
-        
-        //int recurso = contexto_ejecucion_manejo_archivos->recursos_asignados->nombre_recurso; esto creo que es alpedo aca
-        
-        switch(devuelto_por)
-        {
-            
-            case ABRIR_ARCHIVO:
-            
-                //fopen archivo modo
-                char** datos = contexto_ejecucion_manejo_archivos.datos_instruccion;
-                char* nombre_archivo =  datos[0];
-                char* modo_apertura = datos[1];
-                
-                printf("\n\nKernel recibio paquete de CPU para abrir archivo\n\n");
+void atender_peticiones_al_fs(t_pcb* proceso)
+{
+    while(1)
+    {
+        printf("Espero recibir paquete de CPU respecto a archivos\n");
 
-                //vemos si existe en la tabla de archivos abiertos
-                bool existe_en_tabla;
-                
-                existe_en_tabla = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
-                //printf("\n\nBuscamos en la tabla\n\n");
-                if (!existe_en_tabla)
+        switch(tipo_motivo(proceso->motivo_bloqueo)){    
+        case ABRIR_ARCHIVO:
+
+            char* nombre_archivo =  proceso->nombre_archivo;
+            char* modo_apertura = proceso->modo_apertura;
+            log_info(kernel_logger, "PID: %d - Abrir Archivo: %s", proceso->pid, nombre_archivo);
+                    
+            t_archivo* archivo_encontrado = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
+
+            //aca vemos si el archivo lo tengo en la TGAA
+            if (!existe_en_tabla)
+            {
+                printf("no esta en tabla\n");
+                //si no lo tengo, le pido al fs que lo abra
+                enviar_solicitud_fs(nombre_archivo, ABRIR_ARCHIVO);
+
+                //recibimos paquete de fs con info
+                t_paquete* paquete = recibir_paquete(socket_filesystem);
+                void *stream = paquete->buffer->stream;
+                int tamanio;
+                printf("Recibimos paquete de fs");
+
+                if(paquete->codigo_operacion == ARCHIVO_NO_EXISTE)
                 {
-                    //no existe en tabla de archivos abiertos
-                    printf("\n\nNo existe en la tabla, mandamos paquete a fs\n\n");
-                    //mandamos paquete al fs para que abra el archivo
-                    t_paquete *paquete = crear_paquete(ABRIR_ARCHIVO);
-                    agregar_cadena_a_paquete(paquete, nombre_archivo);
-                    agregar_cadena_a_paquete(paquete, modo_apertura);
-                    enviar_paquete(paquete, socket_filesystem);
-                    eliminar_paquete(paquete);
-                    printf("\n\nEnviamos paquete a fs\n\n");
+                    //si el fs me dice que no existe, lo mando a que me lo cree
+                    enviar_solicitud_fs(nombre_archivo, CREAR_ARCHIVO);
 
-                    //recibimos paquete de fs con info
-                    paquete = recibir_paquete(socket_filesystem);
-                    void *stream = paquete->buffer->stream;
-                    printf("\n\nRecibimos paquete de fs\n\n");
+                }else if (paquete->codigo_operacion == ARCHIVO_CREADO || paquete->codigo_operacion == ARCHIVO_EXISTE){
 
-                    //bool archivo_creado = false; //esto lo devuelve el fs
-                    //while(!archivo_creado) //capaz esto hay que sacarlo porque puede que le fs no pueda crear archivo
-                    //{
-                        switch (paquete->codigo_operacion)
-                        {
-                            case ARCHIVO_NO_EXISTE:
-                            {
-                                //mandamos a crear
-                                printf("\n\nEl archivo no existe en el fs, mandamos a crear\n\n");
-                                t_paquete *paquete = crear_paquete(CREAR_ARCHIVO);
-                                agregar_cadena_a_paquete(paquete, nombre_archivo);
-                                enviar_paquete(paquete, socket_filesystem);
-                                eliminar_paquete(paquete);
-                                printf("\n\nMandamos a crear a fs\n\n");
+                    printf("el fs ya me mando algo bueno\n");
+                    //si el fs me dice que existe el archivo, lo agrego a la tgaa
+                    tamanio = sacar_entero_de_paquete(&stream);
+                    agregar_archivo_tgaa(nombre_archivo, tamanio);
+                    
+                    t_archivo* archivo_encontrado = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
 
-                                //recibimos paquete de fs con info
-                                paquete = recibir_paquete(socket_filesystem);
-                                void *stream = paquete->buffer->stream;
-                                printf("\n\nRecibimos respuesta respecto creacino de archivo en fs\n\n");
+                    // poner en tabla de archivos abiertos
+                    asignar_archivo_al_proceso(archivo_encontrado);
 
-                                if (paquete->codigo_operacion==ARCHIVO_CREADO)
-                                {
-                                    //archivo_creado = true;
-                                    printf("\n\nLo creo, ahora lo metemos en tabla\n\n");
-                                    //crear archivo para la tabla de archivos abiertos
-                                    archivo *archivo_nuevo = malloc(sizeof(archivo));
-                                    archivo_nuevo->nombre_archivo = nombre_archivo;
-                                    archivo_nuevo->ARCHIVO = malloc(sizeof(FILE));           
-                                    archivo_nuevo->puntero = archivo_nuevo->ARCHIVO; //esta bien esto? la 1er direccion de memoria
-
-                                    //añadir a la tabla de archivos abiertos
-                                    list_add(archivos_abiertos, archivo_nuevo);
-
-                                    printf("se creo el archivo y se agrego a la tabla de archivos abiertos");
-
-                                    //avisar a cpu???
-                                } else printf("error creando en fs");
-                                break;
-                            }
-                        }
-                    //}
+                }else{
+                    log_error(kernel_logger, "FS no me creo el archivo :c\n");
                 }
+
+            }else{
+                
+                //si el archivo ya fue abierto hago cosas dependiendo el modo de apertura
+                if(string_equals_ignore_case(modo_apertura, "r"))
+                {
+                    
+                }else if(string_equals_ignore_case(modo_apertura, "w")){
+
+                }
+
+            }
             break;
-                 
-            case TRUNCAR_ARCHIVO: // falta hacer todo bien
-                
-                printf("\n\nKernel recibio paquete de CPU para truncar archivo\n\n");
-
-                //fopen archivo modo
-                //nombre_archivo  = sacar_cadena_de_paquete(&stream);
-                //char* tamanio  = sacar_cadena_de_paquete(&stream);
-                //eliminar_paquete(paquete);
-                
-                //vemos si existe en la tabla de archivos abiertos
-                existe_en_tabla = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
-                printf("\n\nBuscamos bien en tabla\n\n");
-                //bool esta_lockeado_escritura;
-
-                if (existe_en_tabla)
-                {
-                    //si se esta escribiendo esperamos a que termine, mandar a cola de lockeados
-                    //si no se esta escribiendo lockeamos este archivo (cambiar bool o meter en cola)
-                }
-                else //si no existe
-                {
-                    //mandamos paquete al fs para que abra el archivo
-                    t_paquete *paquete = crear_paquete(TRUNCAR_ARCHIVO);
-                    agregar_cadena_a_paquete(paquete, nombre_archivo);
-                    //agregar_entero_a_paquete(paquete, tamanio);
-                    enviar_paquete(paquete, socket_filesystem);
-                    eliminar_paquete(paquete);
-
-                }
-                /*
-                    fijarnos si existe en la tabla global
-                        si existe lo agarramos
-                            si se esta escribiendo esperamos a que termine, mandar a cola de lockeados
-                            si no se esta escribiendo lockeamos este archivo (cambiar bool o meter en cola)
-                    si no existe lo creamos (hace falta esto?)
-                        paquete al fs para que lo cree
-                        paquete al fs para que lo abra
-                */
-                break;
-        /*
-        case POSICIONARSE_ARCHIVO:
-            char* nombre_archivo = sacar_cadena_de_paquete(&stream);
-            char* posicion = sacar_cadena_de_paquete(&stream);
-            eliminar paquete
+        case TRUNCAR_ARCHIVO:
             break;
         case LEER_ARCHIVO:
-            char* nombre_archivo  = sacar_cadena_de_paquete(&stream);
-            char* direccion_logica  = sacar_cadena_de_paquete(&stream);
-            eliminar paquete
             break;
         case ESCRIBIR_ARCHIVO:
-            char* nombre_archivo = sacar_cadena_de_paquete(&stream);
-            char* direccion_logica  = sacar_cadena_de_paquete(&stream);
-            eliminar paquete
-            break; 
+            break;
+        case BUSCAR_ARCHIVO:
+            break;
         case CERRAR_ARCHIVO:
-            char* nombre_archivo  = sacar_cadena_de_paquete(&stream);
-            //eliminar paquete
-        */
-        //termina con cerrar archivokernel
+            break;
+        default:
+            log_error(kernel_logger, "Error en el motivo de bloqueo");
+            break;
+            free(archivo_encontrado);
         }
-    //}
+    }
 }
+
+static int tipo_motivo(char *motivo)
+{
+    int numero = -1;
+    
+    if (string_equals_ignore_case(motivo, "F_OPEN"))
+    {
+        numero = ABRIR_ARCHIVO;
+
+    } else if (string_equals_ignore_case(motivo, "F_CLOSE"))
+    {
+        numero = F_CLOSE;
+
+    } else if (string_equals_ignore_case(motivo, "F_SEEK"))
+    {
+        numero = F_SEEK;
+
+    } else if (string_equals_ignore_case(motivo, "F_READ"))
+    {
+        numero = F_READ;
+
+    } else if (string_equals_ignore_case(motivo, "F_WRITE"))
+    {
+        numero = F_WRITE;
+
+    } else if (string_equals_ignore_case(motivo, "F_TRUNCATE"))
+    {
+        numero = F_TRUNCATE;
+
+    }else
+    {
+        log_info(kernel_logger, "no encontre el motivo %d\n", numero);
+        abort();
+    }
+    return numero;
+}
+
+void asignar_archivo_al_proceso(t_archivo* archivo,t_pcb* proceso){
+    //agregar a la tabla del proceso
+    //tabla de proceso va a tener archivos respecto de cada proceso
+    //la manera de encontrar va a ser con el pid
+}
+
+void agregar_archivo_tgaa(char* nombre_archivo, int tamanio)
+{
+    t_archivo* archivo_nuevo = malloc(sizeof(t_archivo));
+    archivo_nuevo->nombre_archivo = nombre_archivo;
+    archivo_nuevo->tamanio = tamanio;
+    archivo_nuevo->lock_escritura = false;
+    archivo_nuevo->cola_solicitudes = list_create();
+    //archivo_nuevo->modo_apertura
+
+    list_add(tabla_global_archivos_abiertos, (void*)archivo_nuevo);
+    existe_en_tabla = true;
+}
+
+void enviar_solicitud_fs(char* nombre_arch, op_code operacion)
+{
+    t_paquete *paquete = crear_paquete(operacion);
+    agregar_cadena_a_paquete(paquete, nombre_arch);
+    enviar_paquete(paquete, socket_filesystem);
+    eliminar_paquete(paquete);
+}
+
+t_archivo* buscar_en_tabla_de_archivos_abiertos(char* nombre_a_buscar)
+{
+    if(tabla_global_archivos_abiertos != NULL && list_size(tabla_global_archivos_abiertos) > 0)
+    {
+        for (int i = 0; i < list_size(tabla_global_archivos_abiertos); i++)
+        {
+            t_archivo* archivo_de_tabla = (t_archivo*)list_get(tabla_global_archivos_abiertos, i);
+
+            if (strcmp(nombre_a_buscar,archivo_de_tabla->nombre_archivo) == 0)
+            {
+                log_info(kernel_logger, "El archivo < %s > a esta abierto", nombre_a_buscar);
+                existe_en_tabla = true;
+                //printf("encontramos archivo");
+                return archivo_de_tabla;
+            }
+        }
+    }else{
+        existe_en_tabla = false;
+        //printf("no encontramos le archivo");
+    }
+    return NULL;
+}
+
+
+/*
 
 void fopen_kernel_filesystem()
 {
@@ -244,31 +222,11 @@ void ftruncate_kernel_filesystem()
     sem_post(&instruccion_tipo_archivo);
 }
 
-bool buscar_en_tabla_de_archivos_abiertos(char* nombre_a_buscar)
-{
-    printf("\n\nNos fijamos en la tabla\n\n");
-    if(archivos_abiertos != NULL && list_size(archivos_abiertos) > 0)
-    {
-        printf("\n\nTabla no esta vacia buscamos\n\n");
-        for (int i = 0; i < list_size(archivos_abiertos); i++)
-        {
-            //tomamos
-            archivo *archivo_de_tabla;
-            archivo_de_tabla = (archivo*)list_get(archivos_abiertos,i);
-
-            if (strcmp(nombre_a_buscar,archivo_de_tabla->nombre_archivo) == 0)
-            {
-                printf("Ya esta abierto: Nombre %s",nombre_a_buscar);
-                //devolver a CPU que ya esta abierto (o solo avisar)
-                return true;
-            }
-        }
-    } else printf("\n\nTabla esta vacia, osea que no esta abierto\n\n");
-    return false;
-}
 
 
-/*
+
+
+
 int abrirArchivoKernel(pcb* proceso, char* instruccion)
 {
 	char** parsed = string_split(instruccion, " "); //Partes de la instruccion actual
@@ -295,7 +253,7 @@ int abrirArchivoKernel(pcb* proceso, char* instruccion)
 		archivoActual->puntero=0;
 		list_add(archivosAbiertos, archivoActual);
 		//agregar el archivo a la lista de archivos abiertos del proceso
-		list_add(proceso->archivos_abiertos,archivoActual);
+		list_add(proceso->tabla_global_archivos_abiertos,archivoActual);
 		log_info(logger, "PID: %d - Abrir Archivo: %s", proceso->pid, parsed[1]);
 		return 1;
 	}
@@ -306,7 +264,7 @@ int abrirArchivoKernel(pcb* proceso, char* instruccion)
 		punteroOriginal=archivoActual->puntero;
 		archivoActual->puntero=0;
 		//agregar el archivo a la lista de archivos abiertos del proceso
-		list_add(proceso->archivos_abiertos,archivoActual);
+		list_add(proceso->tabla_global_archivos_abiertos,archivoActual);
 		archivoActual->puntero=punteroOriginal;
 		exec_a_block();
 		log_warning(logger, "PID: %d - Bloqueado porque archivo %s ya esta abierto", proceso->pid, archivoActual->nombreDeArchivo);
