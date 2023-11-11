@@ -210,8 +210,11 @@ void liberar_todos_recurso(t_pcb* proceso)
 
             //le sumo una instancia a cada recurso que se esta liberando
             instancias = instancias_del_recurso[indice_pedido];
+            if(instancias < instancias_maximas_del_recurso[indice_pedido]) {
             instancias++;
             instancias_del_recurso[indice_pedido] = instancias;
+            }
+
             log_info(kernel_logger, "cantidad instancias ahora: %d", instancias);
             
             //buscamos la lista del recurso que se libero, dentro de la lista de recursos
@@ -238,9 +241,13 @@ void liberar_todos_recurso(t_pcb* proceso)
 
                 for (int i = 0; i < tamanio_recursos; ++i) {
                     log_info(kernel_logger, "Recursos Asignados: %s - Cantidad: %d",pcb_desbloqueado->recursos_asignados[i].nombre_recurso, pcb_desbloqueado->recursos_asignados[i].instancias_recurso);
-                } 
+                }
 
                 obtener_siguiente_blocked(pcb_desbloqueado);
+
+                pthread_mutex_lock(&mutex_ready);
+                list_remove_element(dictionary_int_get(diccionario_colas, READY), proceso);
+                pthread_mutex_unlock(&mutex_ready);
             }            
         }
     }

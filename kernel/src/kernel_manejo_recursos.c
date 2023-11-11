@@ -109,7 +109,6 @@ void liberacion_recursos(t_pcb *proceso)
     proceso->recurso_pedido = NULL;
     pthread_mutex_lock(&mutex_recursos);
     instancias = instancias_del_recurso[indice_pedido];
-    instancias++;
 
     // No puede pedirme más del maximo que declaró
     if (instancias > instancias_maximas_del_recurso[indice_pedido])
@@ -140,10 +139,12 @@ void liberacion_recursos(t_pcb *proceso)
             /*esta funcion ya la habre hecho como 10 veces en lo que vamos de codigo, no hace falta presentacion
             esta cola se va a desbloquear por FIFO, para no perder la costumbre. Nos llega por parametro la cola
             del recurso y de ahi vamos a sacar nuestro proceso*/
+            if(!list_is_empty(cola_bloqueados_recurso)){
             t_pcb *pcb_desbloqueado = obtener_bloqueado_por_recurso(cola_bloqueados_recurso);
-            //list_remove_element((t_list *)list_get(lista_recursos, indice_pedido), (void *)proceso);
 
             obtener_siguiente_blocked(pcb_desbloqueado);
+            }
+          
         }
 
         /*ahora voy a tener que hacer lo mismo pero al revez para sacar el recurso. Pero si tiene mas de una
