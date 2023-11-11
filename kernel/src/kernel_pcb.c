@@ -177,20 +177,16 @@ char* recibir_contexto(t_pcb* proceso)
 
 void eliminar_pcb(t_pcb* proceso)
 {
-    eliminar_recursos_asignados(proceso);
     if (proceso->path_proceso != NULL) {
         free(proceso->path_proceso);
     }
+    /*
      if (proceso->recurso_pedido != NULL) {
         log_info(kernel_logger, "Tengo el recurso %s" ,proceso->recurso_pedido);
         free(proceso->recurso_pedido);
-    }
-}
-
-void eliminar_recursos_asignados(t_pcb* proceso) {
-
+    }*/
     liberar_todos_recurso(proceso);
-    free(proceso->recursos_asignados);
+    
 }
 
 void liberar_todos_recurso(t_pcb* proceso)
@@ -210,10 +206,8 @@ void liberar_todos_recurso(t_pcb* proceso)
 
             //le sumo una instancia a cada recurso que se esta liberando
             instancias = instancias_del_recurso[indice_pedido];
-            if(instancias < instancias_maximas_del_recurso[indice_pedido]) {
             instancias++;
             instancias_del_recurso[indice_pedido] = instancias;
-            }
 
             log_info(kernel_logger, "cantidad instancias ahora: %d", instancias);
             
@@ -244,11 +238,15 @@ void liberar_todos_recurso(t_pcb* proceso)
                 }
 
                 obtener_siguiente_blocked(pcb_desbloqueado);
-
-                pthread_mutex_lock(&mutex_ready);
-                list_remove_element(dictionary_int_get(diccionario_colas, READY), proceso);
-                pthread_mutex_unlock(&mutex_ready);
             }            
+        }
+
+        //busco el proceso que finaliza en cada una de las colas de recursos
+        t_list *cola_recurso = (t_list *)list_get(lista_recursos, i);
+        if(list_remove_element(cola_recurso, (void *)proceso)){
+            instancias = instancias_del_recurso[i];
+            instancias++;
+            instancias_del_recurso[i] = instancias;
         }
     }
 }

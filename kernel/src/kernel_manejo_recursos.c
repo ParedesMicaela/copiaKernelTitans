@@ -109,6 +109,7 @@ void liberacion_recursos(t_pcb *proceso)
     proceso->recurso_pedido = NULL;
     pthread_mutex_lock(&mutex_recursos);
     instancias = instancias_del_recurso[indice_pedido];
+    instancias++;
 
     // No puede pedirme más del maximo que declaró
     if (instancias > instancias_maximas_del_recurso[indice_pedido])
@@ -126,9 +127,6 @@ void liberacion_recursos(t_pcb *proceso)
         log_info(kernel_logger, "PID: %d - Signal: %s - Instancias: %d\n", proceso->pid, recurso, instancias);
 
         if(list_remove_element((t_list *)list_get(lista_recursos, indice_pedido), (void *)proceso))
-        {
-            log_info(kernel_logger, "saque el proceos de la lista de espera\n");
-        }
 
         /*aca vemos que pasa si hay procesos esperando a que ese recurso se libere. Si esta en negativo, es que
         hay un proceso esperando en la cola de bloqueado*/
