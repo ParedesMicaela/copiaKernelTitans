@@ -181,6 +181,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         //=============================================== FETCH =================================================================
         log_info(cpu_logger, "PID: %d - FETCH - Program Counter: %d", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
 
+        mostrar_valores(contexto_ejecucion);
         //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
         pedir_instruccion(socket_cliente_memoria, contexto_ejecucion->program_counter, contexto_ejecucion->pid);
 
@@ -657,8 +658,9 @@ static void mostrar_valores (t_contexto_ejecucion* contexto)
     // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
     log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
 
+    /*
     for (int i = 0; i < tamanio_recursos; ++i) {
         log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d",contexto->recursos_asignados[i].nombre_recurso, contexto->recursos_asignados[i].instancias_recurso);
-    }
+    }*/
 }
 

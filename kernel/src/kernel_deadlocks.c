@@ -49,7 +49,7 @@ void deteccion_deadlock (t_pcb* proceso, char* recurso_pedido)
         hay_deadlock = false;
     }
     //si no retiene recursos, entonces no puede estar en deadlockproceso->recurso_pedido
-    free(recurso_retenido);
+    //free(recurso_retenido);
 }
 
 bool proceso_reteniendo_recurso(t_pcb* proceso_involucrado, char* recurso) {

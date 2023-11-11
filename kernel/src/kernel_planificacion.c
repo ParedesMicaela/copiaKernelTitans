@@ -317,7 +317,7 @@ void proceso_en_exit(t_pcb *proceso)
 
     // sacamos el proceso de la lista de exit
     pthread_mutex_lock(&mutex_exit);
-    list_remove(dictionary_int_get(diccionario_colas, EXIT), 0);
+    list_remove_element(dictionary_int_get(diccionario_colas, EXIT), proceso);
     pthread_mutex_unlock(&mutex_exit);
 
     // le mandamos esto a memoria para que destruya las estructuras

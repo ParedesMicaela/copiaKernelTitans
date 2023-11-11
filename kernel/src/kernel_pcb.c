@@ -131,12 +131,12 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 
 char* recibir_contexto(t_pcb* proceso)
  {
-    //esta funcion lo que hace es recibir un paquete, si ese paquete es un pcb lo abre y nos dice el motivo por el cual se devolvio
-    char* motivo_de_devolucion = NULL;
     t_paquete* paquete = recibir_paquete(socket_cpu_dispatch);
     void* stream = paquete->buffer->stream;
+
+    char* motivo_de_devolucion = NULL;
     int program_counter =-1;
-    char* recurso_pedido = NULL;
+    //char* recurso_pedido = NULL;
     int sleep_pedido = 0;
     int pagina_pedida = -1;
     
@@ -149,7 +149,7 @@ char* recibir_contexto(t_pcb* proceso)
         CX = sacar_entero_sin_signo_de_paquete(&stream);
         DX = sacar_entero_sin_signo_de_paquete(&stream);
         motivo_de_devolucion = sacar_cadena_de_paquete(&stream);
-        recurso_pedido = sacar_cadena_de_paquete(&stream); 
+        proceso->recurso_pedido = sacar_cadena_de_paquete(&stream); 
         sleep_pedido = sacar_entero_de_paquete(&stream);
         pagina_pedida = sacar_entero_de_paquete(&stream);
         proceso->nombre_archivo = sacar_cadena_de_paquete(&stream);
@@ -164,7 +164,7 @@ char* recibir_contexto(t_pcb* proceso)
     }
 
 	proceso->program_counter = program_counter;
-    proceso->recurso_pedido = recurso_pedido;
+    //proceso->recurso_pedido = recurso_pedido;
     proceso->sleep = sleep_pedido;
     proceso->motivo_bloqueo = motivo_de_devolucion;
     proceso->pagina_pedida = pagina_pedida;
@@ -182,7 +182,7 @@ void eliminar_pcb(t_pcb* proceso)
         free(proceso->path_proceso);
     }
      if (proceso->recurso_pedido != NULL) {
-        //log_info(kernel_logger, "Tengo el recurso %s" ,proceso->recurso_pedido);
+        log_info(kernel_logger, "Tengo el recurso %s" ,proceso->recurso_pedido);
         free(proceso->recurso_pedido);
     }
 }
@@ -212,14 +212,16 @@ void liberar_todos_recurso(t_pcb* proceso)
             instancias = instancias_del_recurso[indice_pedido];
             instancias++;
             instancias_del_recurso[indice_pedido] = instancias;
-            printf("cantidad instancias ahora: %d", instancias);
-            if (instancias <= 0)
-            {
-                //buscamos la lista del recurso que se libero, dentro de la lista de recursos
-                t_list *cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
+            log_info(kernel_logger, "cantidad instancias ahora: %d", instancias);
+            
+            //buscamos la lista del recurso que se libero, dentro de la lista de recursos
+            t_list *cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
 
+            //si hay algun proceso esperando por el recurso liberado
+            if(!list_is_empty(cola_bloqueados_recurso))
+            {
                 list_remove_element(cola_bloqueados_recurso, (void *)proceso);
-                //list_remove_and_destroy_element
+
                 //agarramos el primer proceso que esta bloqueado dentro de esa lista
                 t_pcb *pcb_desbloqueado = obtener_bloqueado_por_recurso(cola_bloqueados_recurso);
 
@@ -228,35 +230,25 @@ void liberar_todos_recurso(t_pcb* proceso)
                 //antes de ver su hay deadlock tengo que asignar el recurso liberado al proceso que estaba esperando
                 strcpy(pcb_desbloqueado->recursos_asignados[indice_pedido].nombre_recurso, recurso_asig);
                 pcb_desbloqueado->recursos_asignados[indice_pedido].instancias_recurso++;
-                pcb_desbloqueado->recurso_pedido = NULL;           
-             
+                pcb_desbloqueado->recurso_pedido = NULL;
+
+                instancias = instancias_del_recurso[indice_pedido];
+                instancias--;
+                instancias_del_recurso[indice_pedido] = instancias;
+
+                for (int i = 0; i < tamanio_recursos; ++i) {
+                    log_info(kernel_logger, "Recursos Asignados: %s - Cantidad: %d",pcb_desbloqueado->recursos_asignados[i].nombre_recurso, pcb_desbloqueado->recursos_asignados[i].instancias_recurso);
+                } 
 
                 obtener_siguiente_blocked(pcb_desbloqueado);
-                /*
-                deteccion_deadlock(pcb_desbloqueado, recurso_asig);
-                if(!hay_deadlock){
-                    
-                }
-                */
-            }
+            }            
         }
     }
 }
 
-void eliminar_registros_pcb (t_registros_cpu registros_cpu)
-{
-    free(registros_cpu.AX);
-    free(registros_cpu.AX);
-    free(registros_cpu.AX);
-    free(registros_cpu.AX);
-}
 void eliminar_archivos_abiertos(t_dictionary *archivosAbiertos)
 {
     //esto hay que revisarlo porque no se si esta bien, pero a rezar que lo ultimo que se pierde es la esperanza
     dictionary_destroy_and_destroy_elements(archivosAbiertos, dictionary_elements(archivosAbiertos));
 }
-/*
-void eliminar_mutex(pthread_mutex_t *mutex)
-{
-    pthread_mutex_destroy(mutex);
-}	*/
+
