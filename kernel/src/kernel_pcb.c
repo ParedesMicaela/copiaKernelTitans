@@ -164,7 +164,6 @@ char* recibir_contexto(t_pcb* proceso)
     }
 
 	proceso->program_counter = program_counter;
-    //proceso->recurso_pedido = recurso_pedido;
     proceso->sleep = sleep_pedido;
     proceso->motivo_bloqueo = motivo_de_devolucion;
     proceso->pagina_pedida = pagina_pedida;
@@ -180,11 +179,7 @@ void eliminar_pcb(t_pcb* proceso)
     if (proceso->path_proceso != NULL) {
         free(proceso->path_proceso);
     }
-    /*
-     if (proceso->recurso_pedido != NULL) {
-        log_info(kernel_logger, "Tengo el recurso %s" ,proceso->recurso_pedido);
-        free(proceso->recurso_pedido);
-    }*/
+
     liberar_todos_recurso(proceso);
     
 }
@@ -208,8 +203,6 @@ void liberar_todos_recurso(t_pcb* proceso)
             instancias = instancias_del_recurso[indice_pedido];
             instancias++;
             instancias_del_recurso[indice_pedido] = instancias;
-
-            log_info(kernel_logger, "cantidad instancias ahora: %d", instancias);
             
             //buscamos la lista del recurso que se libero, dentro de la lista de recursos
             t_list *cola_bloqueados_recurso = (t_list *)list_get(lista_recursos, indice_pedido);
