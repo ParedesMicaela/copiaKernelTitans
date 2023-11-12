@@ -61,7 +61,6 @@ void asignacion_recursos(t_pcb *proceso)
 
         log_info(kernel_logger, "PID: %d - Bloqueado por: %s\n", proceso->pid, proceso->recurso_pedido);
         deteccion_deadlock(proceso, proceso->recurso_pedido);
-        // sem_wait(&analisis_deadlock_completo);
     }
     else
     {
@@ -127,6 +126,8 @@ void liberacion_recursos(t_pcb *proceso)
 
         log_info(kernel_logger, "PID: %d - Signal: %s - Instancias: %d\n", proceso->pid, recurso, instancias);
 
+        if(list_remove_element((t_list *)list_get(lista_recursos, indice_pedido), (void *)proceso))
+
         /*aca vemos que pasa si hay procesos esperando a que ese recurso se libere. Si esta en negativo, es que
         hay un proceso esperando en la cola de bloqueado*/
         if (instancias <= 0)
@@ -136,9 +137,12 @@ void liberacion_recursos(t_pcb *proceso)
             /*esta funcion ya la habre hecho como 10 veces en lo que vamos de codigo, no hace falta presentacion
             esta cola se va a desbloquear por FIFO, para no perder la costumbre. Nos llega por parametro la cola
             del recurso y de ahi vamos a sacar nuestro proceso*/
+            if(!list_is_empty(cola_bloqueados_recurso)){
             t_pcb *pcb_desbloqueado = obtener_bloqueado_por_recurso(cola_bloqueados_recurso);
 
-           obtener_siguiente_blocked(pcb_desbloqueado);
+            obtener_siguiente_blocked(pcb_desbloqueado);
+            }
+          
         }
 
         /*ahora voy a tener que hacer lo mismo pero al revez para sacar el recurso. Pero si tiene mas de una
@@ -156,7 +160,7 @@ void liberacion_recursos(t_pcb *proceso)
         // por ultimo mandamos el proceso a exec para que siga su camino
         proceso_en_execute(proceso);
     }
-    free(recurso);
+    //free(recurso);
 }
 
 //==================================================== Accesorios =====================================================

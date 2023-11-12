@@ -304,12 +304,19 @@ void proceso_en_exit(t_pcb *proceso)
     algoritmo algoritmo_elegido = obtener_algoritmo();
     
     if(algoritmo_elegido != RR) {
-    //obtenemos el proceso de execute
-    pthread_mutex_lock(&mutex_exec);
-    list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
-    pthread_mutex_unlock(&mutex_exec);
+        //obtenemos el proceso de execute
+        pthread_mutex_lock(&mutex_exec);
+        list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
+        pthread_mutex_unlock(&mutex_exec);
     } 
-    
+
+    if(proceso->estado_pcb == BLOCKED)
+    {
+        pthread_mutex_lock(&mutex_blocked);
+        list_remove_element(dictionary_int_get(diccionario_colas, BLOCKED), proceso);
+        pthread_mutex_unlock(&mutex_blocked);
+    }
+
     //lo metemos en exit
     pthread_mutex_lock(&mutex_exit);
     meter_en_cola(proceso, EXIT, cola_EXIT);
@@ -317,7 +324,7 @@ void proceso_en_exit(t_pcb *proceso)
 
     // sacamos el proceso de la lista de exit
     pthread_mutex_lock(&mutex_exit);
-    list_remove(dictionary_int_get(diccionario_colas, EXIT), 0);
+    list_remove_element(dictionary_int_get(diccionario_colas, EXIT), proceso);
     pthread_mutex_unlock(&mutex_exit);
 
     // le mandamos esto a memoria para que destruya las estructuras
