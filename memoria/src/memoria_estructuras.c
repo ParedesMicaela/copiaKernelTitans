@@ -169,7 +169,7 @@ static void liberar_swap(int pid) {
 
     int ok_finalizacion_swap;
     recv(socket_fs, &ok_finalizacion_swap, sizeof(int), 0);
-	log_info(memoria_logger,"Bloques reservados\n");
+	log_info(memoria_logger,"Liberando bloques reservados\n");
 
     if (ok_finalizacion_swap != 1)
     {

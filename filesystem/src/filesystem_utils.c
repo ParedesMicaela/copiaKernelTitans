@@ -6,14 +6,13 @@
 //cada que escribir, metes en el archivo con msink
 
 int socket_kernel;
-size_t tamanio_fat;
 fcb config_valores_fcb;
 t_list* bloques_reservados_a_enviar;
 t_list *tabla_fat; //lista con direcciones
 t_list *lista_bloques_swap;
 t_list *lista_bloques_fat;
-size_t tamanio_fat;
 FILE* archivo_fat;
+
 //=======================================================================================================================
 
 void cargar_configuracion(char* path) {
@@ -75,7 +74,6 @@ void atender_clientes_filesystem(void* conexion) {
 				break;
 
 			case TRUNCAR_ARCHIVO:
-				//todavia no funciona
 				nombre_archivo = sacar_cadena_de_paquete(&stream);
 				nuevo_tamanio_archivo = sacar_entero_de_paquete(&stream);
 				log_info(filesystem_logger, "Truncar Archivo: %s- Tamaño: %d\n", nombre_archivo, nuevo_tamanio_archivo);
@@ -136,8 +134,7 @@ void atender_clientes_filesystem(void* conexion) {
 			case PEDIR_PAGINA_PARA_ESCRITURA:
 				pid = sacar_entero_de_paquete(&stream);
 				pag_pf = sacar_entero_de_paquete(&stream);
-				//hace lo que tenga que hacer la página con el swap
-				//buscar_pag (pag_pf); función que me retorna la página recibida que después se agrega en el paquete
+				//t_pagina* pagina = buscar_pagina(pag_pf); 
 			break;
 
 			case ESCRIBIR_PAGINA_SWAP:
@@ -152,37 +149,6 @@ void atender_clientes_filesystem(void* conexion) {
 			break;
 		}
 		eliminar_paquete(paquete);
-	}
-}
-
-//..................................FUNCIONES UTILES.....................................................................
-
-char* concatenarCadenas(const char* str1, const char* str2) {
-    size_t len1 = strlen(str1);
-    size_t len2 = strlen(str2);
-
-    char* resultado = (char*)malloc((len1 + len2 + 1) * sizeof(char));
-
-    if (resultado == NULL) {
-        perror("Error de asignación de memoria");
-        return NULL;
-    }
-
-    strcpy(resultado, str1);
-    strcat(resultado, str2);
-
-    return resultado;
-}
-
-int dividirRedondeando(int numero1 , int numero2)
-{
-	if(numero1 % numero2 == 0)
-	{
-		return (numero1)/(numero2);
-	}
-	else
-	{
-		return (numero1)/(numero2) + 1;
 	}
 }
 

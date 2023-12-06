@@ -1,53 +1,41 @@
 #include "filesystem.h"
 
+bloque_swap* particion_swap;
 //============================================== INICIALIZACION ============================================
 void levantar_fat(size_t tamanio_fat)
 {    
 	char* path = config_valores_filesystem.path_fat;
 	uint32_t tamanio_bloque = config_valores_filesystem.tam_bloque;
-    t_bloque* archivo_fat = fopen(path, "rb+");
+    bloque_swap* archivo_fat = fopen(path, "rb+");
 
-	//creo la tabla fat
+	uint32_t tam_entrada = tamanio_fat / sizeof(uint32_t);
+
 	tabla_fat = list_create();
 
+	//si no existe el archivo fat, lo abre y pone su valor en 0
 	if (archivo_fat == NULL)
 	{
-		//tabla_fat = dictionary_create(); //creamos la tabla de fat
-        //tabla fat ya esta creada logicamente como una lista en el filesystem.h
-
-		// Si no se encuentra el fat se inicializa con 0s.
 		archivo_fat = fopen(path, "wb+");
-        
-		if (archivo_fat == NULL)
-		{
-            perror("No se puedo abrir o crear el archivo_fat \n");
-            abort();
-        } else printf("Terminamos abriendo con wb+\n");
 
 		uint32_t valor_inicial = 0; //Revisar que no sea while(!UINT32_MAX)
-
-	    for (size_t i = 0; i < tamanio_fat / sizeof(uint32_t); i++) // ver que dicen en issue, si queda uint32 o t_bloque o tamanio que nos den
+	    for (size_t i = 1; i < tamanio_fat; i++) // ver que dicen en issue, si queda uint32 o bloque_swap o tamanio que nos den
 		{
-			fwrite(&valor_inicial, sizeof(uint32_t), 1, archivo_fat);
+			fwrite(&valor_inicial, sizeof(tam_entrada), 1, archivo_fat);
         }
         fflush(archivo_fat);
-
-    } else if(archivo_fat != NULL)
+    } else 
 	{
 		log_info(filesystem_logger,"Comenzamos a levantar la tabla fat, que no esta vacia \n");
 
-		//creo que con esto rellenamos toda la lista de la tabla fat del archivo
-		for (size_t i = 0; i < tamanio_fat / sizeof(uint32_t); i++)
+		for (size_t i = 0; i < tamanio_fat; i++)
 		{	
-			//aca habia que poner el malloc para que se cree una nueva instancia de t_bloque
-			t_bloque *entrada_fat = malloc(sizeof(t_bloque));
-
-			//asumo que lo que querias hacer aca era leer el archivo_fat y guardarlo en entrada_fat. Puse sizeof t_bloque y le saque el puntero&
-			fread(entrada_fat, sizeof(t_bloque), 1, archivo_fat);
+			//asumo que lo que querias hacer aca era leer el archivo_fat y guardarlo en entrada_fat. Puse sizeof bloque_swap y le saque el puntero&
+			
+			uint32_t* entrada_fat = malloc(sizeof(uint32_t));
+			fread(entrada_fat, sizeof(bloque_swap), 1, archivo_fat);
 
 			//guardo la entrada_fat en la tabla de fat
-			list_add(tabla_fat,(void*)entrada_fat);
-			//free(archivo_fat);
+			list_add(tabla_fat, entrada_fat);
         }
 		//en teoria con esto tenemos la tabla llena, a modo de lista
         fflush(archivo_fat);
@@ -56,138 +44,50 @@ void levantar_fat(size_t tamanio_fat)
 
 }
 
-/* Este es el antiguo pero lo dejo por las dudas
-void levantar_archivo_bloque(size_t tamanio_swap, size_t tamanio_fat) {
-    
-	
-	char* path = config_valores_filesystem.path_bloques;
-
-    FILE* archivo_bloque = fopen(path, "rb"); // Leemos en modo binario, puede ser wb+
-    
-	if (archivo_bloque == NULL)
-	{
-    perror("No se pudo abrir el archivo de bloques\n");
-    abort();
-    }
-	else printf("Se abrio el archivo de bloques\n");
-
-    // Le asignamos un espacio de memoria al swap
-	uint32_t* particion_swap = (uint32_t*)malloc(tamanio_swap);
-    if (particion_swap == NULL)
-	{
-    perror("No se pudo alocar memoria para el swap\n");
-    abort();
-    }
-	else
-	{
-	fread(particion_swap, 1, 1, archivo_bloque);
-	printf("Se aloco la memoria para el swap\n");
-	}
-
-    // Le asignamos un espacio de memoria al fat
-	uint32_t* particion_fat = (uint32_t*)malloc(tamanio_fat);
-    if (particion_fat == NULL)
-	{
-    perror("No se pudo alocar memoria para el fat\n");
-    abort();
-    }
-	else
-	{
-    fread(particion_fat, 1, tamanio_fat, archivo_bloque);
-	printf("Se aloco la memoria para el fat\n");
-	free(particion_fat);
-	}
-
-	fclose(archivo_bloque);
-
-    printf("Se levanto archivo de bloque\n");
-
-}
-*/
-
 void levantar_archivo_bloque(size_t tamanio_swap, size_t tamanio_fat)
 {
     int tamanio_bloque = config_valores_filesystem.tam_bloque;
 	char* path = config_valores_filesystem.path_bloques;
+	int cant_bloques_swap = config_valores_filesystem.cant_bloques_swap;
 
     FILE* archivo_bloque = fopen(path, "rb"); // Leemos en modo binario, puede ser wb+
 
 	lista_bloques_swap = list_create();
-	lista_bloques_fat = list_create();
     
-	if (archivo_bloque == NULL)
-	{
-		perror("No se pudo abrir el archivo de bloques\n");
-		abort();
-    }
-	else  //revisar esto porque hay cosas que no me cierran
-	{
-		printf("Se abrio el archivo de bloques, rellenamos estructuras\n");
+	log_info(filesystem_logger, "Se abrio el archivo de bloques, rellenamos estructuras\n");
 
-		// Le asignamos un espacio de memoria al swap (tipo swap creo)
-		t_bloque* particion_swap = (t_bloque*)malloc(sizeof(tamanio_swap));
-		if (particion_swap == NULL){("No se pudo alocar memoria para el swap\n");abort();}
-		else
-		{
-			//rellenamos lista con datos de archivo
-			for (size_t i = 0; i <=tamanio_swap / sizeof(tamanio_bloque); i++)
-			{		
-				t_bloque* dato_bloque = malloc(sizeof(t_bloque));
+	// Le asignamos un espacio de memoria al swap (tipo swap creo)
+	particion_swap = malloc(sizeof(tamanio_swap));
 
-				fread(dato_bloque, sizeof(t_bloque), 1, archivo_bloque);
-				list_add_in_index(lista_bloques_swap,i,(void*)dato_bloque);
-				free(dato_bloque);
-			}
-			printf("Se aloco la memoria para el swap y se relleno estructura\n");
-		}
+	//rellenamos lista con datos de archivo
+	for (size_t i = 0; i <= cant_bloques_swap; i++)
+	{		
+		bloque_swap* dato_bloque = malloc(sizeof(bloque_swap));
 
-		// Le asignamos un espacio de memoria al fat
-		uint32_t* particion_fat = (uint32_t*)malloc(sizeof(tamanio_fat));
-		if (particion_fat == NULL){perror("No se pudo alocar memoria para el fat\n");abort();}
-		else
-		{
-			//rellenamos lista con datos de archivo
-			for (size_t i = 0; i <=tamanio_fat / sizeof(tamanio_bloque); i++)
-			{		
-				t_bloque* dato_bloque = malloc(sizeof(t_bloque));
-
-				//reservado (no lo usamos, pero esto no es que sea necesario porque solo reservamos en la fat, es para que quede conceptualmente)
-				if(i==0){list_add_in_index(lista_bloques_fat,i,(void*)dato_bloque);}
-	
-				fread(dato_bloque, sizeof(t_bloque), 1, archivo_bloque);
-				list_add_in_index(lista_bloques_fat,i,(void*)dato_bloque);
-				free(dato_bloque);
-			}
-			printf("Se aloco la memoria para el fat y se relleno estructura\n");
-		}
-		/*
-		//rellenamos con datos de swap (verificar si es con la estructura bloque|)		
-		for (size_t i = 0; i <tamanio_swap / sizeof(uint32_t); i++)
-		{		
-			bloque* dato_bloque;
-			fread(&dato_bloque, sizeof(bloque), 1, archivo_fat);
-			list_add_in_index(lista_bloques_swap,i,dato_bloque);
-			free(dato_bloque);
-		}
-		//rellenamos con datos de fat
-		for (size_t i = 0; i <tamanio_swap / sizeof(uint32_t); i++)
-		{		
-			bloque* dato_bloque;
-			fread(&dato_bloque, sizeof(bloque), 1, archivo_fat);
-			list_add_in_index(lista_bloques_fat,i,dato_bloque);
-			free(dato_bloque);
-		}
-		*/
+		fread(dato_bloque, sizeof(bloque_swap), 1, archivo_bloque);
+		list_add_in_index(lista_bloques_swap,i,(void*)dato_bloque);
 	}
+	log_info(filesystem_logger, "Se aloco la memoria para el swap y se relleno estructura\n");
+
+	// Le asignamos un espacio de memoria al fat
+	uint32_t* particion_fat = malloc(sizeof(tamanio_fat));
+
+	//rellenamos lista con datos de archivo
+	for (size_t i = 0; i <= tamanio_fat; i++)
+	{		
+		uint32_t* dato_bloque = malloc(sizeof(uint32_t));
+		if(i==0){
+			bitarray_set_bit(bitmap_archivo_bloques, i);
+		}
+		list_add_in_index(tabla_fat,i,dato_bloque);
+	}
+	log_info(filesystem_logger, "Se aloco la memoria para el fat y se relleno estructura\n");
 
 	fclose(archivo_bloque);
     log_info(filesystem_logger, "Se levanto archivo de bloque\n");
-
 }
 
 
-
-/*
 void levantar_fcb(char* path) {
 
 	config = config_create(path); //Leo el archivo de configuracion
@@ -203,10 +103,10 @@ void levantar_fcb(char* path) {
 		abort();
 	  }
 }
-*/
+
 
 //================================================= OPERACIONES ARCHIVOS ============================================
-void crear_archivo (char *nombre_archivo, int socket_kernel) 
+void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo unico que funciona
 {
     char *path_archivo = string_from_format ("%s/%s.dat", config_valores_filesystem.path_fcb, nombre_archivo);
 	
@@ -238,20 +138,17 @@ void crear_archivo (char *nombre_archivo, int socket_kernel)
 		config_set_value(archivo_nuevo, "BLOQUE_INICIAL", ultimo_bloque_fat_string);
 		config_set_value(archivo_nuevo, "TAMANIO_ARCHIVO", "0");
 		config_save_in_file(archivo_nuevo,path_archivo);
-		printf("Creamos el config y lo guardamos en disco");
+		log_info(filesystem_logger, "Creamos el config y lo guardamos en disco\n");
 		
 		t_paquete *paquete = crear_paquete(ARCHIVO_CREADO);
 		agregar_entero_a_paquete(paquete, direccion);
 		enviar_paquete(paquete, socket_kernel);
 		eliminar_paquete(paquete);
-		printf("enviamos paquete a k de archivo creado");
 
 		config_destroy (archivo_nuevo);
 		free (path_archivo);
-	
-	
 	}
-} //MARTINCHO TO DO: ACORDATE DE METER LOS CASES EN LAs FUNCIONES......LINEA 47 ARRANCA
+} 
 
 void abrir_archivo (char *nombre_archivo, int socket_kernel)
 {
@@ -272,7 +169,7 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 		FILE *archivo = fopen(path_archivo,"r");
 		uint32_t direccion = (uint32_t)archivo;
 		agregar_entero_a_paquete(paquete,direccion);
-		printf("mandamos que el archivo hya existe");
+		log_info(filesystem_logger, "Enviando confirmacion de que existe el archivo solicitado\n");
 
 		//fclose(archivo); esto creo que no, solo cuando mandan FCLOSE
 		enviar_paquete(paquete, socket_kernel);
@@ -285,7 +182,6 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 		agregar_entero_a_paquete(paquete, 1);
 		enviar_paquete(paquete, socket_kernel);
 		eliminar_paquete(paquete);
-		printf("mandamos a que kernel respecto de que archivo no exista");
 	}
 	
 	free(path_archivo); 
@@ -301,8 +197,6 @@ void truncar_archivo(char *nombre, int tamanio_nuevo)
 	fcb_archivo.nombre_archivo = nombre;
 	fcb_archivo.tamanio_archivo = tamanio;
 	fcb_archivo.bloque_inicial = bloquecito_inicial;
-
-	log_info(filesystem_logger, "FOKINGOU\n");
 				
 	//comparar el tamanio del archivo actual con el nuevo
 	if(fcb_archivo.tamanio_archivo < tamanio_nuevo)
@@ -417,6 +311,7 @@ void *leer_archivo(char *nombre_archivo,uint32_t direccion_fisica, int socket_ke
 }
 
 //============================================= ACCESORIOS DE ARCHIVOS =================================================================
+
 void actualizar_fcb(fcb* nuevo_fcb)
 {
 	char* direccion_archivo = devolver_direccion_archivo(nuevo_fcb->nombre_archivo);
@@ -465,7 +360,7 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb fcb_archivo)
 
 			//en el archivo de bloques si ponemos el dato, que por ahora es nada
 			FILE* archivo_bloques = fopen(config_valores_filesystem.path_bloques, "wb+");
-			int posicion_archivo_bloques = list_size(lista_bloques_swap) + list_size(lista_bloques_fat);
+			int posicion_archivo_bloques = list_size(lista_bloques_swap) + list_size(tabla_fat);
 			fseek(archivo_fat,posicion_archivo_bloques,SEEK_SET); // revisar
 
 			if(archivo_fat != NULL && archivo_bloques != NULL)
@@ -484,9 +379,9 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb fcb_archivo)
 				list_add(tabla_fat,nuevo_ultimo_bloque);
 
 				//actualizamos lista de bloques local
-				t_bloque* nuevo_bloque_fat;
+				bloque_swap* nuevo_bloque_fat;
 				nuevo_bloque_fat->data = NULL; //es nuevo, no tiene nada
-				list_add(lista_bloques_fat,nuevo_bloque_fat);
+				list_add(tabla_fat,nuevo_bloque_fat);
 				
 				//actualizamos archivo_bloque (esta bien asi? quiero guardar el dato de la estructura)
 				if(bloque_agregado == (bloques_totales + bloques_a_agregar) ) //es el bloque final
@@ -496,7 +391,7 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb fcb_archivo)
 				}
 				else
 				{
-					fwrite(&nuevo_bloque_fat, sizeof(t_bloque*), 1, archivo_fat);
+					fwrite(&nuevo_bloque_fat, sizeof(bloque_swap*), 1, archivo_fat);
 				}
 				
 				fflush(archivo_fat);
@@ -532,7 +427,7 @@ void reducir_tamanio_archivo (int nuevo_tamanio_archivo, fcb fcb_archivo)
 
 		//en el archivo de bloques si ponemos el dato, que por ahora es nada
 		FILE* archivo_bloques = fopen(config_valores_filesystem.path_bloques, "wb+");
-		int posicion_archivo_bloques = list_size(lista_bloques_swap) + list_size(lista_bloques_fat);
+		int posicion_archivo_bloques = list_size(lista_bloques_swap) + list_size(tabla_fat);
 		fseek(archivo_fat,posicion_archivo_bloques,SEEK_SET); // revisar
 
 		if(archivo_fat != NULL && archivo_bloques != NULL)
@@ -557,20 +452,20 @@ void reducir_tamanio_archivo (int nuevo_tamanio_archivo, fcb fcb_archivo)
 			//list_replace_and_destroy_element(tabla_fat,bloque_quitado,bloque_nuevo,(void*)vaciar_bloque(bloque_nuevo));
 			
 			//actualizamos lista de bloques local
-			t_bloque* nuevo_bloque_fat = malloc(sizeof(t_bloque));
+			bloque_swap* nuevo_bloque_fat = malloc(sizeof(bloque_swap));
 			nuevo_bloque_fat->data = NULL;
-			list_replace_and_destroy_element(lista_bloques_fat,bloque_quitado,bloque_nuevo,(void*)liberar_bloque(bloque_nuevo));
+			//list_replace_and_destroy_element(tabla_fat,bloque_quitado,bloque_nuevo,liberar_bloque_individual(bloque_nuevo));
 			
 			//actualizamos archivo bloque 
 			if(bloque_quitado == (bloques_totales - bloques_a_quitar) ) //es el bloque final
 			{
 				nuevo_bloque_fat->data = UINT32_MAX;
-				fwrite(nuevo_bloque_fat, sizeof(t_bloque*), 1, archivo_bloques); //vemos si es un bloque* otra cosa 
+				fwrite(nuevo_bloque_fat, sizeof(bloque_swap*), 1, archivo_bloques); //vemos si es un bloque* otra cosa 
 			}
 			else
 			{
 				//list_remove_and_destroy_element()
-				fwrite(0, sizeof(t_bloque), 1, archivo_fat);
+				fwrite(0, sizeof(bloque_swap), 1, archivo_fat);
 			}
 						
 			fflush(archivo_fat);

@@ -7,9 +7,11 @@ int server_fd;
 int* cliente_fd;
 int socket_memoria;
 arch_config config_valores_filesystem;
-//size_t tamanio_fat; es un extern en el .h para la tabla de fat
-size_t tamanio_swap;
+int tamanio_fat;
+int tamanio_swap;
+t_bitarray* bitmap_archivo_bloques;
 
+//============================================================================================================
 
 int main(void)
 {
@@ -32,9 +34,11 @@ int main(void)
     tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
 
     procesos_en_filesystem = list_create();
+
+    inicializar_bitarray();
     
 	char *path_fcb = string_from_format("%s/%s", config_valores_filesystem.path_fcb, "fcb.dat");
-   // levantar_fcb(path_fcb);
+    levantar_fcb(path_fcb);
     log_info(filesystem_logger,"Levanto fcb \n");
     levantar_fat(tamanio_fat);
     log_info(filesystem_logger,"Levanto el fat \n");

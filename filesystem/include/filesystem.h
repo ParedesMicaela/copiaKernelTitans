@@ -20,9 +20,8 @@ extern int server_fd;
 extern t_list *bloques_reservados;
 extern t_list* procesos_en_filesystem;
 extern t_list* lista_bloques_swap;
-extern t_list* lista_bloques_fat;
-
-extern size_t tamanio_fat;
+extern int tamanio_swap;
+extern int tamanio_fat;
 
 //STRUCTS//
 typedef struct  
@@ -60,23 +59,20 @@ typedef struct
 
 typedef struct {
     char* data;  
-} bloque_swap; //DIego por el momento usa esto
+} bloque_swap; 
 
-
-typedef struct {
-    //char* nombre_archivo; //esto al final ni lo usamos
-    int numero_bloque;
-    uint32_t* direccion_bloque;
-    uint32_t* puntero_siguiente_bloque;
-    uint8_t data;
-} t_bloque; // esto es un bloque..xd
+typedef struct{
+    t_list* bloques_de_swap;
+}t_archivo_de_bloques;
 
 extern t_list *tabla_fat;
-
 extern fcb config_valores_fcb;
-
 extern arch_config config_valores_filesystem;
+extern t_bitarray* bitmap_archivo_bloques;
+extern bloque_swap* particion_swap;
 
+
+void inicializar_bitarray();
 void cargar_configuracion(char*);
 void*conexion_inicial_memoria();
 void atender_clientes_filesystem(void* ); 
@@ -89,6 +85,8 @@ void liberar_bloque_individual(bloque_swap* bloque);
 char* devolver_direccion_archivo(char* nombre);
 
 int* buscar_y_rellenar_fcb(char* nombre);
+
+bloque_swap* buscar_pagina(int nro_pagina);
 
 char* concatenarCadenas(const char* str1, const char* str2);
 int dividirRedondeando(int numero1 , int numero2);
@@ -105,13 +103,13 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo,fcb fcb_archivo);
 
 void reducir_tamanio_archivo (int nuevo_tamanio_archivo,fcb fcb_archivo);
 
-void destruir_entrada_fat(t_bloque* ultimo_bloque_fat);
+void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
 t_archivo* buscar_archivo_en_carpeta_fcbs(char* nombre);
 
-void* liberar_bloque(t_bloque* bloque_a_liberar);
+void* liberar_bloque(bloque_swap* bloque_a_liberar);
 
-void destruir_entrada_fat(t_bloque* ultimo_bloque_fat);
+void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
 
@@ -124,5 +122,5 @@ void escribir_archivo(char* nombre_archivo, uint32_t *puntero_archivo, void* con
 //..................................FUNCIONES SWAP.....................................................................
 t_list* reservar_bloques(int pid, int cantidad_bloques);
 void liberar_bloques(int pid);
-bloque_swap* crear_bloque_swap(int tam_bloque);
+bloque_swap* crear_bloque_swap(int tam_bloque, int index);
 #endif

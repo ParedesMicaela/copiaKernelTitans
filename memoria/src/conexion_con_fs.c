@@ -10,13 +10,6 @@ void enviar_pedido_pagina_para_escritura(int pid, int pag_pf){
     eliminar_paquete(paquete);
 }
 
-void solucionar_page_fault(int num_pagina) {
-    t_paquete* paquete = crear_paquete(SOLUCIONAR_PAGE_FAULT_FILESYSTEM); 
-    agregar_entero_a_paquete(paquete, num_pagina); 
-    enviar_paquete(paquete, socket_fs);
-    eliminar_paquete(paquete);
-}
-
 
 void escribir_en_swap(t_pagina* pagina_a_escribir){
     
