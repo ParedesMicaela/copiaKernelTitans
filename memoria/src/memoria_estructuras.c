@@ -57,20 +57,21 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* p
 
 void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad_paginas_proceso) {
     
-    t_pagina* tp = (t_pagina*)malloc(sizeof(t_pagina));
+    for (int i = 0; i <= cantidad_paginas_proceso; i++) {
 
-    for (int i = 0; i < cantidad_paginas_proceso; i++) {
-        tp[i].id = proceso->pid;
-        tp[i].numero_de_pagina = i;
-        tp[i].marco = i;
-        tp[i].bit_de_presencia = 0;
-        tp[i].bit_modificado = 0;
-        tp[i].posicion_swap = -1; // No en memoria
-        tp[i].tiempo_uso = obtener_tiempo();
-        tp[i].tiempo_de_carga = i;
+        //creo una pagina por cada iteracion
+        t_pagina* tp = malloc(sizeof(t_pagina));
 
-        //paso la direccion de la estructura
-        list_add(proceso->paginas_en_memoria, (t_pagina*)&tp[i]);
+        tp->id = proceso->pid;
+        tp->numero_de_pagina = i;
+        tp->marco = i;
+        tp->bit_de_presencia = 0;
+        tp->bit_modificado = 0;
+        tp->posicion_swap = -1; // No en memoria
+        tp->tiempo_uso = obtener_tiempo();
+        tp->tiempo_de_carga = i;
+
+        list_add(proceso->paginas_en_memoria, (t_pagina*)tp);
     }
 }
 
