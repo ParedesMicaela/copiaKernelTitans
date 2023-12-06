@@ -1,64 +1,65 @@
 #include "memoria.h"
 
-void enviar_pedido_pagina_para_escritura(int pid, int pag_pf)
-{
-    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
-    t_pagina* pagina = proceso->paginas_en_memoria;
-    t_paquete *paquete = crear_paquete(PEDIR_PAGINA_PARA_ESCRITURA);
-    
-    agregar_entero_a_paquete(paquete, pid);
-    agregar_entero_a_paquete(paquete, pagina->entradas[pag_pf].marco);
-    agregar_entero_a_paquete(paquete, pagina->entradas[pag_pf].numero_de_pagina);
-    agregar_entero_a_paquete(paquete, pagina->entradas[pag_pf].posicion_swap);
+void enviar_pedido_pagina_para_escritura(int pid, int pag_pf){
 
-    enviar_paquete(paquete, socket_filesystem);
+    t_paquete* paquete = crear_paquete(PEDIR_PAGINA_PARA_ESCRITURA);
+    agregar_entero_a_paquete(paquete,pid);
+    agregar_entero_a_paquete(paquete,pag_pf);
+    
+    enviar_paquete(paquete, socket_fs);
     eliminar_paquete(paquete);
 }
 
-void recibir_pagina_para_escritura()
- {
-    t_paquete* paquete = recibir_paquete(socket_filesystem);
-    void* stream = paquete->buffer->stream;
-    int numero_de_pagina;
-    int marco; 
-    int posicion_swap;     
-    int pid;
-    
-	if(paquete->codigo_operacion == PAGINA_PARA_ESCRITURA)
-	{
-        numero_de_pagina = sacar_entero_de_paquete(&stream);
-        marco = sacar_entero_de_paquete(&stream);
-        posicion_swap = sacar_entero_de_paquete(&stream);
-        pid = sacar_entero_de_paquete(&stream);
-    }
-    else{
-        log_error(memoria_logger, "Falla al recibir página, se cierra la Memoria \n");
-        abort();
-    }
-
-    
+void solucionar_page_fault(int num_pagina) {
+    t_paquete* paquete = crear_paquete(SOLUCIONAR_PAGE_FAULT_FILESYSTEM); 
+    agregar_entero_a_paquete(paquete, num_pagina); 
+    enviar_paquete(paquete, socket_fs);
     eliminar_paquete(paquete);
-
-    escribir_en_memoria_principal(numero_de_pagina, marco, posicion_swap, pid);
-
 }
 
-void escribir_en_swap(int pid, int cantidad_paginas_proceso){
+
+void escribir_en_swap(t_pagina* pagina_a_escribir){
     
+    //CREO QUE DEBERIA SER UN SEND CON EL CONTENIDO, PERO POR EL MOMENTO LO DEJO ASÍ
+
     t_paquete* paquete = crear_paquete(ESCRIBIR_PAGINA_SWAP);
-
-    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
-    t_pagina* pagina = proceso->paginas_en_memoria;
-    
-    agregar_entero_a_paquete(paquete, pid);
-    agregar_entero_a_paquete(paquete, cantidad_paginas_proceso);
-
-     for (int i = 0; i < cantidad_paginas_proceso; ++i) {
-    agregar_entero_a_paquete(paquete, pagina->entradas[i].marco);
-    agregar_entero_a_paquete(paquete, pagina->entradas[i].numero_de_pagina);
-    agregar_entero_a_paquete(paquete, pagina->entradas[i].posicion_swap);
-    }
-    
-    enviar_paquete(paquete, socket_filesystem);
+    agregar_entero_a_paquete(paquete, pagina_a_escribir->numero_de_pagina);
+    agregar_entero_a_paquete(paquete, pagina_a_escribir->posicion_swap);
+    agregar_entero_a_paquete(paquete, pagina_a_escribir->marco);
+    enviar_paquete(paquete, socket_fs);
     eliminar_paquete(paquete);
+}
+
+//bien se viene el toqueteo sensual que nos dijo Dami (Fachini a.k.a el fachas en mis libros)
+
+//en vez de escribir_en_memoria(char* contenido.... why not 
+void escribir_en_memoria(void* contenido, size_t tamanio_contenido, uint32_t direccion_fisica)
+{
+	usleep(1000 * config_valores_memoria.retardo_respuesta); 
+
+    if (espacio_usuario == NULL) {
+        printf("Error: espacio_usuario is NULL\n");
+        return;
+    }else{
+        memcpy(direccion_fisica, contenido, tamanio_contenido);
+
+        //le mandamos el fokin send a fs
+        int se_ha_escrito = 1;
+        send(socket_fs, &se_ha_escrito, sizeof(int), 0 );
+
+        //como en monster inc, que tal si esto lo mandamos a volarrrrrrr
+        /*size_t contenido_length = strlen(contenido) + 1;
+        memcpy(puntero_a_direccion_fisica, contenido, contenido_length);
+
+        int se_ha_escrito = 1;
+        send(socket_filesystem, &se_ha_escrito, sizeof(int), 0); */
+
+        /*char* puntero_a_direccion_fisica = espacio_usuario + direccion_fisica; 
+
+        size_t contenido_length = strlen(contenido) + 1;
+        memcpy(puntero_a_direccion_fisica, contenido, contenido_length);
+
+        int se_ha_escrito = 1;
+        send(socket_filesystem, &se_ha_escrito, sizeof(int), 0); */
+    }
 }

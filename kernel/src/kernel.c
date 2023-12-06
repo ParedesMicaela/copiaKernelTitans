@@ -34,17 +34,17 @@ int main(void)
 
     log_info(kernel_logger, "Kernel conectado con memoria \n");
 
-   //conexion con filesystem
-   socket_filesystem = crear_conexion(config_valores_kernel.ip_filesystem, config_valores_kernel.puerto_filesystem);
+    //conexion con filesystem
+    socket_filesystem = crear_conexion(config_valores_kernel.ip_filesystem, config_valores_kernel.puerto_filesystem);
 
-   log_info(kernel_logger, "Kernel conectado con filesystem \n");
+    log_info(kernel_logger, "Kernel conectado con filesystem \n");
 
-   //iniciamos el servidor
-   server_fd = iniciar_servidor(config_valores_kernel.ip_kernel,config_valores_kernel.puerto_escucha);
+    //iniciamos el servidor
+    server_fd = iniciar_servidor(config_valores_kernel.ip_kernel,config_valores_kernel.puerto_escucha);
 
-   log_info(kernel_logger, "Servidor creado \n");
+    log_info(kernel_logger, "Servidor creado \n");
 
-   log_info(kernel_logger, "Kernel listo para recibir al modulo cliente \n");
+    log_info(kernel_logger, "Kernel listo para recibir al modulo cliente \n");
 
     iniciar_tabla_archivos_abiertos();
 

@@ -14,10 +14,15 @@
 
 extern t_config *config;
 extern t_log *filesystem_logger;
-extern int socket_memoria; 
-extern int socket_kernel;
+extern int socket_memoria;
+extern int socket_kernel; 
 extern int server_fd;
 extern t_list *bloques_reservados;
+extern t_list* procesos_en_filesystem;
+extern t_list* lista_bloques_swap;
+extern t_list* lista_bloques_fat;
+
+extern size_t tamanio_fat;
 
 //STRUCTS//
 typedef struct  
@@ -42,14 +47,31 @@ typedef struct
 {
     char* nombre_archivo; //Puede ser  char nombre_archivo[256]
     int tamanio_archivo; //Puede ser size_t uint32_t
-    uint32_t bloque_inicial;
+    int bloque_inicial;
 } fcb;
+
+typedef struct 
+{
+    int pid;
+    t_list* bloques_reservados;
+} t_proceso_en_filesystem;
 
 // Define la estructura de un bloque de swap
 
 typedef struct {
-    uint8_t* data;  //tam bloque es de 64, usamos uint8_t para todo el archivo
-} bloque_swap;
+    char* data;  
+} bloque_swap; //DIego por el momento usa esto
+
+
+typedef struct {
+    //char* nombre_archivo; //esto al final ni lo usamos
+    int numero_bloque;
+    uint32_t* direccion_bloque;
+    uint32_t* puntero_siguiente_bloque;
+    uint8_t data;
+} t_bloque; // esto es un bloque..xd
+
+extern t_list *tabla_fat;
 
 extern fcb config_valores_fcb;
 
@@ -61,28 +83,46 @@ void atender_clientes_filesystem(void* );
 void levantar_archivo_bloque(size_t tamanio_swap, size_t tamanio_fat);
 void levantar_fat(size_t tamanio_fat);
 void levantar_fcb(char* path);
-int crear_archivo (char *nombre_archivo);
+void crear_archivo (char *nombre_archivo, int socket_kernel);
 void abrir_archivo (char *nombre_archivo, int socket_kernel);
-t_list* reservar_bloques(int cantidad_bloques);
-void liberar_bloques(t_list* bloques_a_liberar);
 void liberar_bloque_individual(bloque_swap* bloque);
-bloque_swap* crear_bloque_swap(int tam_bloque);
+char* devolver_direccion_archivo(char* nombre);
+
+int* buscar_y_rellenar_fcb(char* nombre);
 
 char* concatenarCadenas(const char* str1, const char* str2);
 int dividirRedondeando(int numero1 , int numero2);
-
 //..................................FUNCIONES UTILES ARCHIVOS.....................................................................
 
-int abrirArchivo(char *nombre, char **vectorDePaths,int cantidadPaths);
+//int abrirArchivo(char *nombre, char **vectorDePaths,int cantidadPaths);
 
-int crearArchivo(char *nombre,char *carpeta, char ***vectoreRutas, int *cantidadPaths);
+//int crearArchivo(char *nombre,char *carpeta, char ***vectoreRutas, int *cantidadPaths);
 
-int truncarArchivo(char *nombre,char *carpeta, char **vectoreRutas, int cantidadPaths, int tamanioNuevo);
+//void truncarArchivo(char *nombre, int tamanioNuevo);
+void truncar_archivo(char *nombre, int tamanio_nuevo);
+
+void ampliar_tamanio_archivo (int nuevo_tamanio_archivo,fcb fcb_archivo);
+
+void reducir_tamanio_archivo (int nuevo_tamanio_archivo,fcb fcb_archivo);
+
+void destruir_entrada_fat(t_bloque* ultimo_bloque_fat);
+
+t_archivo* buscar_archivo_en_carpeta_fcbs(char* nombre);
+
+void* liberar_bloque(t_bloque* bloque_a_liberar);
+
+void destruir_entrada_fat(t_bloque* ultimo_bloque_fat);
 
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
 
 //fcb *abrir_archivo (char *nombre_archivo);
-char *leer_archivo(char *nombre_archivo, FILE *puntero_archivo, char *direccion_fisica);
-int escribirArchivo(char *nombreArchivo, FILE *puntero_archivo, size_t bytesAEscribir, void *memoriaAEscribir);
 
+//antes era char* e int*
+void *leer_archivo(char *nombre_archivo, uint32_t direccion_fisica, int socket_kernel);
+void escribir_archivo(char* nombre_archivo, uint32_t *puntero_archivo, void* contenido, uint32_t*  direccion_fisica);
+
+//..................................FUNCIONES SWAP.....................................................................
+t_list* reservar_bloques(int pid, int cantidad_bloques);
+void liberar_bloques(int pid);
+bloque_swap* crear_bloque_swap(int tam_bloque);
 #endif

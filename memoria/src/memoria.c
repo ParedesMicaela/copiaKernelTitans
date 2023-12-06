@@ -3,9 +3,13 @@
 //VARIABLES GLOBALES
 t_log* memoria_logger;
 t_config* config;
-int socket_filesystem;
+int socket_memoria;
 int server_fd;
 arch_config config_valores_memoria;
+sem_t solucionado_pf;
+sem_t swap_creado;
+
+
 
 int main(void) {
 	 memoria_logger = log_create("/home/utnso/tp-2023-2c-KernelTitans/memoria/cfg/memoria.log", "memoria.log", 1, LOG_LEVEL_INFO);
@@ -21,11 +25,10 @@ int main(void) {
     log_info(memoria_logger,"Inicializando memoria\n");
 
     int server_memoria = iniciar_servidor(config_valores_memoria.ip_memoria,config_valores_memoria.puerto_escucha);
+    
+    sem_init(&(swap_creado), 0, 0);
+    sem_init(&(solucionado_pf), 0, 0);
 
-    // COMUNICACIÓN FILESYSTEM //
-	socket_filesystem = crear_conexion(config_valores_memoria.ip_filesystem, config_valores_memoria.puerto_filesystem);
-
-    //Falta que se conecte con FS
     log_info(memoria_logger,"Servidor creado\n");
     log_info(memoria_logger, "Memoria lista para recibir al modulo cliente \n");
 

@@ -27,11 +27,3 @@ void cargar_configuracion(char* path) {
 }
 
 //================================================== + Lindo =====================================================================
-bool es_una_operacion_con_archivos(char* motivo_bloqueo) {
-    return string_equals_ignore_case(motivo_bloqueo, "F_OPEN") 
-        || string_equals_ignore_case(motivo_bloqueo, "F_WRITE") 
-        || string_equals_ignore_case(motivo_bloqueo, "F_SEEK")
-        || string_equals_ignore_case(motivo_bloqueo, "F_TRUNCATE")
-        || string_equals_ignore_case(motivo_bloqueo, "F_READ")
-        || string_equals_ignore_case(motivo_bloqueo, "F_CLOSE");
-}

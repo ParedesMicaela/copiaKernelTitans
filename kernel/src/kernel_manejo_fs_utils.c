@@ -1,3 +1,11 @@
+#include "kernel.h"
+
+bool es_una_operacion_con_archivos(char* motivo_bloqueo) {
+        string_equals_ignore_case(motivo_bloqueo, "F_WRITE") 
+        || string_equals_ignore_case(motivo_bloqueo, "F_TRUNCATE")
+        || string_equals_ignore_case(motivo_bloqueo, "F_READ");
+}
+
 /*
 
 capaz es medio alpedo este archivo... lo dejo por las dudas

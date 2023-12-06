@@ -6,13 +6,18 @@ t_list* marcos_memoria;
 t_bitarray* mapa_bits_principal;
 t_bitarray* mapa_bits_swap;
 t_list* procesos_en_memoria;
+t_list* paginas_en_memoria;
 t_bitarray* status_tabla_paginas = NULL;
+double tiempo;
+//pthread_mutex_t mutex_tiempo;
 
 t_list* bloques_reservados;
 //================================================= Funciones Internas ================================================
-static void liberar_swap(t_pagina* paginas_a_liberar, int pid);
-static void recibir_listado_bloques_reservados(int socket_fs, int pid);
-static void enviar_inicializar_swap_a_filesystem (int pid, int cantidad_paginas_proceso, int socket_fs);
+static void liberar_swap(int pid);
+static void enviar_inicializar_swap_a_filesystem (int pid, int cantidad_paginas_proceso);
+static double obtener_tiempo();
+static void liberar_paginas(t_proceso_en_memoria* proceso_en_memoria);
+
 //================================================= Creacion Estructuras ====================================================
 
 /// @brief Espacio Usuario ///
@@ -32,16 +37,18 @@ void liberar_espacio_usuario() {
 //======================================================= INICIALIZACIONES =========================================================================================================
 
 void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* path_recibido){
-    
+
     t_proceso_en_memoria* proceso_en_memoria = malloc(sizeof(t_proceso_en_memoria));
     proceso_en_memoria->pid = pid;
     proceso_en_memoria->bloques_reservados = list_create();
+    proceso_en_memoria->paginas_en_memoria = list_create();
+    proceso_en_memoria->cantidad_entradas = cantidad_paginas_proceso;
 
     // Leemos el path antes de guardarlo en el proceso en memoria
 	char* instrucciones_leidas = leer_archivo_instrucciones(path_recibido);
     proceso_en_memoria->path_proceso = strdup(instrucciones_leidas);
 
-    //inicializar_la_tabla_de_paginas(proceso_en_memoria, cantidad_paginas_proceso);
+    inicializar_la_tabla_de_paginas(proceso_en_memoria, cantidad_paginas_proceso);
 
     list_add(procesos_en_memoria, (void*)proceso_en_memoria);
     
@@ -49,54 +56,41 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* p
 }
 
 void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad_paginas_proceso) {
-    proceso->paginas_en_memoria = (t_pagina*)malloc(sizeof(t_pagina));
-    t_pagina* tp = proceso->paginas_en_memoria;
-    tp->cantidad_entradas = cantidad_paginas_proceso;
-    tp->entradas = (entrada_t_pagina*)malloc(sizeof(entrada_t_pagina) * cantidad_paginas_proceso);
+    
+    t_pagina* tp = (t_pagina*)malloc(sizeof(t_pagina));
 
     for (int i = 0; i < cantidad_paginas_proceso; i++) {
-        tp->entradas[i].numero_de_pagina = i;
-        tp->entradas[i].marco = i;
-        tp->entradas[i].bit_de_presencia = 0;
-        tp->entradas[i].bit_modificado = 0;
-        tp->entradas[i].posicion_swap = -1; // No en memoria
+        tp[i].id = proceso->pid;
+        tp[i].numero_de_pagina = i;
+        tp[i].marco = i;
+        tp[i].bit_de_presencia = 0;
+        tp[i].bit_modificado = 0;
+        tp[i].posicion_swap = -1; // No en memoria
+        tp[i].tiempo_uso = obtener_tiempo();
+        tp[i].tiempo_de_carga = i;
 
-        // Marco la pagina que no está en memoria
-        //bitarray_clean_bit(status_tabla_paginas, i);
+        //paso la direccion de la estructura
+        list_add(proceso->paginas_en_memoria, (t_pagina*)&tp[i]);
     }
 }
 
-void inicializar_swap_proceso(int pid, int cantidad_paginas_proceso, int socket_fs) {
-    enviar_inicializar_swap_a_filesystem(pid, cantidad_paginas_proceso, socket_fs);
-    recibir_listado_bloques_reservados(socket_fs, pid);
+static double obtener_tiempo(){
+	//pthread_mutex_lock(&mutex_tiempo);
+	double t = tiempo;
+	tiempo++;
+	//pthread_mutex_unlock(&mutext_tiempo);
+	return t;
 }
 
-static void enviar_inicializar_swap_a_filesystem (int pid, int cantidad_paginas_proceso, int socket_fs) {
+void inicializar_swap_proceso(int pid, int cantidad_paginas_proceso) {
+    enviar_inicializar_swap_a_filesystem(pid, cantidad_paginas_proceso);
+}
+
+static void enviar_inicializar_swap_a_filesystem (int pid, int cantidad_paginas_proceso) {
     t_paquete* paquete = crear_paquete(INICIALIZAR_SWAP); 
     agregar_entero_a_paquete(paquete, pid); 
     agregar_entero_a_paquete(paquete, cantidad_paginas_proceso);
     enviar_paquete(paquete, socket_fs);
-    eliminar_paquete(paquete);
-}
-
-static void recibir_listado_bloques_reservados(int socket_fs, int pid)
-{
-    // Obtenemos proceso en memoria
-    t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid); 
-
-    t_paquete* paquete = recibir_paquete(socket_fs);
-    void* stream = paquete->buffer->stream;
-    if (paquete->codigo_operacion == LISTA_BLOQUES_RESERVADOS)
-    {
-
-        proceso_en_memoria->bloques_reservados = sacar_lista_de_cadenas_de_paquete(&stream);
-        log_info(memoria_logger, "Se ha recibido correctamente el listado de bloques");
-    }
-    else
-    {
-        log_error(memoria_logger,"No me enviaste el listado de bloques :( \n");
-        abort();
-    }
     eliminar_paquete(paquete);
 }
 
@@ -112,18 +106,19 @@ t_proceso_en_memoria* buscar_proceso_en_memoria(int pid) {
     return list_get(procesos_en_memoria, i);
 }
 
-entrada_t_pagina* buscar_pagina(int pid, int num_pagina){
+t_pagina* buscar_pagina(int pid, int num_pagina){
 
     // Obtenemos proceso en memoria
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid); 
 
     // Iterar las entradas
-    for(int i = 0; i < proceso_en_memoria->paginas_en_memoria->cantidad_entradas; i++)
+    for(int i = 0; i < proceso_en_memoria->cantidad_entradas; i++)
     {
-        // Si matchea el numero de pagina con la entrada, devuelvo la entrada
-        if (proceso_en_memoria->paginas_en_memoria->entradas[i].numero_de_pagina == num_pagina)
-        {
-            return &(proceso_en_memoria->paginas_en_memoria->entradas[i]);
+        t_pagina* pagina_actual = list_get(proceso_en_memoria->paginas_en_memoria, i);
+
+        // Si coincide el número de página, devolver la página
+        if (pagina_actual->numero_de_pagina == num_pagina) {
+            return pagina_actual;
         }
     }
 
@@ -133,7 +128,7 @@ entrada_t_pagina* buscar_pagina(int pid, int num_pagina){
 
 int buscar_marco(int pid, int num_pagina){
 
-    entrada_t_pagina* pagina = buscar_pagina(pid, num_pagina);
+    t_pagina* pagina = buscar_pagina(pid, num_pagina);
     log_info(memoria_logger, "Se buscara marco en las tablas de paginas");
 
     if (pagina->bit_de_presencia == 0) {
@@ -145,138 +140,41 @@ int buscar_marco(int pid, int num_pagina){
     }
 }
 
-void solucionar_page_fault(int num_pagina, int socket_fs) {
-    t_paquete* paquete = crear_paquete(SOLUCIONAR_PAGE_FAULT); 
-    agregar_entero_a_paquete(paquete, num_pagina); 
-    enviar_paquete(paquete, socket_fs);
-    eliminar_paquete(paquete);
-}
 
 //======================================================= FINALIZAR_PROCESO =========================================================================================================
 
 void finalizar_en_memoria(int pid) {
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid);
-    t_pagina* paginas = proceso_en_memoria->paginas_en_memoria;
-
-    liberar_swap(paginas, pid);
-    //Hace falta un send o response?
+    liberar_paginas(proceso_en_memoria);
+    liberar_swap(pid);
     list_remove_element(procesos_en_memoria,proceso_en_memoria);
-    free(procesos_en_memoria); 
+    free(proceso_en_memoria); 
 }
 
-static void liberar_swap(t_pagina* paginas_a_liberar, int pid) {
+static void liberar_paginas(t_proceso_en_memoria* proceso_en_memoria) {
+
+    int cantidad_de_paginas_a_liberar = proceso_en_memoria->cantidad_entradas;
+    list_destroy(proceso_en_memoria->paginas_en_memoria);
+
+    log_info(memoria_logger, "PID: %d - Tamaño: %d", proceso_en_memoria->pid, cantidad_de_paginas_a_liberar);
+
+}
+
+static void liberar_swap(int pid) {
     t_paquete* paquete = crear_paquete(LIBERAR_SWAP);
     agregar_entero_a_paquete(paquete, pid);
-    agregar_entero_a_paquete(paquete, paginas_a_liberar->cantidad_entradas);
-
-    for(int i = 0; i < paginas_a_liberar->cantidad_entradas; i++) {
-    agregar_entero_a_paquete(paquete, paginas_a_liberar->entradas[i].marco);
-    agregar_entero_a_paquete(paquete, paginas_a_liberar->entradas[i].numero_de_pagina);
-    agregar_entero_a_paquete(paquete, paginas_a_liberar->entradas[i].posicion_swap); 
-    }
-    
-    enviar_paquete(paquete, socket_filesystem);
+    enviar_paquete(paquete, socket_fs);
     eliminar_paquete(paquete);
-}
 
-//======================================================= Reemplazar Páginas =========================================================================================================
-void escribir_en_memoria_principal(int numero_de_pagina, int marco, int posicion_swap, int pid) {
+    int ok_finalizacion_swap;
+    recv(socket_fs, &ok_finalizacion_swap, sizeof(int), 0);
+	log_info(memoria_logger,"Bloques reservados\n");
 
-    /*intenta escribir en memoria y si esta llena, reemplaza
-    if(memoria_llena){
-        reemplazar_pagina(pagina_recibida);
-    }*/
-    
-   t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
-    t_pagina* pagina = proceso->paginas_en_memoria;
-
-    if(pagina->entradas[numero_de_pagina].posicion_swap == -1) {
-        pagina->cantidad_entradas++;
-    }
-   
-    pagina->entradas[numero_de_pagina].marco = marco;
-    pagina->entradas[numero_de_pagina].bit_de_presencia = 1;
-    pagina->entradas[numero_de_pagina].bit_modificado = 1;
-    pagina->entradas[numero_de_pagina].posicion_swap = posicion_swap;
-    pagina->entradas[numero_de_pagina].numero_de_pagina = numero_de_pagina;
-
-}
-
-
-
-/*
-void reemplazarPagina(){
-	
-	//BUSCO TODAS LAS PAGINAS QUE SE PUEDAN REEMPLAZAR
-	t_list* paginasEnMp = buscarPaginasMP(); 
-	
-	int noLock(t_pagina* pag){
-        
-		return (pag->lock == 0);
-	}
-	
-	t_list* paginasSinLock = list_filter(paginasEnMp, (void*)noLock);//FILTRO LAS QUE ESTAN LOCKEADAS -> ESTAS LAS NECESITO //TODO QUE PASA SI ESTAN TODAS LOCKEADAS???
-	
-	if(list_is_empty(paginasSinLock)){
-		log_error(logger, "No hay paginas para sacar de la memoria ppal");
-	}
-	
-	if(string_equals_ignore_case(config_valores.algoritmo_reemplazo, "LRU")){
-		reemplazarConLRU(paginasSinLock);
-	}
-	else if(string_equals_ignore_case(config_valores.algoritmo_reemplazo, "FIFO")){
-		reemplazarConFIFO(paginasSinLock);
-	}
-	
-	list_destroy(paginasEnMp);
-	list_destroy(paginasSinLock);	
-}
-
-
-//LRU
-void reemplazarConLRU(t_list* paginasEnMp){
-	
-	int masVieja(t_pagina* unaPag, t_pagina* otraPag){
-		
-		return (otraPag->tiempo_uso > unaPag->tiempo_uso); //LA QUE ESTA HACE MAS TIEMPO
-	}
-	
-	list_sort(paginasEnMp, (void*) masVieja); //FILTRO Y PONGO A LA MAS VIEJA PRIMERO -> ORDENA DE MAS VIEJA A MAS NIEVA
-	
-	//COMO REEMPLAZO SEGUN LRU, ELIJO LA PRIMERA QUE ES LA MAS VIEJA
-	t_pagina* paginaReemplazo = list_get(paginasEnMp, 0);
-	log_info(logger, "Voy a reemplazar la pagina %d que estaba en el frame %d", paginaReemplazo->id, paginaReemplazo->frame_ppal);
-	setLock(paginaReemplazo);
-	
-	//SI EL BIT DE MODIFICADO ES 1, LA GUARDO EM MV -> PORQUE TIENE CONTENIDO DIFERENTE A LO QUE ESTA EN MV
-	if(paginaReemplazo->modificado == 1)
-	{
-		guardarMemoriaVirtual(paginaReemplazo);
-	}
-	else
-	{
-		//EN LA MP, DESOCUPO EL FRAME EN EL BITMAP
-		desocuparFrame(paginaReemplazo->frame_ppal, MEM_PPAL);
-        //AHORA ESTA PAGINA YA NO ESTA EN MP, CAMBIO EL BIT DE PRESENCIA
-		paginaReemplazo->presencia = 0;
-		cleanLock(paginaReemplazo);
-	}
-}
-*/
-/*
-// Inicializamos el bit_array
-void inicializar_bit_array(int cantidad_paginas_proceso) {
-    bytes_necesarios = floor(cantidad_paginas_proceso / 8);
-    status_tabla_paginas = bitarray_create_with_mode((char*)malloc(bytes_necesarios), bytes_necesarios, MSB_FIRST);
-}
-
-int acceso_a_tabla_de_paginas(int numero_de_pagina, int pid) {
-// Checkeo
-if (bitarray_test_bit(status_tabla_paginas, numero_de_pagina)) {
-    int numero_de_marco = buscar_marco(pid, numero_de_pagina);
-    return numero_de_marco;
-} else {
-    // Page_Fault
+    if (ok_finalizacion_swap != 1)
+    {
+        log_error(memoria_logger, "No se pudieron crear reservar los bloques");
     }
 }
-*/
+
+
+

@@ -2,6 +2,11 @@
 
 int cantidad_paginas_proceso;
 char* path_recibido = NULL;
+int socket_fs;
+int chantada = 1;
+size_t tamanio_contenido;
+int pid_fs;
+
 
 // CONFIGURACION //
 void cargar_configuracion(char* path){
@@ -46,6 +51,7 @@ void manejo_conexiones(void* socket_cliente)
 	int pid_proceso = 0;
 	uint32_t valor_registro = 0;
 	uint32_t direccion_fisica = 0;
+	char* contenido = NULL;
 	char* path_asignado = NULL;
 	uint32_t numero_pagina;
 
@@ -77,6 +83,11 @@ void manejo_conexiones(void* socket_cliente)
 
 	case CREACION_ESTRUCTURAS_MEMORIA:
 
+		if(chantada == 1){
+			socket_fs = crear_conexion(config_valores_memoria.ip_filesystem, config_valores_memoria.puerto_filesystem);
+			chantada--;
+		}
+
 		pid_proceso = sacar_entero_de_paquete(&stream);
 		cantidad_paginas_proceso = sacar_entero_de_paquete(&stream);
 		path_recibido = sacar_cadena_de_paquete(&stream);
@@ -86,17 +97,29 @@ void manejo_conexiones(void* socket_cliente)
 		log_info(memoria_logger, "PATH recibido: %s", config_valores_memoria.path_instrucciones );
 
 		crear_tablas_paginas_proceso(pid_proceso, cantidad_paginas_proceso, path_recibido);
-		//inicializar_swap_proceso(pid_proceso,cantidad_paginas_proceso);
+		inicializar_swap_proceso(pid_proceso,cantidad_paginas_proceso);
 
-        int ok_creacion = 1;
+		pid_fs = pid_proceso;
+		
+		sem_wait(&swap_creado);
+		int ok_creacion = 1;
         send(cliente, &ok_creacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras creadas en memoria kernel-kyunn\n");
+		break;
+
+	case LISTA_BLOQUES_RESERVADOS:
+	    t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid_fs); 
+
+		proceso_en_memoria->bloques_reservados = sacar_lista_de_cadenas_de_paquete(&stream);
+        log_info(memoria_logger, "Se ha recibido correctamente el listado de bloques");
+
+		sem_post(&swap_creado);
 		break;
 
 	case FINALIZAR_EN_MEMORIA:
 		int pid = sacar_entero_de_paquete(&stream);
 		log_info(memoria_logger,"Recibi pedido de creacion de estructuras en memoria\n");
-		//finalizar_en_memoria(pid);
+		finalizar_en_memoria(pid);
 	    int ok_finalizacion = 1;
         send(cliente, &ok_finalizacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras eliminadas en memoria kernel-kyunn\n");
@@ -106,6 +129,13 @@ void manejo_conexiones(void* socket_cliente)
 		numero_pagina = sacar_entero_sin_signo_de_paquete(&stream);
 		pid_proceso = sacar_entero_de_paquete(&stream);
 		enviar_respuesta_pedido_marco(cliente, numero_pagina, pid_proceso);
+		break;
+
+	case ESCRIBIR_EN_MEMORIA:
+		contenido = sacar_cadena_de_paquete(&stream);
+		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+		escribir_en_memoria(contenido,tamanio_contenido, direccion_fisica);
+		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso, "ESCRIBIR EN MEMORIA", direccion_fisica);
 		break;
 
 	case WRITE:
@@ -123,9 +153,9 @@ void manejo_conexiones(void* socket_cliente)
 		uint32_t valor_a_enviar = leer(direccion_fisica);
 		enviar_valor_de_lectura(valor_a_enviar, cliente);
 		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso, "LEER", direccion_fisica);
+		break;
 
-
-	case SOLUCIONAR_PAGE_FAULT:
+	case SOLUCIONAR_PAGE_FAULT_MEMORIA:
 		pid_proceso = sacar_entero_de_paquete(&stream);
 		int pag_pf = sacar_entero_de_paquete(&stream);
 
@@ -133,13 +163,24 @@ void manejo_conexiones(void* socket_cliente)
 
 		enviar_pedido_pagina_para_escritura(pid_proceso, pag_pf);
 
-		recibir_pagina_para_escritura();
+		sem_wait(&solucionado_pf);
 
 		int a = 1;
         send(cliente, &a, sizeof(int), 0);
 		log_info(memoria_logger,"Page fault solucionado\n");
 		break;
-		
+	
+	case PAGINA_PARA_ESCRITURA:
+		t_pagina* pagina_recibida = (t_pagina*)malloc(sizeof(t_pagina));
+
+		pagina_recibida->numero_de_pagina = sacar_entero_de_paquete(&stream);
+   		pagina_recibida->marco = sacar_entero_de_paquete(&stream);
+    	pagina_recibida->posicion_swap = sacar_entero_de_paquete(&stream);
+
+		escribir_en_memoria_principal(pagina_recibida);
+
+		sem_post(&solucionado_pf);
+
 	default:
 		break;
 	}

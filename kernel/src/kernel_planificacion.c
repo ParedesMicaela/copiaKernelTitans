@@ -33,15 +33,12 @@ sem_t mutex_pid;
 // bool fWrite;
 //t_pcb* proceso_en_exit_rr;
 int corriendo = 1;
-int id_evento_cpu;
 static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2);
 static void a_mimir(t_pcb* proceso);
-static void atender_round_robin(int* evento_para_interrupt);
+static void atender_round_robin(t_pcb* proceso_seleccionado);
 //====================================================== Planificadores ========================================================
 void inicializar_planificador()
 {
-    id_evento_cpu = 0;
-
     // creamos todas las colas que vamos a usar
     inicializar_colas();
     log_info(kernel_logger, "Iniciando colas.. \n");
@@ -87,8 +84,9 @@ void planificador_largo_plazo()
         // metemos el proceso en la cola de ready
         pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso_nuevo, READY, cola_READY);
-        mostrar_lista_pcb(cola_READY,"READY");
         pthread_mutex_unlock(&mutex_ready);
+
+        mostrar_lista_pcb(cola_READY, "READY");
 
          /*le avisamos al corto plazo que puede empezar a planificar. Aca solamente vamos a poner el proceso
         en la cola de ready pero no vamos a elegir cual va a ejecutar el de corto plazo porque no hacemos eso
@@ -110,18 +108,18 @@ void planificador_corto_plazo()
 
         detener_planificacion();
  
-        obtener_siguiente_ready();
+        proceso_en_ready();
 
     }
 }
 
 //======================================================== Estados ==================================================================
 
-// aca agarramos el proceso que nos devuelve obtener_siguiente_ready_segun_algoritmo y lo mandamos a ejecutar
-void obtener_siguiente_ready()
+// aca agarramos el proceso que nos devuelve obtener_siguiente_ready y lo mandamos a ejecutar
+void proceso_en_ready()
 {
-    // creamos un proceso, que va a ser el elegido por obtener_siguiente_ready_segun_algoritmo
-    t_pcb *siguiente_proceso = obtener_siguiente_ready_segun_algoritmo();
+    // creamos un proceso, que va a ser el elegido por obtener_siguiente_ready
+    t_pcb *siguiente_proceso = obtener_siguiente_ready();
 
     log_info(kernel_logger, "PID[%d] ingresando a EXEC\n", siguiente_proceso->pid);
 
@@ -135,32 +133,25 @@ void obtener_siguiente_ready()
 
 void proceso_en_execute(t_pcb *proceso_seleccionado)
 {
-    //si es rr hay que ver los tiempos  
-    if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR") == 0)
-    {
-        id_evento_cpu++;
-
-        pthread_t hilo_round_robin;
-
-        int* evento_para_interrupt = malloc(sizeof(int));
-
-        memcpy(evento_para_interrupt, &id_evento_cpu, sizeof(int));
-        
-        pthread_create(&hilo_round_robin, NULL, (void*)atender_round_robin, evento_para_interrupt);
-        pthread_detach(hilo_round_robin);
-
-        log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
-    }
-
-     // La CPU despues nos dice pq regresa
+    // le enviamos el pcb a la cpu para que ejecute y recibimos el pcb resultado de su ejecucion
     enviar_pcb_a_cpu(proceso_seleccionado);
 
-    //La CPU nos dice pq finalizo
+    //si es rr y termina el quantum tenemos que desalojar    
+    char *algoritmo = config_valores_kernel.algoritmo_planificacion;
+    if(strcmp(algoritmo, "RR") == 0)
+    {
+        pthread_t hilo_round_robin;
+
+        pthread_create(&hilo_round_robin, NULL, (void*)atender_round_robin, proceso_seleccionado);
+        pthread_detach(hilo_round_robin);
+    }
+
+    /*despues la cpu nos va a devolver el contexto en caso de que haya finalizado el proceso
+    haya pedido un recurso (wait/signal), por desalojo o por page fault*/
     char *devuelto_por = recibir_contexto(proceso_seleccionado);
 
-    id_evento_cpu++;
-
-    // Observamos los motivos de devolucion
+    /*aca usamos el proceso_en_exit para el mejor de los casos, cuando un proceso estaba ejecutando
+    y termina su ejecucion con exit*/
     if (string_equals_ignore_case(devuelto_por, "exit"))
     {
        detener_planificacion();
@@ -189,23 +180,22 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         // Lo agregamos nuevamente a la cola de Ready
         pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso_seleccionado, READY, cola_READY);
-        mostrar_lista_pcb(cola_READY,"READY");
         pthread_mutex_unlock(&mutex_ready);
 
-        obtener_siguiente_ready();
+        proceso_en_ready();
     }
 
     if (string_equals_ignore_case(devuelto_por, "f_open"))
     {
-        a_mimir(proceso_seleccionado);
+        atender_peticiones_al_fs(proceso_seleccionado);
     }
     if (string_equals_ignore_case(devuelto_por, "f_close"))
     {
-        a_mimir(proceso_seleccionado);
+        atender_peticiones_al_fs(proceso_seleccionado);
     }
     if (string_equals_ignore_case(devuelto_por, "f_seek"))
     {
-        a_mimir(proceso_seleccionado);
+        atender_peticiones_al_fs(proceso_seleccionado);
     }
     if (string_equals_ignore_case(devuelto_por, "f_read"))
     {
@@ -236,23 +226,45 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     free(devuelto_por);
 }
 
-static void atender_round_robin(int* evento_para_interrupt) {
+static void atender_round_robin(t_pcb* proceso_seleccionado) {
   
-        int local_evento_interrupt;
-       
-        memcpy(&local_evento_interrupt, evento_para_interrupt, sizeof(int));
+        int quantum = config_valores_kernel.quantum;
+        usleep(1000 * quantum); // Simula la ejecución y pausa el proceso en milisegundos
+        quantum = 0;
+        t_pcb *proceso_en_exec = NULL;
 
-        usleep(1000 * config_valores_kernel.quantum); 
-            
-        if (local_evento_interrupt == id_evento_cpu)
+        printf("\nComparamos si el proceso que nos dieron es el que se esta ejecutando\n");
+        
+        pthread_mutex_lock(&mutex_exec);
+        int tam_cola_execute = list_size(cola_EXEC);
+        pthread_mutex_unlock(&mutex_exec);
+
+        if(tam_cola_execute > 0) {
+        pthread_mutex_lock(&mutex_exec);
+        t_pcb * hay_proceso_en_exec = list_get(dictionary_int_get(diccionario_colas, EXEC),0);
+        proceso_en_exec = hay_proceso_en_exec;
+        pthread_mutex_unlock(&mutex_exec);
+        }
+        pthread_mutex_unlock(&mutex_exec);
+
+        //si el que agarramos es el mismo que enviamos, significa que se quiere seguir ejecutando dps del quantum (nao nao)
+        if (proceso_en_exec != NULL && proceso_en_exec->pid == proceso_seleccionado->pid )
         {
+            log_info(kernel_logger, "\nPID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
+            
+             // Desalojamos
+            pthread_mutex_lock(&mutex_exec);
+            list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso_seleccionado);
+            pthread_mutex_unlock(&mutex_exec);
+
             // Debes enviar una señal de desalojo al proceso en CPU.
             t_paquete *paquete = crear_paquete(DESALOJO);
             agregar_entero_a_paquete(paquete, 1);
             enviar_paquete(paquete, socket_cpu_interrupt);
             eliminar_paquete(paquete);
 
-        } 
+            //proceso_en_exit_rr = proceso_seleccionado;
+        }
 }
 
 static void a_mimir(t_pcb* proceso){
@@ -262,7 +274,7 @@ static void a_mimir(t_pcb* proceso){
     list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
     pthread_mutex_unlock(&mutex_exec);
 
-     // Movemos el proceso a la cola de BLOCKED
+    // Movemos el proceso a la cola de BLOCKED
     pthread_mutex_lock(&mutex_blocked);
     meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
     pthread_mutex_unlock(&mutex_blocked);
@@ -278,6 +290,7 @@ static void a_mimir(t_pcb* proceso){
             log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", proceso->motivo_bloqueo);
             abort();
         }   
+
     } else if (string_equals_ignore_case(proceso->motivo_bloqueo, "sleep")){
 
         pthread_t pcb_en_sleep;
@@ -287,7 +300,9 @@ static void a_mimir(t_pcb* proceso){
             log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", proceso->motivo_bloqueo);
             abort();
         }  
+
     } else if (es_una_operacion_con_archivos(proceso->motivo_bloqueo)) {
+        
         pthread_t peticiones_fs;
         if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
             pthread_join(peticiones_fs, NULL);
@@ -295,6 +310,7 @@ static void a_mimir(t_pcb* proceso){
             log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", proceso->motivo_bloqueo);
             abort();
         }  
+        
     }
 }
 
@@ -304,19 +320,12 @@ void proceso_en_exit(t_pcb *proceso)
     algoritmo algoritmo_elegido = obtener_algoritmo();
     
     if(algoritmo_elegido != RR) {
-        //obtenemos el proceso de execute
-        pthread_mutex_lock(&mutex_exec);
-        list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
-        pthread_mutex_unlock(&mutex_exec);
+    //obtenemos el proceso de execute
+    pthread_mutex_lock(&mutex_exec);
+    list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
+    pthread_mutex_unlock(&mutex_exec);
     } 
-
-    if(proceso->estado_pcb == BLOCKED)
-    {
-        pthread_mutex_lock(&mutex_blocked);
-        list_remove_element(dictionary_int_get(diccionario_colas, BLOCKED), proceso);
-        pthread_mutex_unlock(&mutex_blocked);
-    }
-
+    
     //lo metemos en exit
     pthread_mutex_lock(&mutex_exit);
     meter_en_cola(proceso, EXIT, cola_EXIT);
@@ -324,7 +333,7 @@ void proceso_en_exit(t_pcb *proceso)
 
     // sacamos el proceso de la lista de exit
     pthread_mutex_lock(&mutex_exit);
-    list_remove_element(dictionary_int_get(diccionario_colas, EXIT), proceso);
+    list_remove(dictionary_int_get(diccionario_colas, EXIT), 0);
     pthread_mutex_unlock(&mutex_exit);
 
     // le mandamos esto a memoria para que destruya las estructuras
@@ -378,33 +387,38 @@ t_pcb *obtener_siguiente_new()
 
 /*esta funcion la voy a poner para que me haga todo el calculo de que proceso deberia ir primero dependiendo
 del algoritmo que estoy usando. Y la pongo aca porque es mas facil solamente poner una linea en la parte de
-obtener_siguiente_ready, que hacer todo este calculo alla arriba.*/
-t_pcb *obtener_siguiente_ready_segun_algoritmo()
+proceso_en_ready, que hacer todo este calculo alla arriba.*/
+t_pcb *obtener_siguiente_ready()
 {
     // creamos un proceso para seleccionar
     t_pcb *proceso_seleccionado;
 
-    int tamanio_cola_ready;
-    int tamanio_cola_exec;
+    int tamanio_cola_ready = 0;
+    int ejecutando = 0;
 
-    //obtenemos el tamanio de la cola ready
+    /*necesito saber la cantidad de procesos que estan listos para ejecutar y para eso bloqueo sino capaz
+    cuento y al final resulta que entraron 4 procesos mas*/
     pthread_mutex_lock(&mutex_ready);
     tamanio_cola_ready = list_size(cola_READY);
     pthread_mutex_unlock(&mutex_ready);
 
+    // despues vemos cual seria el grado maximo pero supongamos que es esto
     int grado = config_valores_kernel.grado_multiprogramacion_ini;
 
-    //obtenemos el algoritmo
+    /*el grado de multiprogramacion es el que yo tengo que fijarme para saber si puedo admitir mas procesos
+    en ready, o no. Entonces para saber eso necesito saber cuantos procesos estan esperando en ready
+    y cuantos procesos estan ejecutando justo ahora. Con eso puedo comparar con el grado de multi que tengo
+    y ver si podemos meter un proceso mas.*/
     algoritmo algoritmo_elegido = obtener_algoritmo();
 
-    //obtenemos el tamaño de la cola de ejecutando
+    // obtenemos el tamaño de la cola de ejecutando, nuevamente pongo un semaforo
     pthread_mutex_lock(&mutex_exec);
-    tamanio_cola_exec = list_size(cola_EXEC);
+    ejecutando = list_size(cola_EXEC);
     pthread_mutex_unlock(&mutex_exec);
 
-    /*si todavia hay procesos en ready y si el grado de multiprogramacion me permite ejecutar
-    los procesos que estoy ejecutando*/
-    if (tamanio_cola_ready >= 0 && tamanio_cola_exec < grado)
+    /*vemos si todavia hay procesos en ready y si el grado de multiprogramacion me permite ejecutar
+    los procesos que estoy ejecutando justo ahora con un proceso mas*/
+    if (tamanio_cola_ready >= 0 && ejecutando < grado)
     {
         switch (algoritmo_elegido)
         {
@@ -422,7 +436,7 @@ t_pcb *obtener_siguiente_ready_segun_algoritmo()
         }
     }
 
-    //segun el algoritmo
+    // devolvemos el proceso seleccionado segun el algoritmo que elegimos
     return proceso_seleccionado;
 }
 
@@ -466,17 +480,19 @@ void obtener_siguiente_blocked(t_pcb* proceso)
     //aca ya de una lo mandamos a ready porque sabemos que en el diagrama va directo a ready
     pthread_mutex_lock(&mutex_ready);
     meter_en_cola(proceso, READY, cola_READY);
-    mostrar_lista_pcb(cola_READY,"READY");
     pthread_mutex_unlock(&mutex_ready);
 
     log_info(kernel_logger, "PID[%d] sale de BLOCKED para meterse en READY\n", proceso->pid);
 
-    obtener_siguiente_ready();
+    proceso_en_ready();
 }
 
 t_pcb *obtener_siguiente_FIFO()
 {
     log_info(kernel_logger, "Inicio la planificacion FIFO \n");
+
+    //mostramos los que estan en ready
+    mostrar_lista_pcb(cola_READY, "READY");
 
     /*voy a seleccionar el primer proceso que esta en ready usando esta funcion porque me retorna el proceso
     que le pido y tambien me lo borra. Como FIFO va a ejecutar todo hasta terminar, me biene barbaro*/
@@ -570,8 +586,14 @@ t_pcb *obtener_siguiente_PRIORIDADES()
 
 t_pcb *obtener_siguiente_RR()
 {
+    //es lo mismo que FIFO
     log_info(kernel_logger, "Inicio la planificacion RR \n");
 
+    //mostramos los que estan en ready
+    mostrar_lista_pcb(cola_READY, "READY");
+
+    /*voy a seleccionar el primer proceso que esta en ready usando esta funcion porque me retorna el proceso
+    que le pido y tambien me lo borra. Como FIFO va a ejecutar todo hasta terminar, me biene barbaro*/
     pthread_mutex_lock(&mutex_ready);
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
     pthread_mutex_unlock(&mutex_ready);

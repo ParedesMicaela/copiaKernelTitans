@@ -1,6 +1,4 @@
 #include "memoria.h"
-int tiempo;
-
 
 //================================================= Handshake =====================================================================
 void enviar_paquete_handshake(int socket_cliente) {
@@ -83,7 +81,7 @@ char* buscar_path_proceso(int pid)
         }
     }
 
-    log_warning(memoria_logger, "No se encontró un proceso con PID %d", pid);
+    log_error(memoria_logger, "No se encontró un proceso con PID %d", pid);
     return NULL;
 }
 
@@ -93,7 +91,7 @@ void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid)
     int marco;
 
     marco = buscar_marco(pid, num_pagina);
-
+    printf("enviando");
     t_paquete* paquete = crear_paquete(NUMERO_MARCO);
     // El -1 lo vemos desde la cpu (Page Fault)
     agregar_entero_a_paquete(paquete, marco);

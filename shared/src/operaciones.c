@@ -128,6 +128,27 @@ void agregar_puntero_a_paquete(t_paquete* paquete, void* puntero, uint32_t taman
     }
 }
 
+void agregar_bytes_a_paquete(t_paquete* paquete, void* bytes, uint32_t tamanio_bytes)
+{
+    // vemo que el puntero y tamaño sea correcto
+    if (bytes == NULL || tamanio_bytes == 0) {
+        printf("Error: Puntero de bytes nulo o tamaño de bytes 0\n");
+        return;
+    }
+
+    // Realloc para ajustar el tamaño del stream
+    paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + sizeof(uint32_t) + tamanio_bytes);
+
+    // Copiar el tamaño de los bytes al stream
+    memcpy(paquete->buffer->stream + paquete->buffer->size, &tamanio_bytes, sizeof(uint32_t));
+    paquete->buffer->size += sizeof(uint32_t);
+
+    // Copiar los bytes al stream
+    memcpy(paquete->buffer->stream + paquete->buffer->size, bytes, tamanio_bytes);
+    paquete->buffer->size += tamanio_bytes;
+}
+
+
 char* sacar_cadena_de_paquete(void** stream)
 {
 	int tamanio_cadena = -1;
@@ -207,6 +228,32 @@ void* sacar_puntero_de_paquete(void** stream)
     }
 
     return puntero;
+}
+
+void* sacar_bytes_de_paquete(void** stream, uint32_t* tamanio_bytes)
+{
+    
+    if (*stream == NULL) {
+        printf("Error: Puntero de stream nulo\n");
+        *tamanio_bytes = 0;
+        return NULL;
+    }
+
+    // lee el tamaño de los bytes del stream
+    memcpy(tamanio_bytes, *stream, sizeof(uint32_t));
+    *stream += sizeof(uint32_t);
+
+    // se fija uwu si hay bytes para leer
+    if (*tamanio_bytes == 0) {
+        return NULL;
+    }
+
+    // saca los bytes del stream
+    void* bytes = malloc(*tamanio_bytes);
+    memcpy(bytes, *stream, *tamanio_bytes);
+    *stream += *tamanio_bytes;
+
+    return bytes;
 }
 
 void eliminar_paquete(t_paquete* paquete)

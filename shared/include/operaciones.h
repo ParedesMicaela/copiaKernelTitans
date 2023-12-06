@@ -35,9 +35,12 @@ typedef enum
 	FINALIZACION_PROCESO,
 	FINALIZAR_EN_MEMORIA,
 	PAGE_FAULT,
-	SOLUCIONAR_PAGE_FAULT,
+	SOLUCIONAR_PAGE_FAULT_MEMORIA,
+	SOLUCIONAR_PAGE_FAULT_FILESYSTEM,
 	TRADUCIR_PAGINA_A_MARCO,
 	INICIALIZAR_SWAP,
+	ESCRIBIR_EN_MEMORIA,
+	LEER_EN_MEMORIA,
 	LISTA_BLOQUES_RESERVADOS,
 	PAGINA_PARA_ESCRITURA,
 	ESCRIBIR_PAGINA_SWAP,
@@ -60,7 +63,8 @@ typedef enum
 	FINALIZAR_PROCESO,
 	LIBERAR_SWAP,
 	CERRAR_ARCHIVO,
-	BUSCAR_ARCHIVO
+	BUSCAR_ARCHIVO,
+	ARCHIVO_ABIERTO
 } op_code;
 
 typedef enum{
@@ -124,13 +128,37 @@ typedef struct registros_cpu
 	
 } t_registros_cpu;
 
-//vamos a hacer una estructura recurso, ahi guardo el nombre y la cantidad del recurso y puedo tener los 3 aca
 typedef struct 
 {
 	char nombre_recurso [50];
 	int instancias_recurso;
 
 }t_recurso;
+
+typedef struct
+{
+	char *nombre_archivo;  
+    int tamanio;
+	bool lock_escritura;
+	bool lock_lectura;
+	uint32_t *bloque_inicial;
+	//(el primer bloque del archivo, apenas lo creamos con la cant de bloques es el puntero al 1er bloque, asi es mas facil buscarlo)
+} fcb_proceso;
+
+typedef struct {   
+	fcb_proceso* fcb;
+    uint32_t* puntero_posicion; //si lo manejamos con file, como lo habias hecho creoque es mas facil
+	char* modo_apertura;
+	//esto es distinto al bloque inical porque podemos usar FSEEK. el bloque incial es siempre el mismo para moverse mas facil
+} t_archivo_proceso;
+
+typedef struct {   
+	fcb_proceso* fcb;
+    uint32_t* puntero_posicion;
+	t_list* cola_solicitudes;
+} t_archivo;
+//cada vez que queramos guardar usamos: uint32_t direccion = (uint32_t)archivo; puede ser el bloque inicial o cualquiera por el FSEEK
+//Lo manejamos con uint32 y no como FILE para que al enviar paquete no nos haga quilombo
 
 typedef struct
 {
@@ -151,7 +179,7 @@ typedef struct
     int posicion;
     uint32_t direccion_fisica_proceso;
     int tamanio_archivo;
-	//t_dictionary *archivosAbiertos;
+	t_list* archivos_abiertos;
 
 }t_pcb; 
 
@@ -174,6 +202,7 @@ void agregar_array_cadenas_a_paquete(t_paquete* , char** );
 void agregar_lista_de_cadenas_a_paquete(t_paquete* , t_list*);
 void agregar_puntero_a_paquete(t_paquete* , void* , uint32_t);
 void agregar_a_paquete(t_paquete* , void* , int );
+void agregar_bytes_a_paquete(t_paquete* , void* , uint32_t);
 void* serializar_paquete(t_paquete* , int );
 void free_array (char ** );
 t_paquete* recibir_paquete(int );
@@ -183,6 +212,7 @@ uint32_t sacar_entero_sin_signo_de_paquete(void** );
 char** sacar_array_cadenas_de_paquete(void** );
 t_list* sacar_lista_de_cadenas_de_paquete(void**);
 void* sacar_puntero_de_paquete(void** );
+void* sacar_bytes_de_paquete(void** , uint32_t* );
 void enviar_paquete(t_paquete* , int );
 void eliminar_paquete(t_paquete* );
 

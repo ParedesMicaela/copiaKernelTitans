@@ -59,7 +59,7 @@ static int numero_marco_pagina(int socket_cliente_memoria) {
     t_paquete* paquete = recibir_paquete(socket_cliente_memoria);
     void* stream = paquete->buffer->stream;
 
-    if (paquete->codigo_operacion == NUMERO_MARCO)
+    if (paquete->codigo_operacion == NUMERO_MARCO) //LLEGA VALORREAD
     {
         numero_marco = sacar_entero_de_paquete(&stream);
 

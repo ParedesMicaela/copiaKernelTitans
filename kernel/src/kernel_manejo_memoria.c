@@ -78,7 +78,7 @@ op_code esperar_respuesta_memoria(int socket_memoria) {
 
 void atender_page_fault(t_pcb *proceso)
 {
-    t_paquete* paquete = crear_paquete(SOLUCIONAR_PAGE_FAULT);
+    t_paquete* paquete = crear_paquete(SOLUCIONAR_PAGE_FAULT_MEMORIA);
 
     //acá no haría falta agregarle el motivo de bloqueo, medio redundante sería
     agregar_entero_a_paquete(paquete,proceso->pid);

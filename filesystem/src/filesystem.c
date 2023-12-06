@@ -7,7 +7,7 @@ int server_fd;
 int* cliente_fd;
 int socket_memoria;
 arch_config config_valores_filesystem;
-size_t tamanio_fat;
+//size_t tamanio_fat; es un extern en el .h para la tabla de fat
 size_t tamanio_swap;
 
 
@@ -28,24 +28,25 @@ int main(void)
     int server_fd = iniciar_servidor(config_valores_filesystem.ip_filesystem,config_valores_filesystem.puerto_escucha);
     log_info(filesystem_logger, "\nFilesystem listo para recibir al modulo cliente \n");
 
-
     tamanio_fat = (config_valores_filesystem.cant_bloques_total - config_valores_filesystem.cant_bloques_swap) * sizeof(uint32_t);
     tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
+
+    procesos_en_filesystem = list_create();
     
-    log_info(filesystem_logger,"\n Empezamo \n");
-    //levantar_fcb(config_valores_filesystem.path_fcb);
-    log_info(filesystem_logger,"\n Levanto fcb \n");
+	char *path_fcb = string_from_format("%s/%s", config_valores_filesystem.path_fcb, "fcb.dat");
+   // levantar_fcb(path_fcb);
+    log_info(filesystem_logger,"Levanto fcb \n");
     levantar_fat(tamanio_fat);
-    log_info(filesystem_logger,"\n Levanto al gordo \n");
+    log_info(filesystem_logger,"Levanto el fat \n");
     levantar_archivo_bloque(tamanio_swap, tamanio_fat);
-    log_info(filesystem_logger,"\n Levanto el archivo bloque\n");
+    log_info(filesystem_logger,"Levanto el archivo bloque\n");
 
     //atender peticiones de kernel
     while(1) 
     {
         int* cliente_fd = malloc(sizeof(int));
         *cliente_fd = esperar_cliente(server_fd);
-        log_info(filesystem_logger,"\nSe conecto un cliente \n");
+        log_info(filesystem_logger,"Se conecto un cliente \n");
         pthread_t multihilo;
 	    pthread_create(&multihilo,NULL,(void*) atender_clientes_filesystem, cliente_fd);
 	    pthread_detach(multihilo);
