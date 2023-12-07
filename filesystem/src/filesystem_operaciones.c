@@ -297,8 +297,8 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 
 	for
 	(
-		int posicion_bloque_agregado = fcb_archivo->bloque_inicial;
-		posicion_bloque_agregado < posicion_ultimo_bloque;
+		int posicion_bloque_agregado = 0;
+		posicion_bloque_agregado <= bloques_a_agregar;
 		posicion_bloque_agregado++
 	)
 	{
