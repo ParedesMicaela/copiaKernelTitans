@@ -642,5 +642,80 @@ void agregarBloques(int cantidadBloquesOriginal ,int cantidadBloquesNueva,t_conf
 	fclose(bloques);
 	return;
 }
+
+//eto creo que no hace falta pero lo dejo por las dudas
+//esto no anda y no se porque mierda
+int devolver_tamanio_de_fcb(char* nombre)
+{
+    char * path = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre);
+
+    t_config * archivo = config_create (path);
+
+    fcb* archivo_FCB = malloc (sizeof (fcb)); 
+    archivo_FCB->nombre_archivo = config_get_string_value (archivo, "NOMBRE_ARCHIVO");
+    archivo_FCB->bloque_inicial = config_get_int_value(archivo, "BLOQUE_INICIAL");
+    archivo_FCB->tamanio_archivo = config_get_int_value (archivo, "TAMANIO_ARCHIVO");
+
+	int tamanio = archivo_FCB->tamanio_archivo;
+
+	free(archivo_FCB);
+    config_destroy (archivo);
+    free(path);
+    return tamanio;
+}
+
+//es lo mismo que la de arriba, falta optimizar 
+int devolver_bloque_inicial_de_fcb(char* nombre)
+{
+	//creamos el comandito pa entrar al directorio y empezar a buscar el archivo
+	char comando[256];
+
+	//lo tengo que buscar como nombre.dat porque sino no me lo va a encontrar
+	char* nombre_archivo = string_from_format("%s.dat", nombre);
+	char *path_archivo = string_from_format("%s/%s.dat", config_valores_filesystem.path_fcb, nombre);
+
+	//le agregue la parte del /home/utns/tp.../ porque sino no andaba pero me parece que hay que hacerlo mas generico como lo hicimos en la linea 415
+	snprintf(comando, sizeof(comando), "ls -1 %s", "/home/utnso/tp-2023-2c-KernelTitans/filesystem/fs/fcbs"); //carpeta de lo fcbs
+	FILE *tuberia_conexion = popen(comando, "r");
+
+    if (tuberia_conexion != NULL) {
+        
+		char nombre_archivo_buscado[256];
+
+        while (fscanf(tuberia_conexion, "%255s", nombre_archivo_buscado) != EOF) //no creo que tenga mas de 255
+		{
+            if (strcmp(nombre_archivo, nombre_archivo_buscado) == 0)
+			{
+                printf("Se encontró el archivo: %s\n", nombre_archivo); //LLEGUE HASTA ACA, TIRA SEG FAULT PERO VA ANDANDO
+				
+				//creamos config para guardar datos en una estructura y mandarla. En el config_create va el path
+				t_config* config = config_create(path_archivo);
+				
+
+				//agarramos los datos del archivo y los guardamos en un fcb
+				char* nombre = config_get_string_value(config, "NOMBRE_ARCHIVO");
+				int tamanio = (int*)config_get_string_value(config, "TAMANIO_ARCHIVO");
+				int bloque_inicial = config_get_int_value(config, "BLOQUE_INICIAL");
+
+				//guardamos datos en esturctura
+				
+				pclose(tuberia_conexion);		
+				
+				return bloque_inicial; //despues sacamos lo que no usa
+            }
+        }
+		printf("No encontró el archivo %s, se llego al final\n", nombre_archivo);
+        pclose(tuberia_conexion);
+		return NULL;
+    }
+	else 
+	{
+        perror("Error al abrir la carpeta");
+        pclose(tuberia_conexion);
+		return NULL;
+    }
+}
+
+
 */
 //..................................FUNCIONES UTILES PUNTEROS....................................................................

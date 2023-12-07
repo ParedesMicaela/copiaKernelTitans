@@ -1,6 +1,7 @@
 #include "filesystem.h"
 
 bloque_swap* particion_swap;
+
 //============================================== INICIALIZACION ============================================
 
 void levantar_fat(size_t tamanio_fat)
@@ -37,7 +38,7 @@ fcb* levantar_fcb (char * nombre) {
     archivo_FCB->bloque_inicial = config_get_int_value(archivo, "BLOQUE_INICIAL");
     archivo_FCB->tamanio_archivo = config_get_int_value (archivo, "TAMANIO_ARCHIVO");
 
-    config_destroy (archivo);
+	config_destroy (archivo);
     free(path);
     return archivo_FCB;
 }
@@ -55,8 +56,8 @@ void levantar_archivo_bloque()
     for (size_t i = 0; i < cant_espacio_swap; i++)
     {
         bloque_swap dato_bloque;  
-        //dato_bloque.data = malloc(sizeof(char*));  //con lo que nos dijo Dami esto no debería decir void¿ bah también como se redefine tiene void en vez de char
-		dato_bloque.data = malloc(sizeof(void*));
+        dato_bloque.data = malloc(sizeof(char*)); 
+
         fwrite(&dato_bloque, sizeof(bloque_swap), 1, archivo_bloque);
 
         free(dato_bloque.data);
@@ -78,7 +79,7 @@ void levantar_archivo_bloque()
 //================================================= OPERACIONES ARCHIVOS ============================================
 void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo unico que funciona
 {
-    char *path_archivo = string_from_format ("%s/%s.dat", config_valores_filesystem.path_fcb, nombre_archivo);
+    char *path_archivo = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
 	
 	FILE *archivo = fopen(path_archivo, "w"); //en cambio ahí sí lo crea
 	fclose(archivo);		
@@ -90,9 +91,9 @@ void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo u
 	{
 		//nos guardamos la direccion de memoria del archivos (uint por el envio de paquete, por las dudas pa que no rompa)
 		uint32_t direccion = (uint32_t)archivo;
-		
+
 		config_set_value(archivo_nuevo, "NOMBRE_ARCHIVO", nombre_archivo);
-		config_set_value(archivo_nuevo, "BLOQUE_INICIAL", "sin asignar");
+		config_set_value(archivo_nuevo, "BLOQUE_INICIAL", "");
 		config_set_value(archivo_nuevo, "TAMANIO_ARCHIVO", "0");
 		config_save_in_file(archivo_nuevo,path_archivo);
 		log_info(filesystem_logger, "Creamos el config y lo guardamos en disco\n");
@@ -110,7 +111,7 @@ void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo u
 void abrir_archivo (char *nombre_archivo, int socket_kernel)
 {
 	// /home/utnso/tp-2023-2c-KernelTitans/filesystem/fs/fat.dat
-	char *path_archivo = string_from_format("%s/%s.dat", config_valores_filesystem.path_fcb, nombre_archivo);
+	char *path_archivo = string_from_format("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
 	
 	printf("entramos al path: %s\n", path_archivo);
 
@@ -146,23 +147,24 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 
 void truncar_archivo(char *nombre, int tamanio_nuevo)
 {	
-	//copiamos en un tipo fcb los datos del archivo con la direccion
-	int tamanio = devolver_tamanio_de_fcb(nombre);
-	int bloquecito_inicial = devolver_bloque_inicial_de_fcb(nombre);
-	
-	fcb fcb_archivo;
-	fcb_archivo.nombre_archivo = nombre;
-	fcb_archivo.tamanio_archivo = tamanio;
-	fcb_archivo.bloque_inicial = bloquecito_inicial;
-				
+	int tamanio_archivos_bloques = config_valores_filesystem.tam_bloque * config_valores_filesystem.cant_bloques_total;
+	int cant_espacio_swap = config_valores_filesystem.cant_bloques_swap - 1;
+	int cant_espacio_fat = tamanio_archivos_bloques - cant_espacio_swap;
+
+	fcb* fcb_a_truncar = levantar_fcb(nombre);
+
+	log_info(filesystem_logger,"Truncando archivo: Nombre %s, tamanio %d, bloque inicial %d \n",fcb_a_truncar->nombre_archivo, fcb_a_truncar->tamanio_archivo, fcb_a_truncar->bloque_inicial);
+
 	//comparar el tamanio del archivo actual con el nuevo
-	if(fcb_archivo.tamanio_archivo < tamanio_nuevo)
+	if(fcb_a_truncar->tamanio_archivo < tamanio_nuevo && tamanio_nuevo < cant_espacio_fat)
 	{
-		ampliar_tamanio_archivo(tamanio_nuevo, fcb_archivo);
+		log_info(filesystem_logger,"Ampliamos\n");
+		ampliar_tamanio_archivo(tamanio_nuevo, fcb_a_truncar);
 	}
-	else if (fcb_archivo.tamanio_archivo > tamanio_nuevo)
+	else if (fcb_a_truncar->tamanio_archivo > tamanio_nuevo)
 	{
-		reducir_tamanio_archivo(tamanio_nuevo, fcb_archivo);
+		log_info(filesystem_logger,"reducimos\n");
+		reducir_tamanio_archivo(tamanio_nuevo, fcb_a_truncar);
 	}
 	else printf("Bueno bueno, para... No se puede hacer eso");
 	
@@ -266,84 +268,111 @@ void *leer_archivo(char *nombre_archivo,uint32_t direccion_fisica, int socket_ke
 
 void actualizar_fcb(fcb* nuevo_fcb)
 {
-	char* direccion_archivo = devolver_direccion_archivo(nuevo_fcb->nombre_archivo);
-	
-	t_config* config = config_create(direccion_archivo);
+	char * path = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nuevo_fcb->nombre_archivo);
 
+    t_config * archivo = config_create (path);
+	char* bloque; 	sprintf(bloque, "%d", nuevo_fcb->bloque_inicial);
+	char* tamanio; 	sprintf(tamanio, "%d", nuevo_fcb->tamanio_archivo);
+	printf("convirtio bien");
+	
 	config_set_value(config, "NOMBRE_ARCHIVO", nuevo_fcb->nombre_archivo);
-	config_set_value(config, "BLOQUE_INICIAL", nuevo_fcb->bloque_inicial);
-	config_set_value(config, "TAMANIO_ARCHIVO", nuevo_fcb->tamanio_archivo);
-	config_save_in_file(config,direccion_archivo);
+	config_set_value(config, "BLOQUE_INICIAL", bloque);
+	config_set_value(config, "TAMANIO_ARCHIVO", tamanio);
+	config_save_in_file(config,path);
 	config_destroy(config);
 	printf("actualizarmos bien el fcb");
 }
 
 //AMPLIAR Y REDUCIR NICO
-void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb fcb_archivo)
+void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 {
+	int tamanio_archivos_bloques = config_valores_filesystem.tam_bloque * config_valores_filesystem.cant_bloques_total;
+	int cant_espacio_swap = config_valores_filesystem.cant_bloques_swap - 1;
+	int cant_espacio_fat = tamanio_archivos_bloques - cant_espacio_swap;
+
 	//calculamos cantidad a agregar
-	int bloques_a_agregar = nuevo_tamanio_archivo - fcb_archivo.tamanio_archivo;
+	int bloques_a_agregar = nuevo_tamanio_archivo - fcb_archivo->tamanio_archivo;
 	
-	int bloques_totales = fcb_archivo.bloque_inicial + fcb_archivo.tamanio_archivo;
+	int posicion_ultimo_bloque = fcb_archivo->bloque_inicial + bloques_a_agregar;
 
 	for
 	(
-		int bloque_agregado = bloques_totales;
-		bloque_agregado <= (bloques_totales + bloques_a_agregar);
-		bloque_agregado++
+		int posicion_bloque_agregado = fcb_archivo->bloque_inicial;
+		posicion_bloque_agregado < posicion_ultimo_bloque;
+		posicion_bloque_agregado++
 	)
 	{
-		uint32_t* nuevo_ultimo_bloque = (uint32_t*)malloc(sizeof(config_valores_filesystem.tam_bloque));
+
+		uint32_t* nuevo_ultimo_bloque_fat = (uint32_t*)malloc(sizeof(config_valores_filesystem.tam_bloque));
+		bloque_swap* nuevo_ultimo_bloque_bloques = (bloque_swap*)malloc(sizeof(config_valores_filesystem.tam_bloque));
+		
+
 		
 		//definir el puntero
-		if (nuevo_ultimo_bloque == NULL)
+		if (nuevo_ultimo_bloque_fat == NULL && nuevo_ultimo_bloque_bloques == NULL)
 		{
 			perror("No se pudo alocar memoria para hacer la entrada fat\n");
 			abort();
 		}
 		else
 		{
-			//futuras pruebas ftell(archivo) dice donde estas parado
-		
-			//no creo que esten abiertos
-			//en el fat ponemos el puntero, porque es el mapa
+			//ABRIMOS LOS DOS ARCHIVOS QUE VAMOS A MODIFICAR
+			
+			//fat
 			FILE* archivo_fat = fopen(config_valores_filesystem.path_fat, "wb+");
-			fseek(archivo_fat,bloque_agregado,SEEK_SET);
-
-			//en el archivo de bloques si ponemos el dato, que por ahora es nada
+			fseek(archivo_fat,posicion_bloque_agregado,SEEK_SET);
+			
+			//bloques
 			FILE* archivo_bloques = fopen(config_valores_filesystem.path_bloques, "wb+");
-			int posicion_archivo_bloques = list_size(lista_bloques_swap) + list_size(tabla_fat);
-			fseek(archivo_fat,posicion_archivo_bloques,SEEK_SET); // revisar
+			int posicion_archivo_bloques = cant_espacio_swap + posicion_bloque_agregado;
+			fseek(archivo_bloques,posicion_archivo_bloques,SEEK_SET);
 
+			//ACTUALIZAMOS LOS DOS ARCHIVOS
 			if(archivo_fat != NULL && archivo_bloques != NULL)
 			{
-				//actualizamos archivo fat
-				if(bloque_agregado == (bloques_totales + bloques_a_agregar) ) //es el bloque final
+				//------------------ACTUALIZAMOS TABLA FAT-----------------//
+				if(( posicion_bloque_agregado + 1 ) == posicion_ultimo_bloque ) 
+				//El que tenemos creado en realidad seria el anteultimo y el siguiente el ultimo
 				{
-					fwrite(UINT32_MAX, sizeof(uint32_t), 1, archivo_fat);
+					//escribimos el anteultimo
+					fwrite(nuevo_ultimo_bloque_fat, sizeof(uint32_t), 1, archivo_fat);
+					//escribimos ahora si el ultimo bloque
+					fwrite(UINT32_MAX, sizeof(uint32_t), 1, archivo_fat); //escribimos el ultimo bloque
+					
+					free(nuevo_ultimo_bloque_fat);
+					//free(nuevo_ultimo_bloque);
+					log_info(filesystem_logger,"actualizmos el ultimo bloque de archivo fat\n");
 				}
 				else
+				//si el siguiente no es el ultimo bloque solo guardamos el valor del puntero
 				{
-					fwrite(&nuevo_ultimo_bloque, sizeof(uint32_t), 1, archivo_fat);
+					//escribimos el bloque
+					fwrite(nuevo_ultimo_bloque_fat, sizeof(uint32_t), 1, archivo_fat);
+					
+					free(nuevo_ultimo_bloque_fat);
+					//free(nuevo_ultimo_bloque);
+					log_info(filesystem_logger,"actualizmos un bloque de archivo fat\n");
 				}
 				
-				//actualizamos la tabla local fat
-				list_add(tabla_fat,nuevo_ultimo_bloque);
 
-				//actualizamos lista de bloques local
-				bloque_swap* nuevo_bloque_fat;
-				nuevo_bloque_fat->data = NULL; //es nuevo, no tiene nada
-				list_add(tabla_fat,nuevo_bloque_fat);
-				
-				//actualizamos archivo_bloque (esta bien asi? quiero guardar el dato de la estructura)
-				if(bloque_agregado == (bloques_totales + bloques_a_agregar) ) //es el bloque final
+				//------------------ACTUALIZAMOS ARCHIVO BLOQUES-----------------//
+				if((cant_espacio_swap + posicion_bloque_agregado + 1) == (cant_espacio_swap + posicion_ultimo_bloque ) )
+				//El que tenemos creado en realidad seria el anteultimo y el siguiente el ultimo
 				{
-					nuevo_bloque_fat->data = UINT32_MAX;
-					fwrite(nuevo_bloque_fat, sizeof(uint32_t), 1, archivo_fat);
+					nuevo_ultimo_bloque_bloques->data = "/0"; 
+					fwrite(nuevo_ultimo_bloque_bloques, sizeof(bloque_swap), 1, archivo_bloques);
+					nuevo_ultimo_bloque_bloques->data = UINT32_MAX; 
+					fwrite(nuevo_ultimo_bloque_bloques, sizeof(bloque_swap), 1, archivo_bloques);
+					
+					log_info(filesystem_logger,"actualizmos el ultimo bloque de archivo bloques\n");
 				}
 				else
+				//este no es el ultimo
 				{
-					fwrite(&nuevo_bloque_fat, sizeof(bloque_swap*), 1, archivo_fat);
+					nuevo_ultimo_bloque_bloques->data = "/0"; 
+					fwrite(nuevo_ultimo_bloque_bloques, sizeof(bloque_swap), 1, archivo_bloques);
+					
+					log_info(filesystem_logger,"actualizmos un bloque de archivo bloques\n");
 				}
 				
 				fflush(archivo_fat);
@@ -356,16 +385,14 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb fcb_archivo)
 			
 		}	
 	}
-	printf("en teoria termino el for y se crearon los bloques");
-
-	
+	log_info(filesystem_logger,"En teoria termino el for y se crearon los bloques\n");
 }
 
-void reducir_tamanio_archivo (int nuevo_tamanio_archivo, fcb fcb_archivo)
+void reducir_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 {
-	int bloques_a_quitar = fcb_archivo.tamanio_archivo - nuevo_tamanio_archivo;
+	int bloques_a_quitar = fcb_archivo->tamanio_archivo - nuevo_tamanio_archivo;
 	
-	int bloques_totales = fcb_archivo.bloque_inicial + fcb_archivo.tamanio_archivo;
+	int bloques_totales = fcb_archivo->bloque_inicial + fcb_archivo->tamanio_archivo;
 
 	for(int bloque_quitado = 0; bloque_quitado <= (bloques_totales - bloques_a_quitar); bloque_quitado++)
 	{
@@ -429,111 +456,6 @@ void reducir_tamanio_archivo (int nuevo_tamanio_archivo, fcb fcb_archivo)
 		fclose(archivo_bloques);
 	}
 	printf("en teoria termino el for y se eliminaron ls bloques");
-}
-
-
-//eto creo que no hace falta pero lo dejo por las dudas
-int devolver_tamanio_de_fcb(char* nombre)
-{
-	//creamos el comandito pa entrar al directorio y empezar a buscar el archivo
-	char comando[256];
-
-	//lo tengo que buscar como nombre.dat porque sino no me lo va a encontrar
-	char* nombre_archivo = string_from_format("%s.dat", nombre);
-	char *path_archivo = string_from_format("%s/%s.dat", config_valores_filesystem.path_fcb, nombre);
-
-	//le agregue la parte del /home/utns/tp.../ porque sino no andaba pero me parece que hay que hacerlo mas generico como lo hicimos en la linea 415
-	snprintf(comando, sizeof(comando), "ls -1 %s", "/home/utnso/tp-2023-2c-KernelTitans/filesystem/fs/fcbs"); //carpeta de lo fcbs
-	FILE *tuberia_conexion = popen(comando, "r");
-
-    if (tuberia_conexion != NULL) {
-        
-		char nombre_archivo_buscado[256];
-
-        while (fscanf(tuberia_conexion, "%255s", nombre_archivo_buscado) != EOF) //no creo que tenga mas de 255
-		{
-            if (strcmp(nombre_archivo, nombre_archivo_buscado) == 0)
-			{
-                printf("Se encontró el archivo: %s\n", nombre_archivo); //LLEGUE HASTA ACA, TIRA SEG FAULT PERO VA ANDANDO
-				
-				//creamos config para guardar datos en una estructura y mandarla. En el config_create va el path
-				t_config* config = config_create(path_archivo);
-				
-
-				//agarramos los datos del archivo y los guardamos en un fcb
-				char* nombre = config_get_string_value(config, "NOMBRE_ARCHIVO");
-				int tamanio = (int*)config_get_string_value(config, "TAMANIO_ARCHIVO");
-				int bloque_inicial = config_get_int_value(config, "BLOQUE_INICIAL");
-
-				//guardamos datos en esturctura
-				
-				pclose(tuberia_conexion);		
-				
-				return tamanio; //despues sacamos lo que no usa
-            }
-        }
-		printf("No encontró el archivo %s, se llego al final\n", nombre_archivo);
-        pclose(tuberia_conexion);
-		return NULL;
-    }
-	else 
-	{
-        perror("Error al abrir la carpeta");
-        pclose(tuberia_conexion);
-		return NULL;
-    }
-}
-
-//es lo mismo que la de arriba, falta optimizar 
-int devolver_bloque_inicial_de_fcb(char* nombre)
-{
-	//creamos el comandito pa entrar al directorio y empezar a buscar el archivo
-	char comando[256];
-
-	//lo tengo que buscar como nombre.dat porque sino no me lo va a encontrar
-	char* nombre_archivo = string_from_format("%s.dat", nombre);
-	char *path_archivo = string_from_format("%s/%s.dat", config_valores_filesystem.path_fcb, nombre);
-
-	//le agregue la parte del /home/utns/tp.../ porque sino no andaba pero me parece que hay que hacerlo mas generico como lo hicimos en la linea 415
-	snprintf(comando, sizeof(comando), "ls -1 %s", "/home/utnso/tp-2023-2c-KernelTitans/filesystem/fs/fcbs"); //carpeta de lo fcbs
-	FILE *tuberia_conexion = popen(comando, "r");
-
-    if (tuberia_conexion != NULL) {
-        
-		char nombre_archivo_buscado[256];
-
-        while (fscanf(tuberia_conexion, "%255s", nombre_archivo_buscado) != EOF) //no creo que tenga mas de 255
-		{
-            if (strcmp(nombre_archivo, nombre_archivo_buscado) == 0)
-			{
-                printf("Se encontró el archivo: %s\n", nombre_archivo); //LLEGUE HASTA ACA, TIRA SEG FAULT PERO VA ANDANDO
-				
-				//creamos config para guardar datos en una estructura y mandarla. En el config_create va el path
-				t_config* config = config_create(path_archivo);
-				
-
-				//agarramos los datos del archivo y los guardamos en un fcb
-				char* nombre = config_get_string_value(config, "NOMBRE_ARCHIVO");
-				int tamanio = (int*)config_get_string_value(config, "TAMANIO_ARCHIVO");
-				int bloque_inicial = config_get_int_value(config, "BLOQUE_INICIAL");
-
-				//guardamos datos en esturctura
-				
-				pclose(tuberia_conexion);		
-				
-				return bloque_inicial; //despues sacamos lo que no usa
-            }
-        }
-		printf("No encontró el archivo %s, se llego al final\n", nombre_archivo);
-        pclose(tuberia_conexion);
-		return NULL;
-    }
-	else 
-	{
-        perror("Error al abrir la carpeta");
-        pclose(tuberia_conexion);
-		return NULL;
-    }
 }
 
 

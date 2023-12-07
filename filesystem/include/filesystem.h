@@ -108,9 +108,9 @@ int dividirRedondeando(int numero1 , int numero2);
 //void truncarArchivo(char *nombre, int tamanioNuevo);
 void truncar_archivo(char *nombre, int tamanio_nuevo);
 
-void ampliar_tamanio_archivo (int nuevo_tamanio_archivo,fcb fcb_archivo);
+void ampliar_tamanio_archivo (int nuevo_tamanio_archivo,fcb* fcb_archivo);
 
-void reducir_tamanio_archivo (int nuevo_tamanio_archivo,fcb fcb_archivo);
+void reducir_tamanio_archivo (int nuevo_tamanio_archivo,fcb* fcb_archivo);
 
 void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
