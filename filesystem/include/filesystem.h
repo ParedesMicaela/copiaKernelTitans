@@ -44,8 +44,8 @@ typedef struct
 
 typedef struct 
 {
-    char* nombre_archivo; //Puede ser  char nombre_archivo[256]
-    int tamanio_archivo; //Puede ser size_t uint32_t
+    char* nombre_archivo; 
+    int tamanio_archivo; 
     int bloque_inicial;
 } fcb;
 
@@ -58,7 +58,7 @@ typedef struct
 // Define la estructura de un bloque de swap
 
 typedef struct {
-    char* data;  
+    void* data;  
 } bloque_swap; 
 
 typedef struct{
@@ -76,9 +76,9 @@ void inicializar_bitarray();
 void cargar_configuracion(char*);
 void*conexion_inicial_memoria();
 void atender_clientes_filesystem(void* ); 
-void levantar_archivo_bloque(size_t tamanio_swap, size_t tamanio_fat);
+void levantar_archivo_bloque();
 void levantar_fat(size_t tamanio_fat);
-void levantar_fcb(char* path);
+fcb* levantar_fcb (char * path);
 void crear_archivo (char *nombre_archivo, int socket_kernel);
 void abrir_archivo (char *nombre_archivo, int socket_kernel);
 void liberar_bloque_individual(bloque_swap* bloque);

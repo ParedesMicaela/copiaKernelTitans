@@ -37,12 +37,11 @@ int main(void)
 
     inicializar_bitarray();
     
-	char *path_fcb = string_from_format("%s/%s", config_valores_filesystem.path_fcb, "fcb.dat");
-    levantar_fcb(path_fcb);
+    fcb* nuevoArchivo = levantar_fcb("PruebaFCB");
     log_info(filesystem_logger,"Levanto fcb \n");
     levantar_fat(tamanio_fat);
     log_info(filesystem_logger,"Levanto el fat \n");
-    levantar_archivo_bloque(tamanio_swap, tamanio_fat);
+    levantar_archivo_bloque();
     log_info(filesystem_logger,"Levanto el archivo bloque\n");
 
     //atender peticiones de kernel
