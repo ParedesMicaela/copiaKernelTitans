@@ -37,7 +37,7 @@ int main(void)
 
     inicializar_bitarray();
     
-    fcb* nuevoArchivo = levantar_fcb("PruebaFCB");
+    //fcb* nuevoArchivo = levantar_fcb("PruebaFCB");
     log_info(filesystem_logger,"Levanto fcb \n");
     levantar_fat(tamanio_fat);
     log_info(filesystem_logger,"Levanto el fat \n");

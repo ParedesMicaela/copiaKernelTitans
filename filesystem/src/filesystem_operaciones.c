@@ -34,8 +34,8 @@ fcb* levantar_fcb (char * nombre) {
 
     fcb* archivo_FCB = malloc (sizeof (fcb)); 
     archivo_FCB->nombre_archivo = config_get_string_value (archivo, "NOMBRE_ARCHIVO");
-    archivo_FCB->tamanio_archivo = config_get_int_value (archivo, "TAMANIO_ARCHIVO");
     archivo_FCB->bloque_inicial = config_get_int_value(archivo, "BLOQUE_INICIAL");
+    archivo_FCB->tamanio_archivo = config_get_int_value (archivo, "TAMANIO_ARCHIVO");
 
     config_destroy (archivo);
     free(path);
@@ -91,21 +91,8 @@ void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo u
 		//nos guardamos la direccion de memoria del archivos (uint por el envio de paquete, por las dudas pa que no rompa)
 		uint32_t direccion = (uint32_t)archivo;
 		
-		//ahora tenemos que saber que bloque le asignamos, por lo que vamos a la ultima entrada de la tabla fat
-		int ultimo_bloque_fat = list_size(tabla_fat);
-		if(ultimo_bloque_fat==0){
-			printf("El ultimo bloque es el 0 y este esta reservado, se asiga bloque inicial 1");
-			ultimo_bloque_fat = 1;
-		}
-		
-		//ENUNCIADO En la operación crear archivo, se deberá crear un archivo FCB con tamaño 0 y sin bloque inicial.
-		
-		// Convertir el entero a una cadena de caracteres con snprintf
-		char* ultimo_bloque_fat_string;
-		snprintf(ultimo_bloque_fat_string, sizeof(char*), "%d", ultimo_bloque_fat);
-
 		config_set_value(archivo_nuevo, "NOMBRE_ARCHIVO", nombre_archivo);
-		config_set_value(archivo_nuevo, "BLOQUE_INICIAL", ultimo_bloque_fat_string);
+		config_set_value(archivo_nuevo, "BLOQUE_INICIAL", "sin asignar");
 		config_set_value(archivo_nuevo, "TAMANIO_ARCHIVO", "0");
 		config_save_in_file(archivo_nuevo,path_archivo);
 		log_info(filesystem_logger, "Creamos el config y lo guardamos en disco\n");
