@@ -86,7 +86,7 @@ void atender_clientes_filesystem(void* conexion) {
 				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream); 
 				direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 				log_info(filesystem_logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d", nombre_archivo, puntero_archivo, direccion_fisica);
-				leer_archivo(nombre_archivo, direccion_fisica, cliente_fd); 
+				leer_archivo(nombre_archivo, puntero_archivo, direccion_fisica); 
 			break;
 
 			case ESCRIBIR_ARCHIVO:

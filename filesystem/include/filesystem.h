@@ -11,15 +11,12 @@
 #include "socket.h"
 #include "logconfig.h"
 #include "operaciones.h"
-//libs necesarias en caso de usar mmap
-/*
-
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
-*/
+
 
 extern t_config *config;
 extern t_log *filesystem_logger;
@@ -31,6 +28,7 @@ extern t_list* procesos_en_filesystem;
 extern t_list* lista_bloques_swap;
 extern int tamanio_swap;
 extern int tamanio_fat;
+extern int tamanio_archivo_bloques;
 
 //STRUCTS//
 typedef struct  

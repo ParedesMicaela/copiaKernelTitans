@@ -9,6 +9,7 @@ int socket_memoria;
 arch_config config_valores_filesystem;
 int tamanio_fat;
 int tamanio_swap;
+int tamanio_archivo_bloques;
 t_bitarray* bitmap_archivo_bloques;
 
 //============================================================================================================
@@ -19,7 +20,7 @@ int main(void)
 
 	cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/filesystem/cfg/filesystem.config");
 
-	log_info(filesystem_logger, "\nArchivo de configuracion cargada \n");
+	log_info(filesystem_logger, "Archivo de configuracion cargada \n");
 
     // COMUNICACIÓN MEMORIA //
 	socket_memoria = crear_conexion(config_valores_filesystem.ip_memoria, config_valores_filesystem.puerto_memoria);
@@ -28,17 +29,16 @@ int main(void)
 
     /// CREA LA CONEXION CON KERNEL Y MEMORIA ///
     int server_fd = iniciar_servidor(config_valores_filesystem.ip_filesystem,config_valores_filesystem.puerto_escucha);
-    log_info(filesystem_logger, "\nFilesystem listo para recibir al modulo cliente \n");
+    log_info(filesystem_logger, "Filesystem listo para recibir al modulo cliente \n");
 
     tamanio_fat = (config_valores_filesystem.cant_bloques_total - config_valores_filesystem.cant_bloques_swap) * sizeof(uint32_t);
     tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
+    tamanio_archivo_bloques = config_valores_filesystem.cant_bloques_total * config_valores_filesystem.tam_bloque;
 
     procesos_en_filesystem = list_create();
 
     inicializar_bitarray();
     
-    //fcb* nuevoArchivo = levantar_fcb("PruebaFCB");
-    log_info(filesystem_logger,"Levanto fcb \n");
     levantar_fat(tamanio_fat);
     log_info(filesystem_logger,"Levanto el fat \n");
     levantar_archivo_bloque();

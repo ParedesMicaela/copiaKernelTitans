@@ -1,7 +1,8 @@
 #include "filesystem.h"
 
 bloque_swap* particion_swap;
-
+char* swap_mapeado;
+uint32_t* fat_mapeado;
 //============================================== INICIALIZACION ============================================
 
 void levantar_fat(size_t tamanio_fat)
@@ -43,37 +44,38 @@ fcb* levantar_fcb (char * nombre) {
     return archivo_FCB;
 }
 
-void levantar_archivo_bloque()
-{
+void levantar_archivo_bloque() {
+    char* path_bloques = config_valores_filesystem.path_bloques;
     int tamanio_archivos_bloques = config_valores_filesystem.tam_bloque * config_valores_filesystem.cant_bloques_total;
-    char *path_archivo_bloques = config_valores_filesystem.path_bloques;
-    int cant_espacio_swap = config_valores_filesystem.cant_bloques_swap - 1;
-    int cant_espacio_fat = tamanio_archivos_bloques - cant_espacio_swap;
+    int espacio_de_swap = tamanio_swap;
+    int espacio_de_FAT = tamanio_archivo_bloques - espacio_de_swap;
 
-    FILE *archivo_bloque = fopen(path_archivo_bloques, "ab+");
-
-    // Agregamos los bloques de swap
-    for (size_t i = 0; i < cant_espacio_swap; i++)
-    {
-        bloque_swap dato_bloque;  
-        dato_bloque.data = malloc(sizeof(char*)); 
-
-        fwrite(&dato_bloque, sizeof(bloque_swap), 1, archivo_bloque);
-
-        free(dato_bloque.data);
+    // Abrir el archivo una vez fuera del bucle
+    FILE* archivo_de_bloques = fopen(path_bloques, "w");
+    if (archivo_de_bloques == NULL) {
+        perror("Error al abrir el archivo de bloques");
+        abort();
     }
 
-    // Ahora con FAT
-    for (size_t i = 1; i < cant_espacio_fat; i++)
-    {
-        uint32_t dato_bloque = 0;
-    
-        bitarray_set_bit(bitmap_archivo_bloques, i);
-
-        fwrite(&dato_bloque, sizeof(uint32_t), 1, archivo_bloque);
+    // Escribimos con ceros
+    for (int i = 0; i < tamanio_archivos_bloques; i++) {
+        fputc('0', archivo_de_bloques);
     }
 
-    fclose(archivo_bloque);
+    // Cierro antes de mapearlo
+    fclose(archivo_de_bloques);
+
+    // Mapeo el archivo
+    int fd_bloques = open(path_bloques, O_RDWR);
+    if (fd_bloques == -1) {
+        perror("Error al abrir el archivo de bloques");
+        abort();
+    }
+
+    swap_mapeado = mmap(0, espacio_de_swap, PROT_WRITE, MAP_SHARED, fd_bloques, 0);
+    fat_mapeado = mmap(0, espacio_de_FAT, PROT_WRITE, MAP_SHARED, fd_bloques, espacio_de_swap);
+
+    close(fd_bloques);
 }
 
 //================================================= OPERACIONES ARCHIVOS ============================================
@@ -178,22 +180,16 @@ void truncar_archivo(char *nombre, int tamanio_nuevo)
 	printf("terminamos y mandamos el fcb a actualizarse");
 }
 
-//idem que leer, tengo que tocar acá
 void escribir_archivo(char* nombre_archivo, uint32_t *puntero_archivo, void* contenido, uint32_t* direccion_fisica){
 
 	FILE *archivo;
 	char *path_archivo = string_from_format("%s/%s.dat", config_valores_filesystem.path_fcb, nombre_archivo);
 
-  	archivo = fopen(path_archivo, "wb"); //abro en modo escritura
-    	if (archivo == NULL) {
-        	perror("Error al abrir el archivo");
-        	//free(contenido); esto seguro al final
-        	return;
-    	}
+	//Se abre en modo escritura
+  	archivo = fopen(path_archivo, "wb"); 
 
-	if (fwrite(contenido, 1, sizeof(contenido), archivo) != sizeof(contenido)) { //escribo el contenido en el archivo o mejor dicho... el contenido que es lo que quieren que escriba en el archivo lo escribe
+	if (fwrite(contenido, 1, sizeof(contenido), archivo) != sizeof(contenido)) { 
         perror("Error al escribir en el archivo");
-        //free(contenido); idem linea 781 pero pensándolo bien seguro lo deje
         fclose(archivo);
         return;
     }
@@ -205,19 +201,22 @@ void escribir_archivo(char* nombre_archivo, uint32_t *puntero_archivo, void* con
 
 }
 
-void *leer_archivo(char *nombre_archivo,uint32_t direccion_fisica, int socket_kernel)
+/*
+Leer Archivo
+Esta operación leerá la información correspondiente al bloque a partir del puntero.
+La información se deberá enviar al módulo Memoria para ser escrita 
+a partir de la dirección física recibida por parámetro, 
+una vez recibida la confirmación por parte del módulo Memoria, se informará al módulo Kernel del éxito de la operación.
+*/
+void *leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica)
 {	
 	char *path_archivo = string_from_format("%s/%s.dat", config_valores_filesystem.path_fcb, nombre_archivo);
-	FILE *archivo = fopen(path_archivo, "r"); // lo abrimos en modo lectura 
+	FILE *archivo = fopen(path_archivo, "r"); 
 
-	if (archivo == NULL){
-		perror("No se puede leer el archivo");
-		return NULL;
-	}
-	
+	uint32_t bloque_inicial = direccion_fisica / tam_bloque;
 	fseek(archivo, 0, SEEK_SET); 
 
-	int tamanio = (int*)config_get_string_value(config, "TAMANIO_ARCHIVO"); //el tamanio lo guardamos como un string porque no hay otra forma de hacerlo (linea 392). Lo convierto a int aca
+	int tamanio = (int*)config_get_string_value(config, "TAMANIO_ARCHIVO"); 
 
 	void *contenido;
 	contenido = (void*)malloc(tamanio + 1); // +1 por el \0
@@ -255,14 +254,11 @@ void *leer_archivo(char *nombre_archivo,uint32_t direccion_fisica, int socket_ke
 		int ok_read = 1;
         send(socket_kernel, &ok_read, sizeof(int), 0);
 	}
+
+	log_info(filesystem_logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d", nombre_archivo, puntero_archivo, direccion_fisica);
+
 }
 
-	/*
-    Lectura (solo de un solo bloque)
-    uint32_t valor;
-    fseek(archivo_fat, block_number * bytesAEscribir, SEEK_SET);
-    fread(&valor, bytesAEscribir, 1, archivo_fat);
-	*/
 
 //============================================= ACCESORIOS DE ARCHIVOS =================================================================
 
