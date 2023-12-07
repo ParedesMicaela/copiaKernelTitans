@@ -11,6 +11,15 @@
 #include "socket.h"
 #include "logconfig.h"
 #include "operaciones.h"
+//libs necesarias en caso de usar mmap
+/*
+
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+*/
 
 extern t_config *config;
 extern t_log *filesystem_logger;

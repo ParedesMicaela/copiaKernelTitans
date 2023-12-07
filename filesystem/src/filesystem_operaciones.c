@@ -55,8 +55,8 @@ void levantar_archivo_bloque()
     for (size_t i = 0; i < cant_espacio_swap; i++)
     {
         bloque_swap dato_bloque;  
-        dato_bloque.data = malloc(sizeof(char*)); 
-
+        //dato_bloque.data = malloc(sizeof(char*));  //con lo que nos dijo Dami esto no debería decir void¿ bah también como se redefine tiene void en vez de char
+		dato_bloque.data = malloc(sizeof(void*));
         fwrite(&dato_bloque, sizeof(bloque_swap), 1, archivo_bloque);
 
         free(dato_bloque.data);
