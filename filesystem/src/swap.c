@@ -1,33 +1,37 @@
 #include "filesystem.h"
 
-t_list* bloques_reservados;
-//t_list* bloques_a_liberar = NULL;
 t_list* procesos_en_filesystem;
 t_bitarray* mapa_bits_swap;
 
 static t_proceso_en_filesystem* buscar_proceso_en_filesystem(int pid);
 
 //==============================================================================================================
-void crear_filesystem_swap() {
-    int cant_bloques_swap = config_valores_filesystem.cant_bloques_swap;
-    log_info(filesystem_logger, "Se crearan %d bloques para swap\n", cant_bloques_swap);   
+void crear_filesystem_swap(int cant_paginas_proceso) {
 
-    int num_bytes = cant_bloques_swap / 8;
+    char* path = config_valores_filesystem.path_bloques;
+    FILE* fd = fopen(path, "w");
+
+    fseek(fd, tamanio_swap , SEEK_SET);
+    fputc('\0', fd);
+    fclose(fd);
+
+    int tam = cant_paginas_proceso / 8;
 
 	void* aux = malloc(num_bytes);
-	mapa_bits_swap = bitarray_create_with_mode(aux, num_bytes, MSB_FIRST);
+	mapa_bits_swap = bitarray_create_with_mode(aux, tam, MSB_FIRST);
+
+    int cant_bloques_swap = config_valores_filesystem.cant_bloques_swap;
 
 	for (int i=0; i < cant_bloques_swap; i++)
 	{
-		bitarray_clean_bit(mapa_bits_swap, i);
+        bloque_libre(i);
 	}
 }
 
 //fs va a reservar 1 bloque para cada pagina del proceso, la memoria solo sabe la cant de paginas que tinee, no sabe las paginas
 t_list* reservar_bloques(int pid, int cantidad_bloques)
 {
-    // Creo un proceso
-    int nro_p_inventado = 12;
+    // Creo un proceso de fs
     t_proceso_en_filesystem* proceso_en_filesystem = malloc(sizeof(t_proceso_en_filesystem));
     proceso_en_filesystem->pid = pid;
     proceso_en_filesystem->bloques_reservados = list_create();
@@ -114,10 +118,26 @@ t_pagina_fs* buscar_pagina_swap(int nro_pagina, int pid)
 
 void swap_in(int pid, int nro_pagina)
 {
+    int datos_por_pagina = tam_pagina/4;
+    int fd = open(config_get_string_value(config_memoria, "PATH_SWAP"), O_RDWR, S_IRWXU | S_IRWXG);
 
+    void* datos_swap = malloc (config_get_int_value(config_memoria, "TAMANIO_SWAP"));
+    datos_swap = mmap(NULL, config_get_int_value(config_memoria, "TAMANIO_SWAP"), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+    t_list* marco = list_get(marcos_memoria, pagina->marco);
+
+    for (int j=0; j < datos_por_pagina; j++){
+        uint32_t* dato = list_get(marco, j);
+        memcpy(datos_swap + pagina->posicion_swap + j * 4, dato, 4);
+        log_info(logger_global, "Se copia dato de memoria principal a swap en marco %d, ofsset: %d ,dato: %d", pagina->marco, j * 4, *dato);         
+        }
+
+    munmap(datos_swap, tam_pagina);
+	close(fd); 
 }
 
-void swap_out(int pid, int nro_pag_pf)
+
+void swap_out(int pid, int nro_pag_pf, int posicion_swap, int marco)
 {
     t_proceso_en_filesystem* proceso_en_fs = buscar_proceso_en_filesystem(pid); 
 
@@ -126,7 +146,7 @@ void swap_out(int pid, int nro_pag_pf)
     int posicion_swap = pagina->posicion_swap;
 
     //le mando a memoria el nro de pagina, como el id total la memoria no sabe nada apenas empieza
-    t_paquete *paquete = crear_paquete(PAGINA_SWAP_OUT);
+    t_paquete *paquete = crear_paquete(PAGINA_PARA_ESCRITURA);
     agregar_entero_a_paquete(paquete, nro_pag_pf);
     agregar_entero_a_paquete(paquete, posicion_swap);
     agregar_entero_a_paquete(paquete, pid);
@@ -143,11 +163,17 @@ void liberar_bloques(int pid)
 	//Busco el proceso y cuantos bloques tiene
 	t_proceso_en_filesystem* proceso_en_filesystem = buscar_proceso_en_filesystem(pid);
 	int cantidad_bloques_a_liberar = list_size(proceso_en_filesystem->bloques_reservados);
+    log_info(filesystem_logger, "Liberando bloques de swap del PID: %d - Cantidad bloques a liberar: %d\n", pid, cantidad_bloques_a_liberar);
 
 	//Liberamos los bloques del proceso (Ponemos en 0)
-	for(int i =0; i <= cantidad_bloques_a_liberar; i++){
+	for(int i = 0; i < cantidad_bloques_a_liberar; i++){
+
 		bloque_swap* bloque_a_liberar = list_get(proceso_en_filesystem->bloques_reservados, i);
-		bloque_a_liberar->data = "0";
+		bloque_a_liberar->data = " ";
+        bloque_a_liberar->pagina_guardada->nro_pagina = 0;
+        bloque_a_liberar->pagina_guardada->bit_presencia_swap = 10;
+        bloque_a_liberar->pagina_guardada->posicion_swap = 0; //tiene que ser el bloque dentro de todoe l swap
+        bloque_a_liberar->pagina_guardada->pid = 0;
 		list_replace(proceso_en_filesystem->bloques_reservados, i, bloque_a_liberar);
         bitarray_clean_bit(bitmap_archivo_bloques, i);
         liberar_bloque_individual(bloque_a_liberar);
@@ -155,6 +181,8 @@ void liberar_bloques(int pid)
 
     list_remove_element(procesos_en_filesystem, (void*)proceso_en_filesystem);
 	free(proceso_en_filesystem);
+
+    log_info(filesystem_logger, "Bloques de swap liberados exitosamente\n");
 
 	int ok_finalizacion_swap = 1;
     send(socket_memoria, &ok_finalizacion_swap, sizeof(int), 0);

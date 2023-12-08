@@ -30,6 +30,7 @@ extern int tamanio_swap;
 extern int tamanio_fat;
 extern int tamanio_archivo_bloques;
 extern int espacio_de_FAT;
+extern t_bitarray* mapa_bits_swap;
 
 //STRUCTS//
 typedef struct  
@@ -63,10 +64,17 @@ typedef struct
     t_list* bloques_reservados;
 } t_proceso_en_filesystem;
 
-// Define la estructura de un bloque de swap
+typedef struct {
+    int nro_pagina;
+    int bit_presencia_swap;
+    int posicion_swap;
+    int pid;
+    int marco;
+}t_pagina_fs;
 
 typedef struct {
     void* data;  
+    t_pagina fs* pagina_guardada;
 } bloque_swap; 
 
 typedef struct{
@@ -130,5 +138,11 @@ void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* cont
 //..................................FUNCIONES SWAP.....................................................................
 t_list* reservar_bloques(int pid, int cantidad_bloques);
 void liberar_bloques(int pid);
-bloque_swap* crear_bloque_swap(int tam_bloque, int index);
+t_pagina_fs* buscar_pagina_swap(int nro_pagina, int pid);
+void bloque_libre_swap (int i);
+bloque_swap* crear_bloque_swap(int tam_bloque, int index, int pid);
+void crear_filesystem_swap();
+void ocupar_bloque(int i);
+void swap_out(int pid, int nro_pag_pf);
+
 #endif

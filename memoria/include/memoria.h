@@ -94,13 +94,17 @@ void inicializar_la_tabla_de_paginas();
 void inicializar_swap_proceso(int pid_proceso, int cantidad_paginas_proceso);
 void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* path_recibido);
 void finalizar_en_memoria(int pid);
-void escribir_en_memoria_principal();
+void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid);
 void enviar_pedido_pagina_para_escritura(int pid, int pag_pf);
 t_proceso_en_memoria* buscar_proceso_en_memoria(int pid);
 t_pagina* buscar_pagina(int pid, int num_pagina);
 int mas_vieja(t_pagina* una_pag, t_pagina* otra_pag);
+int obtener_tiempo();
+int obtener_tiempo_carga();
 
 /// @brief SWAP ///
-void escribir_en_swap(t_pagina* pagina);
+void escribir_en_swap(t_pagina* pagina, int pid);
+void swap_in_tabla_proceso (int nro_pagina, int pid);
+void recibir_pagina_swap (int pid);
 
 #endif

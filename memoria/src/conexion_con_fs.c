@@ -1,8 +1,16 @@
 #include "memoria.h"
 
+void inicializar_swap_proceso(int pid, int cantidad_paginas_proceso) {
+    t_paquete* paquete = crear_paquete(INICIALIZAR_SWAP); 
+    agregar_entero_a_paquete(paquete, pid); 
+    agregar_entero_a_paquete(paquete, cantidad_paginas_proceso);
+    enviar_paquete(paquete, socket_fs);
+    eliminar_paquete(paquete);
+}
+
 void enviar_pedido_pagina_para_escritura(int pid, int pag_pf){
 
-    t_paquete* paquete = crear_paquete(PEDIR_PAGINA_PARA_ESCRITURA);
+    t_paquete* paquete = crear_paquete(PAGINA_SWAP_OUT);
     agregar_entero_a_paquete(paquete,pid);
     agregar_entero_a_paquete(paquete,pag_pf);
     
@@ -11,11 +19,15 @@ void enviar_pedido_pagina_para_escritura(int pid, int pag_pf){
 }
 
 
-void escribir_en_swap(t_pagina* pagina_a_escribir){
+void escribir_en_swap(t_pagina* pagina_a_escribir, int pid){
     
-    //CREO QUE DEBERIA SER UN SEND CON EL CONTENIDO, PERO POR EL MOMENTO LO DEJO ASÍ
+    pagina_a_escribir->bit_de_presencia = 0;
+    pagina_a_escribir->bit_modificado = 0;
 
-    t_paquete* paquete = crear_paquete(ESCRIBIR_PAGINA_SWAP);
+    log_info(memoria_logger, "SWAP IN -  PID: %d - Marco: %d - Page In: %d - %d\n",pid,pagina_a_escribir->marco, pid, pagina_a_escribir->numero_de_pagina);
+
+    t_paquete* paquete = crear_paquete(PAGINA_SWAP_IN);
+    agregar_entero_a_paquete(paquete, pid);
     agregar_entero_a_paquete(paquete, pagina_a_escribir->numero_de_pagina);
     agregar_entero_a_paquete(paquete, pagina_a_escribir->posicion_swap);
     agregar_entero_a_paquete(paquete, pagina_a_escribir->marco);

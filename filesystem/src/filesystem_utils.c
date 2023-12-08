@@ -49,11 +49,13 @@ void atender_clientes_filesystem(void* conexion) {
     char* informacion = NULL;
 	int tamanio = 0;
 	int pid =-1;
-	int pag_pf;
+	int nro_pag;
     int bloques_a_reservar = -1;
 	bool corriendo = true;
 	void* contenido_a_escrbir = NULL;
 	int tam_bloque = config_valores_filesystem.tam_bloque;
+	int posicion_swap;
+	int marco;
 	
 	while (corriendo) //hace falta esto???
 	{		
@@ -126,16 +128,18 @@ void atender_clientes_filesystem(void* conexion) {
 				liberar_bloques(pid);
 			break;
 
-			case PEDIR_PAGINA_PARA_ESCRITURA:
+			case PAGINA_SWAP_OUT:
 				pid = sacar_entero_de_paquete(&stream);
-				pag_pf = sacar_entero_de_paquete(&stream);
-				//t_pagina* pagina = buscar_pagina(pag_pf); 
+				nro_pag = sacar_entero_de_paquete(&stream);
+				posicion_swap = sacar_entero_de_paquete(&stream);
+				marco = sacar_entero_de_paquete(&stream);
+				swap_out(pid, nro_pag, posicion_swap, marco); 
 			break;
 
-			case ESCRIBIR_PAGINA_SWAP:
-				//pag_a_escribir = sacar_pagina_de_paquete(&stream);
-				//escribir_pag(pag_a_escribir);
-				enviar_pagina_para_escritura();
+			case PAGINA_SWAP_IN:
+				nro_pag = sacar_entero_de_paquete(&stream);
+				pid = sacar_entero_de_paquete(&stream);
+				swap_in(pid, nro_pag);
 			break;
 
 			default:
