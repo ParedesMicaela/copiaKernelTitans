@@ -17,7 +17,7 @@ int main(void)
     log_info(cpu_logger, "Archivo de configuracion cargado \n");
 
     // creamos conexion con memoria
-    int socket_cliente_memoria = crear_conexion(config_valores_cpu.ip_memoria, config_valores_cpu.puerto_memoria);
+    socket_cliente_memoria = crear_conexion(config_valores_cpu.ip_memoria, config_valores_cpu.puerto_memoria);
     log_info(cpu_logger, "Conexion con memoria realizada \n");
     realizar_handshake(socket_cliente_memoria);
 

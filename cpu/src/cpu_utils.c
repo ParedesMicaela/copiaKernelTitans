@@ -181,6 +181,8 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         //=============================================== FETCH =================================================================
         log_info(cpu_logger, "PID: %d - FETCH - Program Counter: %d", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
 
+        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d\n", AX, BX, CX, DX);
+
         //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
         pedir_instruccion(socket_cliente_memoria, contexto_ejecucion->program_counter, contexto_ejecucion->pid);
 
@@ -197,7 +199,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         log_info(cpu_logger,"%s requiere traduccion", instruccion);
         uint32_t direccion_logica = atoi(datos[1]);
         direccion_logica_aux = direccion_logica;
-        direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, socket_cliente_memoria, contexto_ejecucion);
+        direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, contexto_ejecucion);
         log_info(cpu_logger, "Se tradujo %d", direccion_fisica);  
 
         }else if(string_starts_with(instruccion, "MOV_IN") || string_starts_with(instruccion, "F_READ") || string_starts_with(instruccion, "F_WRITE")){
@@ -205,7 +207,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         log_info(cpu_logger,"%s requiere traduccion", instruccion);
         uint32_t direccion_logica = atoi(datos[2]);
         direccion_logica_aux = direccion_logica;
-        direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, socket_cliente_memoria, contexto_ejecucion);
+        direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, contexto_ejecucion);
         log_info(cpu_logger, "Se tradujo la direccion %d", direccion_fisica);      
 
         }
@@ -218,6 +220,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0, numero_pagina, "", "", -1 , 0, -1);
             seguir_ejecutando = false;
             ejecuto_instruccion = false;
+            hay_page_fault = false;
         }
         
         //=============================================== EXECUTE =================================================================
@@ -306,7 +309,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             if(ejecuto_instruccion){
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[1];;
-            mov_in(registro, direccion_fisica, socket_cliente_memoria, contexto_ejecucion);
+            mov_in(registro, direccion_fisica, contexto_ejecucion);
             //mostrar_valores(contexto_ejecucion)
             contexto_ejecucion->program_counter += 1;
             }
@@ -316,7 +319,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             if(ejecuto_instruccion){
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro = datos[2];
-            mov_out(direccion_fisica, registro, socket_cliente_memoria, contexto_ejecucion); 
+            mov_out(direccion_fisica, registro, contexto_ejecucion); 
             //mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
             }
@@ -657,4 +660,3 @@ static void mostrar_valores (t_contexto_ejecucion* contexto)
         log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d",contexto->recursos_asignados[i].nombre_recurso, contexto->recursos_asignados[i].instancias_recurso);
     }
 }
-
