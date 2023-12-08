@@ -131,21 +131,30 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
             proceso_en_exit(proceso);  
         }
-
+        
         enviar_solicitud_fs(nombre_archivo, TRUNCAR_ARCHIVO, tamanio, 0, 0);
-
-        //el proceso se bloquea hasta que el fs me informe la finalizacion de la operacion
-        int respuesta = 0;
-        recv(socket_filesystem, &respuesta, sizeof(int),0);
-
-        if (respuesta != 1)
+        
+        log_info(kernel_logger, "Espero a que me llegue que trunco bien\n");
+        
+        bool truncando;
+        
+        while(truncando)
         {
-            log_error(kernel_logger, "Hubo un error con la respuesta de fs\n");
-        }else{
-            proceso_en_execute(proceso);
+            t_paquete* paquete = recibir_paquete(socket_filesystem);
+            void *stream = paquete->buffer->stream;
+            
+            if(paquete->codigo_operacion == ARCHIVO_TRUNCADO)
+            {
+                truncando=false;
+                proceso_en_execute(proceso);
+            }
+            else
+            {
+                perror("no me llego que se trunco, que pingo es esto");
+                abort();
+            }
         }
         break;
-
     case LEER_ARCHIVO:
 
         nombre_archivo =  proceso->nombre_archivo;

@@ -115,15 +115,15 @@ void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
 t_archivo* buscar_archivo_en_carpeta_fcbs(char* nombre);
 
+void actualizar_fcb(fcb* nuevo_fcb);
+
+int calcular_bloque_inicial_archivo(int tamanio);
+
 void* liberar_bloque(bloque_swap* bloque_a_liberar);
 
 void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
-
-//fcb *abrir_archivo (char *nombre_archivo);
-
-//antes era char* e int*
 void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica);
 void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido);
 
