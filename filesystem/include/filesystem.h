@@ -29,6 +29,7 @@ extern t_list* lista_bloques_swap;
 extern int tamanio_swap;
 extern int tamanio_fat;
 extern int tamanio_archivo_bloques;
+extern int espacio_de_FAT;
 
 //STRUCTS//
 typedef struct  
@@ -123,7 +124,7 @@ void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 //fcb *abrir_archivo (char *nombre_archivo);
 
 //antes era char* e int*
-void *leer_archivo(char *nombre_archivo, uint32_t direccion_fisica, int socket_kernel);
+void *leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica);
 void escribir_archivo(char* nombre_archivo, uint32_t *puntero_archivo, void* contenido, uint32_t*  direccion_fisica);
 
 //..................................FUNCIONES SWAP.....................................................................

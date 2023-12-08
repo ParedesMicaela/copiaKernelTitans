@@ -230,31 +230,32 @@ void* sacar_puntero_de_paquete(void** stream)
     return puntero;
 }
 
-void* sacar_bytes_de_paquete(void** stream, uint32_t* tamanio_bytes)
+void* sacar_bytes_de_paquete(void** stream, uint32_t tamanio_bytes)
 {
-    
     if (*stream == NULL) {
         printf("Error: Puntero de stream nulo\n");
-        *tamanio_bytes = 0;
+        tamanio_bytes = 0;
         return NULL;
     }
 
-    // lee el tamaño de los bytes del stream
-    memcpy(tamanio_bytes, *stream, sizeof(uint32_t));
+    // Alocamos memoria para el tamaño de bytes
+    tamanio_bytes = 0;  
+    memcpy(&tamanio_bytes, *stream, sizeof(uint32_t));
     *stream += sizeof(uint32_t);
 
     // se fija uwu si hay bytes para leer
-    if (*tamanio_bytes == 0) {
+    if (tamanio_bytes == 0) {
         return NULL;
     }
 
     // saca los bytes del stream
-    void* bytes = malloc(*tamanio_bytes);
-    memcpy(bytes, *stream, *tamanio_bytes);
-    *stream += *tamanio_bytes;
+    void* bytes = malloc(tamanio_bytes);
+    memcpy(bytes, *stream, tamanio_bytes);
+    *stream += tamanio_bytes;
 
     return bytes;
 }
+
 
 void eliminar_paquete(t_paquete* paquete)
 {

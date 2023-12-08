@@ -2,14 +2,16 @@
 
 bloque_swap* particion_swap;
 char* swap_mapeado;
-uint32_t* fat_mapeado;
+void* fat_mapeado;
+uint32_t* tabla_fat_en_memoria;
 //============================================== INICIALIZACION ============================================
 
 void levantar_fat(size_t tamanio_fat)
 {
     char *path = config_valores_filesystem.path_fat;
     uint32_t tam_entrada = tamanio_fat / sizeof(uint32_t);
-   
+   	uint32_t valor_inicial = 0;
+
     FILE *archivo_fat = fopen(path, "rb+");
     if (archivo_fat == NULL)
     {
@@ -17,7 +19,7 @@ void levantar_fat(size_t tamanio_fat)
         archivo_fat = fopen(path, "wb+");
         if (archivo_fat != NULL)
         {
-            uint32_t valor_inicial = 0;
+            
             for (size_t i = 1; i < tam_entrada; i++)
             {
                 fwrite(&valor_inicial, sizeof(uint32_t), 1, archivo_fat);
@@ -26,6 +28,10 @@ void levantar_fat(size_t tamanio_fat)
             fclose(archivo_fat);
         }
     }
+
+	int fd_tabla_FAT = open(path, O_RDWR); 
+	tabla_fat_en_memoria = mmap(NULL, tam_entrada, PROT_WRITE, MAP_SHARED, fd_tabla_FAT, 0);
+	close(fd_tabla_FAT);
 }
 
 fcb* levantar_fcb (char * nombre) {
@@ -45,35 +51,23 @@ fcb* levantar_fcb (char * nombre) {
 }
 
 void levantar_archivo_bloque() {
-    char* path_bloques = config_valores_filesystem.path_bloques;
-    int tamanio_archivos_bloques = config_valores_filesystem.tam_bloque * config_valores_filesystem.cant_bloques_total;
-    int espacio_de_swap = tamanio_swap;
-    int espacio_de_FAT = tamanio_archivo_bloques - espacio_de_swap;
+    char *path_bloques = config_valores_filesystem.path_bloques;
 
-    // Abrir el archivo una vez fuera del bucle
-    FILE* archivo_de_bloques = fopen(path_bloques, "w");
-    if (archivo_de_bloques == NULL) {
-        perror("Error al abrir el archivo de bloques");
-        abort();
-    }
-
-    // Escribimos con ceros
-    for (int i = 0; i < tamanio_archivos_bloques; i++) {
-        fputc('0', archivo_de_bloques);
-    }
-
-    // Cierro antes de mapearlo
-    fclose(archivo_de_bloques);
-
-    // Mapeo el archivo
-    int fd_bloques = open(path_bloques, O_RDWR);
+    int fd_bloques = open(path_bloques, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd_bloques == -1) {
         perror("Error al abrir el archivo de bloques");
         abort();
     }
 
-    swap_mapeado = mmap(0, espacio_de_swap, PROT_WRITE, MAP_SHARED, fd_bloques, 0);
-    fat_mapeado = mmap(0, espacio_de_FAT, PROT_WRITE, MAP_SHARED, fd_bloques, espacio_de_swap);
+    // Mapear el archivo
+    swap_mapeado = mmap(NULL, tamanio_swap, PROT_WRITE, MAP_SHARED, fd_bloques, 0);
+    fat_mapeado = mmap(NULL, espacio_de_FAT, PROT_WRITE, MAP_SHARED, fd_bloques, tamanio_swap);
+
+    if (swap_mapeado == MAP_FAILED || fat_mapeado == MAP_FAILED) {
+        perror("Error al mapear el archivo en memoria");
+        close(fd_bloques);
+        abort();
+    }
 
     close(fd_bloques);
 }
@@ -210,56 +204,62 @@ una vez recibida la confirmación por parte del módulo Memoria, se informará a
 */
 void *leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica)
 {	
-	char *path_archivo = string_from_format("%s/%s.dat", config_valores_filesystem.path_fcb, nombre_archivo);
-	FILE *archivo = fopen(path_archivo, "r"); 
+	fcb* archivo_a_leer = levantar_fcb (nombre_archivo);
 
-	uint32_t bloque_inicial = direccion_fisica / tam_bloque;
-	fseek(archivo, 0, SEEK_SET); 
-
-	int tamanio = (int*)config_get_string_value(config, "TAMANIO_ARCHIVO"); 
-
-	void *contenido;
-	contenido = (void*)malloc(tamanio + 1); // +1 por el \0
-	if (contenido == NULL) {
-        perror("Error para guardar el contenido");
-        fclose(archivo);
-        return NULL;
-    }
-
-    if (fread(contenido, 1, tamanio, archivo) != tamanio) {
-        perror("Error al leer el archivo");
-        fclose(archivo);
-        return NULL;
-    }
+	uint32_t bloque_inicial = archivo_a_leer->bloque_inicial; 
+	int tamanio_archivo = archivo_a_leer->tamanio_archivo;
+	int tam_bloque = config_valores_filesystem.tam_bloque;
+	uint32_t bloque_final = puntero_archivo/tam_bloque;
 	
-	fclose(archivo);
+	free(archivo_a_leer);
+	
+	char *path_fat = config_valores_filesystem.path_fat;
 
+	recorrer_tabla_fat(bloque_inicial,bloque_final, tam_bloque, direccion_fisica);
+
+	//Avisa al kernel que terminó
+	int ok_read = 1;
+    send(socket_kernel, &ok_read, sizeof(int), 0);
+}
+
+void escribir_en_memoria(int tam_bloque, void* contenido, uint32_t direccion_fisica) {
 	t_paquete *paquete = crear_paquete(ESCRIBIR_EN_MEMORIA); 
-	agregar_bytes_a_paquete(paquete,contenido,32); //ojo después hay que ver bien el tema del tamaño para que sea algo variable como nos dijo Dami 
+	agregar_entero_a_paquete(paquete, tam_bloque);
+	agregar_bytes_a_paquete(paquete,contenido,tam_bloque); //Revisar dsps 
 	agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica); 
 	enviar_paquete(paquete,socket_memoria);
 	eliminar_paquete(paquete);
-    free(contenido); 
-
-	//esperamos que memoria me confirme que lo escribio
-	int escritura_ok = 0;
-	recv(socket_memoria, &escritura_ok, sizeof(int), 0);
-
-	if (escritura_ok != 1)
-	{
-	printf("No se pudo escribir en memoria :(\n");
-	}else{
-
-		//le avisamos al kernel que ya la memoria escribio el contenido del archivo
-		int ok_read = 1;
-        send(socket_kernel, &ok_read, sizeof(int), 0);
-	}
-
-	log_info(filesystem_logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d", nombre_archivo, puntero_archivo, direccion_fisica);
-
 }
 
+void recorrer_tabla_fat(uint32_t bloque_inicial, uint32_t bloque_final, int tam_bloque, uint32_t direccion_fisica) {
 
+	uint32_t indice = bloque_inicial;
+
+ 	while (tabla_fat_en_memoria[indice] != UINT32_MAX && indice != bloque_final) {		
+
+		//Creo un buffer temporal
+		void *buffer = malloc(espacio_de_FAT);
+		    
+		//Copio los datos desde el archivo mapeado al nuevo buffer 
+    	memcpy(buffer, fat_mapeado, espacio_de_FAT);
+
+		//Mandamos el contenido(buffer) a que se persista en memoria
+		escribir_en_memoria(tam_bloque, buffer, direccion_fisica);
+
+		//free(buffer);
+		
+		int escritura_ok;
+		recv(socket_memoria, &escritura_ok, sizeof(int), 0);
+
+		if (escritura_ok != 1)
+		{
+		printf("No se pudo escribir en memoria :(\n");
+		}
+		log_info(filesystem_logger, "NO llego aca :(");
+
+		indice = tabla_fat_en_memoria[bloque_inicial];
+	}
+}
 //============================================= ACCESORIOS DE ARCHIVOS =================================================================
 
 void actualizar_fcb(fcb* nuevo_fcb)

@@ -10,6 +10,7 @@ arch_config config_valores_filesystem;
 int tamanio_fat;
 int tamanio_swap;
 int tamanio_archivo_bloques;
+int espacio_de_FAT;
 t_bitarray* bitmap_archivo_bloques;
 
 //============================================================================================================
@@ -34,6 +35,7 @@ int main(void)
     tamanio_fat = (config_valores_filesystem.cant_bloques_total - config_valores_filesystem.cant_bloques_swap) * sizeof(uint32_t);
     tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
     tamanio_archivo_bloques = config_valores_filesystem.cant_bloques_total * config_valores_filesystem.tam_bloque;
+    espacio_de_FAT = tamanio_archivo_bloques - tamanio_swap;
 
     procesos_en_filesystem = list_create();
 

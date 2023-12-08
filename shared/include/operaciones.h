@@ -157,8 +157,7 @@ typedef struct {
     uint32_t* puntero_posicion;
 	t_list* cola_solicitudes;
 } t_archivo;
-//cada vez que queramos guardar usamos: uint32_t direccion = (uint32_t)archivo; puede ser el bloque inicial o cualquiera por el FSEEK
-//Lo manejamos con uint32 y no como FILE para que al enviar paquete no nos haga quilombo
+
 
 typedef struct
 {
@@ -212,7 +211,7 @@ uint32_t sacar_entero_sin_signo_de_paquete(void** );
 char** sacar_array_cadenas_de_paquete(void** );
 t_list* sacar_lista_de_cadenas_de_paquete(void**);
 void* sacar_puntero_de_paquete(void** );
-void* sacar_bytes_de_paquete(void** , uint32_t* );
+void* sacar_bytes_de_paquete(void** , uint32_t );
 void enviar_paquete(t_paquete* , int );
 void eliminar_paquete(t_paquete* );
 
@@ -223,12 +222,7 @@ void* serializar_paquete(t_paquete* , int );
 void enviar_mensaje(char*, int);
 void recibir_mensaje(int ,t_log*);
 
-/*======================================================= Buffer ======================================================
-void* recibir_buffer(int*, int);
-void crear_buffer(t_paquete*);
-void agregar_a_buffer(t_buffer*, void*, int);
-t_buffer* inicializar_buffer_con_parametros(uint32_t, void*);
-*/
+
 
 
 #endif

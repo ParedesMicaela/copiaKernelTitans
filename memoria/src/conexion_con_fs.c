@@ -23,36 +23,16 @@ void escribir_en_swap(t_pagina* pagina_a_escribir){
     eliminar_paquete(paquete);
 }
 
-//bien se viene el toqueteo sensual que nos dijo Dami (Fachini a.k.a el fachas en mis libros)
 
-//en vez de escribir_en_memoria(char* contenido.... why not 
 void escribir_en_memoria(void* contenido, size_t tamanio_contenido, uint32_t direccion_fisica)
 {
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
-    if (espacio_usuario == NULL) {
-        printf("Error: espacio_usuario is NULL\n");
-        return;
-    }else{
-        memcpy(direccion_fisica, contenido, tamanio_contenido);
+    char* puntero_a_direccion_fisica = espacio_usuario + direccion_fisica; 
 
-        //le mandamos el fokin send a fs
-        int se_ha_escrito = 1;
-        send(socket_fs, &se_ha_escrito, sizeof(int), 0 );
+    memcpy(puntero_a_direccion_fisica, contenido, tamanio_contenido);
+   
+    int se_ha_escrito = 1;
+    send(socket_fs, &se_ha_escrito, sizeof(int), 0 );
 
-        //como en monster inc, que tal si esto lo mandamos a volarrrrrrr
-        /*size_t contenido_length = strlen(contenido) + 1;
-        memcpy(puntero_a_direccion_fisica, contenido, contenido_length);
-
-        int se_ha_escrito = 1;
-        send(socket_filesystem, &se_ha_escrito, sizeof(int), 0); */
-
-        /*char* puntero_a_direccion_fisica = espacio_usuario + direccion_fisica; 
-
-        size_t contenido_length = strlen(contenido) + 1;
-        memcpy(puntero_a_direccion_fisica, contenido, contenido_length);
-
-        int se_ha_escrito = 1;
-        send(socket_filesystem, &se_ha_escrito, sizeof(int), 0); */
-    }
-}
+ }
