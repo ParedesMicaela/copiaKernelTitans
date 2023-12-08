@@ -31,8 +31,35 @@ void escribir_en_memoria(void* contenido, size_t tamanio_contenido, uint32_t dir
     char* puntero_a_direccion_fisica = espacio_usuario + direccion_fisica; 
 
     memcpy(puntero_a_direccion_fisica, contenido, tamanio_contenido);
-   
+
+    log_info(memoria_logger, "Acción: %s - Dirección física: %d ", "ESCRIBIR EN MEMORIA", direccion_fisica);
+
     int se_ha_escrito = 1;
     send(socket_fs, &se_ha_escrito, sizeof(int), 0 );
-
  }
+
+void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica) {
+
+	usleep(1000 * config_valores_memoria.retardo_respuesta); 
+
+	char* puntero_direccion_fisica = espacio_usuario + direccion_fisica; 
+    void* contenido = malloc(tamanio_contenido);
+
+	memcpy(contenido, puntero_direccion_fisica, tamanio_contenido);
+
+    log_info(memoria_logger, "Acción: %s - Dirección física: %d ", "LEER EN MEMORIA", direccion_fisica);
+
+
+	return contenido; 
+}
+
+
+void bloques_para_escribir(int tam_bloque, void* contenido, uint32_t puntero_archivo, char* nombre_archivo){
+
+    t_paquete* paquete = crear_paquete(ESCRIBIR_EN_ARCHIVO_BLOQUES);
+    agregar_bytes_a_paquete(paquete, contenido, tam_bloque);
+	agregar_entero_sin_signo_a_paquete(paquete, puntero_archivo);
+	agregar_cadena_a_paquete(paquete, nombre_archivo);
+    enviar_paquete(paquete, socket_fs);
+    eliminar_paquete(paquete);
+}

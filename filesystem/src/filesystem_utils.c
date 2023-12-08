@@ -44,14 +44,16 @@ void atender_clientes_filesystem(void* conexion) {
     char* nombre_archivo = NULL;
 	char* modo_apertura = NULL;
     int nuevo_tamanio_archivo = -1;
-    uint32_t puntero_archivo = NULL; //antes era FILE*
-    uint32_t direccion_fisica; //antes era char*
+    uint32_t puntero_archivo = NULL; 
+    uint32_t direccion_fisica; 
     char* informacion = NULL;
 	int tamanio = 0;
 	int pid =-1;
 	int pag_pf;
     int bloques_a_reservar = -1;
 	bool corriendo = true;
+	void* contenido_a_escrbir = NULL;
+	int tam_bloque = config_valores_filesystem.tam_bloque;
 	
 	while (corriendo) //hace falta esto???
 	{		
@@ -90,29 +92,21 @@ void atender_clientes_filesystem(void* conexion) {
 			break;
 
 			case ESCRIBIR_ARCHIVO:
-				//nombre_archivo = sacar_cadena_de_paquete(&stream); idem leer, seguro haya que agregar el nombre, sino cómo sé el archivo que estoy agarrando 			
+				nombre_archivo = sacar_cadena_de_paquete(&stream); 			
 				direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
-				log_info(filesystem_logger, "Escribir Archivo: %s - Puntero: %p - Memoria: %s ", nombre_archivo, (void*)puntero_archivo, direccion_fisica);
-					/* 
-				t_paquete* paquete = crear_paquete(LEER_INFORMACION);
-				agregar_cadena_a_paquete(paquete, direccion_fisica);
-				agregar_puntero_a_paquete(paquete, puntero_archivo);
-				enviar_paquete(paquete, socket_memoria);
-				eliminar_paquete(paquete);
-			*/ 
+				log_info(filesystem_logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d ", nombre_archivo, puntero_archivo, direccion_fisica);
 
-				//despues de enviar el paquete voy a recibir el paquete de respuesta de memoria con el contenido		
-				//contenido/informacion_a_escribir = sacar_cadena_de_paquete(&stream); -> después agregarlo 
-				//direccion_fisica = sacar_cadena_de_paquete(&stream);
-				//puntero_archivo = sacar_puntero_de_paquete(&stream);
-				void *contenido; // esto después vuela cuando agreguemos el contenido/info a escribir ->  línea 108
-				escribir_archivo(nombre_archivo,puntero_archivo,contenido,direccion_fisica);
-				//como pingo es escribir
-				//como un log
+				solicitar_informacion_memoria(direccion_fisica, tam_bloque, nombre_archivo, puntero_archivo);
 			break;
 
-		case INICIALIZAR_SWAP:		
+			case ESCRIBIR_EN_ARCHIVO_BLOQUES:
+				contenido_a_escrbir = sacar_bytes_de_paquete(&stream, tam_bloque); 			
+				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
+				nombre_archivo = sacar_cadena_de_paquete(&stream); 
+				escribir_archivo(nombre_archivo,puntero_archivo,contenido_a_escrbir);	
+			break;
+			case INICIALIZAR_SWAP:		
 				bloques_reservados_a_enviar = list_create();
 				pid = sacar_entero_de_paquete(&stream);
 				bloques_a_reservar = sacar_entero_de_paquete(&stream);

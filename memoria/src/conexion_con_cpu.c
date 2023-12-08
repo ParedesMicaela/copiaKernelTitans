@@ -122,7 +122,6 @@ uint32_t leer(uint32_t direccion_fisica) {
 	memcpy(&valor, puntero_direccion_fisica, sizeof(uint32_t));
 
 	return valor; 
-
 }
 
 void enviar_valor_de_lectura(uint32_t valor, int socket_cpu) {

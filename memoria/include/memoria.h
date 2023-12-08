@@ -83,8 +83,9 @@ void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid)
 void creacion_espacio_usuario();
 void liberar_espacio_usuario() ;
 void escribir(uint32_t* valor, uint32_t direccion_fisica, int socket_cpu);
-void escribir_en_memoria(void* contenido, size_t tamanio_contenido, uint32_t direccion_fisica);
 uint32_t leer(uint32_t direccion_fisica);
+void escribir_en_memoria(void* contenido, size_t tamanio_contenido, uint32_t direccion_fisica);
+void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica);
 void enviar_valor_de_lectura(uint32_t valor, int socket_cpu);
 
 /// @brief  TABLAS DE PAGINAS ///

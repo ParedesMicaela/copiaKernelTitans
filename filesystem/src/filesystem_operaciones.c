@@ -174,35 +174,52 @@ void truncar_archivo(char *nombre, int tamanio_nuevo)
 	printf("terminamos y mandamos el fcb a actualizarse");
 }
 
-void escribir_archivo(char* nombre_archivo, uint32_t *puntero_archivo, void* contenido, uint32_t* direccion_fisica){
+/*
+Se deberá solicitar al módulo Memoria la información que se encuentra 
+a partir de la dirección física recibida y se escribirá en el bloque 
+correspondiente del archivo a partir del puntero recibido.
+*/
+void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido){
+	
+	fcb* archivo_a_leer = levantar_fcb (nombre_archivo);
 
-	FILE *archivo;
-	char *path_archivo = string_from_format("%s/%s.dat", config_valores_filesystem.path_fcb, nombre_archivo);
-
-	//Se abre en modo escritura
-  	archivo = fopen(path_archivo, "wb"); 
-
-	if (fwrite(contenido, 1, sizeof(contenido), archivo) != sizeof(contenido)) { 
-        perror("Error al escribir en el archivo");
-        fclose(archivo);
-        return;
-    }
- 
-    fclose(archivo); 
+	uint32_t bloque_inicial = archivo_a_leer->bloque_inicial; 
+	int tamanio_archivo = archivo_a_leer->tamanio_archivo;
+	int tam_bloque = config_valores_filesystem.tam_bloque;
+	uint32_t bloque_final = puntero_archivo/tam_bloque;
+	
+	free(archivo_a_leer);
     
-	int ok_read = 1;
-	send(socket_kernel, &ok_read, sizeof(int), 0);
+	escribir_contenido_en_bloque(bloque_inicial,bloque_final, contenido, tam_bloque);
+
+	int ok_write = 1;
+	send(socket_kernel, &ok_write, sizeof(int), 0);
 
 }
 
-/*
-Leer Archivo
-Esta operación leerá la información correspondiente al bloque a partir del puntero.
-La información se deberá enviar al módulo Memoria para ser escrita 
-a partir de la dirección física recibida por parámetro, 
-una vez recibida la confirmación por parte del módulo Memoria, se informará al módulo Kernel del éxito de la operación.
-*/
-void *leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica)
+void escribir_contenido_en_bloque(uint32_t bloque_final, void* contenido, int tam_bloque) {
+		
+		uint32_t nro_de_bloque = tabla_fat_en_memoria[bloque_final];
+		int tamanio = nro_de_bloque * tam_bloque;
+		    
+		//Copio los datos desde el archivo contenido al bloque del fat mappeado 
+    	memcpy((char*)fat_mapeado + tamanio, contenido, tamanio);
+		
+		//Le había hecho un malloc en memoria
+		free(contenido);
+}
+
+void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo)
+{
+	t_paquete* paquete = crear_paquete(LEER_EN_MEMORIA);
+	agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
+	agregar_entero_a_paquete(paquete, tam_bloque);
+	agregar_entero_sin_signo_a_paquete(paquete, puntero_archivo);
+	agregar_cadena_a_paquete(paquete, nombre_archivo);
+	enviar_paquete(paquete, socket_memoria);
+	eliminar_paquete(paquete);
+}
+void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica)
 {	
 	fcb* archivo_a_leer = levantar_fcb (nombre_archivo);
 
@@ -213,13 +230,9 @@ void *leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t dire
 	
 	free(archivo_a_leer);
 	
-	char *path_fat = config_valores_filesystem.path_fat;
+	//char *path_fat = config_valores_filesystem.path_fat;
 
 	recorrer_tabla_fat(bloque_inicial,bloque_final, tam_bloque, direccion_fisica);
-
-	//Avisa al kernel que terminó
-	int ok_read = 1;
-    send(socket_kernel, &ok_read, sizeof(int), 0);
 }
 
 void escribir_en_memoria(int tam_bloque, void* contenido, uint32_t direccion_fisica) {
@@ -229,36 +242,34 @@ void escribir_en_memoria(int tam_bloque, void* contenido, uint32_t direccion_fis
 	agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica); 
 	enviar_paquete(paquete,socket_memoria);
 	eliminar_paquete(paquete);
+	free(contenido);
 }
 
 void recorrer_tabla_fat(uint32_t bloque_inicial, uint32_t bloque_final, int tam_bloque, uint32_t direccion_fisica) {
 
-	uint32_t indice = bloque_inicial;
+	uint32_t indice = bloque_inicial; 
 
  	while (tabla_fat_en_memoria[indice] != UINT32_MAX && indice != bloque_final) {		
+
+		uint32_t dato_a_copiar = tabla_fat_en_memoria[indice];
+		int tamanio = dato_a_copiar * tam_bloque;
 
 		//Creo un buffer temporal
 		void *buffer = malloc(espacio_de_FAT);
 		    
 		//Copio los datos desde el archivo mapeado al nuevo buffer 
-    	memcpy(buffer, fat_mapeado, espacio_de_FAT);
+		memcpy(buffer, (char*)fat_mapeado + tamanio, tamanio);
 
 		//Mandamos el contenido(buffer) a que se persista en memoria
 		escribir_en_memoria(tam_bloque, buffer, direccion_fisica);
 
-		//free(buffer);
-		
-		int escritura_ok;
-		recv(socket_memoria, &escritura_ok, sizeof(int), 0);
-
-		if (escritura_ok != 1)
-		{
-		printf("No se pudo escribir en memoria :(\n");
-		}
-		log_info(filesystem_logger, "NO llego aca :(");
-
-		indice = tabla_fat_en_memoria[bloque_inicial];
+		//Leemos el próximo bloque
+		indice = tabla_fat_en_memoria[bloque_inicial]; 
 	}
+
+	//Avisa al kernel que terminó
+	int ok_read = 1;
+    send(socket_kernel, &ok_read, sizeof(int), 0);
 }
 //============================================= ACCESORIOS DE ARCHIVOS =================================================================
 

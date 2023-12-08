@@ -51,10 +51,12 @@ void manejo_conexiones(void* socket_cliente)
 	int pid_proceso = 0;
 	uint32_t valor_registro = 0;
 	uint32_t direccion_fisica = 0;
-	char* contenido = NULL;
 	char* path_asignado = NULL;
 	uint32_t numero_pagina;
 	uint32_t tam_contenido;
+	uint32_t puntero_de_archivo;
+	char* nombre_archivo;
+	void* contenido = NULL;
 
 	while(1){
 	t_paquete* paquete = recibir_paquete(cliente);
@@ -137,7 +139,16 @@ void manejo_conexiones(void* socket_cliente)
 		contenido = sacar_bytes_de_paquete(&stream, tam_contenido);
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 		escribir_en_memoria(contenido,tam_contenido, direccion_fisica);
-		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso, "ESCRIBIR EN MEMORIA", direccion_fisica);
+		break;
+
+	case LEER_EN_MEMORIA:
+		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+		tam_contenido = sacar_entero_sin_signo_de_paquete(&stream);
+		puntero_de_archivo = sacar_entero_sin_signo_de_paquete(&stream);
+		nombre_archivo = sacar_cadena_de_paquete(&stream);
+
+		contenido = leer_en_memoria(tam_contenido, direccion_fisica);
+		bloques_para_escribir(tam_contenido, contenido, puntero_de_archivo, nombre_archivo);
 		break;
 
 	case WRITE:
