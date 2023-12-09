@@ -128,6 +128,10 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 		agregar_entero_a_paquete(paquete,direccion);
 		log_info(filesystem_logger, "Enviando confirmacion de que existe el archivo solicitado\n");
 
+		//diccionario de adrchivos abiertos
+		dictionary_put(diccionario_archivos_abiertos,nombre_archivo,archivo);
+		log_info(filesystem_logger, "Guardamos el tipo FILE en el diccionario\n");
+
 		//fclose(archivo); esto creo que no, solo cuando mandan FCLOSE
 		enviar_paquete(paquete, socket_kernel);
 		eliminar_paquete(paquete);
@@ -283,6 +287,16 @@ void recorrer_tabla_fat(uint32_t bloque_inicial, uint32_t bloque_final, int tam_
 	int ok_read = 1;
     send(socket_kernel, &ok_read, sizeof(int), 0);
 }
+
+void cerrar_archivo(char* nombre_archivo)
+{
+	FILE* archivo = dictionary_get(diccionario_archivos_abiertos,nombre_archivo);
+	
+	fclose(archivo);
+	
+	log_info(filesystem_logger, "Cerramos el archivo\n");
+}
+
 //============================================= ACCESORIOS DE ARCHIVOS =================================================================
 
 void actualizar_fcb(fcb* nuevo_fcb)

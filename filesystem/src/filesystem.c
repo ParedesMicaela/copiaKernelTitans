@@ -12,6 +12,8 @@ int tamanio_swap;
 int tamanio_archivo_bloques;
 int espacio_de_FAT;
 t_bitarray* bitmap_archivo_bloques;
+t_dictionary* diccionario_archivos_abiertos;
+
 
 //============================================================================================================
 
@@ -41,6 +43,8 @@ int main(void)
 
     inicializar_bitarray();
     
+    diccionario_archivos_abiertos = dictionary_create();
+
     levantar_fat(tamanio_fat);
     log_info(filesystem_logger,"Levanto el fat \n");
     levantar_archivo_bloque();

@@ -86,6 +86,7 @@ extern fcb config_valores_fcb;
 extern arch_config config_valores_filesystem;
 extern t_bitarray* bitmap_archivo_bloques;
 extern bloque_swap* particion_swap;
+extern t_dictionary* diccionario_archivos_abiertos;
 
 
 void inicializar_bitarray();
@@ -130,6 +131,8 @@ int calcular_bloque_inicial_archivo(int tamanio);
 void* liberar_bloque(bloque_swap* bloque_a_liberar);
 
 void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
+
+void cerrar_archivo(char* nombre_archivo);
 
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
 void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica);

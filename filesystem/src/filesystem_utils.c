@@ -142,6 +142,12 @@ void atender_clientes_filesystem(void* conexion) {
 				swap_in(pid, nro_pag);
 			break;
 
+			case CERRAR_ARCHIVO:
+				nombre_archivo = sacar_cadena_de_paquete(&stream);
+				log_info(filesystem_logger, "Crear Archivo: %s", nombre_archivo);
+				cerrar_archivo(nombre_archivo); 
+				break;
+
 			default:
 				printf("Operacion desconocida \n");
 				abort();
