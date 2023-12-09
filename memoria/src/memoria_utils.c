@@ -107,7 +107,7 @@ void manejo_conexiones(void* socket_cliente)
 		sem_wait(&swap_creado);
 		int ok_creacion = 1;
         send(cliente, &ok_creacion, sizeof(int), 0);
-		log_info(memoria_logger,"Estructuras creadas en memoria kernel-kyunn\n");
+		log_info(memoria_logger,"Estructuras creadas en memoria exitosamente\n");
 		break;
 
 	case LISTA_BLOQUES_RESERVADOS:
@@ -121,11 +121,11 @@ void manejo_conexiones(void* socket_cliente)
 
 	case FINALIZAR_EN_MEMORIA:
 		int pid = sacar_entero_de_paquete(&stream);
-		log_info(memoria_logger,"Recibi pedido de creacion de estructuras en memoria\n");
+		log_info(memoria_logger,"Recibi pedido de eliminacion de estructuras en memoria\n");
 		finalizar_en_memoria(pid);
 	    int ok_finalizacion = 1;
         send(cliente, &ok_finalizacion, sizeof(int), 0);
-		log_info(memoria_logger,"Estructuras eliminadas en memoria kernel-kyunn\n");
+		log_info(memoria_logger,"Estructuras eliminadas en memoria exitosamente\n");
 		break;
 
 	case TRADUCIR_PAGINA_A_MARCO:
@@ -165,16 +165,16 @@ void manejo_conexiones(void* socket_cliente)
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 		uint32_t valor_a_enviar = leer(direccion_fisica);
 		enviar_valor_de_lectura(valor_a_enviar, cliente);
-		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso, "LEER", direccion_fisica);
+		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso, "LEER\n", direccion_fisica);
 		break;
 
 	case SOLUCIONAR_PAGE_FAULT_MEMORIA:
 		pid_proceso = sacar_entero_de_paquete(&stream);
-		int pag_pf = sacar_entero_de_paquete(&stream);
+		int nro_pag_pf = sacar_entero_de_paquete(&stream);
 
-		log_info(memoria_logger,"Recibi un pedido para solucionar page fault uwu con PID %d - Pagina %d", pid_proceso, pag_pf);
+		log_info(memoria_logger,"Recibi un pedido para solucionar page fault con PID %d - Pagina %d\n", pid_proceso, nro_pag_pf);
 
-		enviar_pedido_pagina_para_escritura(pid_proceso, pag_pf);
+		enviar_pedido_pagina_para_escritura(pid_proceso, nro_pag_pf);
 
 		sem_wait(&solucionado_pf);
 
@@ -184,13 +184,12 @@ void manejo_conexiones(void* socket_cliente)
 		break;
 	
 	case PAGINA_PARA_ESCRITURA:
-		t_pagina* pagina_recibida = (t_pagina*)malloc(sizeof(t_pagina));
 
-		pagina_recibida->numero_de_pagina = sacar_entero_de_paquete(&stream);
-   		pagina_recibida->marco = sacar_entero_de_paquete(&stream);
-    	pagina_recibida->posicion_swap = sacar_entero_de_paquete(&stream);
+		int nro_pagina = sacar_entero_de_paquete(&stream);
+   		int posicion_swap= sacar_entero_de_paquete(&stream);
+    	pid_proceso= sacar_entero_de_paquete(&stream);
 
-		escribir_en_memoria_principal(pagina_recibida);
+		escribir_en_memoria_principal(nro_pagina, posicion_swap, pid_proceso);
 
 		sem_post(&solucionado_pf);
 

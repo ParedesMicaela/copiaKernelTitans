@@ -8,14 +8,13 @@ t_bitarray* mapa_bits_swap;
 t_list* procesos_en_memoria;
 t_list* paginas_en_memoria;
 t_bitarray* status_tabla_paginas = NULL;
-double tiempo;
-//pthread_mutex_t mutex_tiempo;
+int tiempo = 0;
+int tiempo_carga = 0;
+pthread_mutex_t mutex_tiempo;
 
 t_list* bloques_reservados;
 //================================================= Funciones Internas ================================================
 static void liberar_swap(int pid);
-static void enviar_inicializar_swap_a_filesystem (int pid, int cantidad_paginas_proceso);
-static double obtener_tiempo();
 static void liberar_paginas(t_proceso_en_memoria* proceso_en_memoria);
 
 //================================================= Creacion Estructuras ====================================================
@@ -57,6 +56,8 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* p
 
 void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad_paginas_proceso) {
     
+    pthread_mutex_init(&mutex_tiempo, NULL);
+
     for (int i = 0; i <= cantidad_paginas_proceso; i++) {
 
         //creo una pagina por cada iteracion
@@ -67,32 +68,28 @@ void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad
         tp->marco = i;
         tp->bit_de_presencia = 0;
         tp->bit_modificado = 0;
-        tp->posicion_swap = -1; // No en memoria
-        tp->tiempo_uso = obtener_tiempo();
-        tp->tiempo_de_carga = i;
+        tp->posicion_swap = 0; // No en memoria
+        tp->tiempo_uso = 0;
+        tp->tiempo_de_carga = 0;
 
         list_add(proceso->paginas_en_memoria, (t_pagina*)tp);
     }
 }
 
-static double obtener_tiempo(){
-	//pthread_mutex_lock(&mutex_tiempo);
-	double t = tiempo;
+int obtener_tiempo(){
+	pthread_mutex_lock(&mutex_tiempo);
+	int t = tiempo;
 	tiempo++;
-	//pthread_mutex_unlock(&mutext_tiempo);
+	pthread_mutex_unlock(&mutex_tiempo);
 	return t;
 }
 
-void inicializar_swap_proceso(int pid, int cantidad_paginas_proceso) {
-    enviar_inicializar_swap_a_filesystem(pid, cantidad_paginas_proceso);
-}
-
-static void enviar_inicializar_swap_a_filesystem (int pid, int cantidad_paginas_proceso) {
-    t_paquete* paquete = crear_paquete(INICIALIZAR_SWAP); 
-    agregar_entero_a_paquete(paquete, pid); 
-    agregar_entero_a_paquete(paquete, cantidad_paginas_proceso);
-    enviar_paquete(paquete, socket_fs);
-    eliminar_paquete(paquete);
+int obtener_tiempo_carga(){
+	pthread_mutex_lock(&mutex_tiempo);
+	int t = tiempo_carga;
+	tiempo++;
+	pthread_mutex_unlock(&mutex_tiempo);
+	return t;
 }
 
 //======================================================= BUSCAR_PAGINA =========================================================================================================
@@ -116,6 +113,8 @@ t_pagina* buscar_pagina(int pid, int num_pagina){
     for(int i = 0; i < proceso_en_memoria->cantidad_entradas; i++)
     {
         t_pagina* pagina_actual = list_get(proceso_en_memoria->paginas_en_memoria, i);
+
+        pagina_actual->tiempo_uso = obtener_tiempo(); 
 
         // Si coincide el número de página, devolver la página
         if (pagina_actual->numero_de_pagina == num_pagina) {
@@ -157,7 +156,7 @@ static void liberar_paginas(t_proceso_en_memoria* proceso_en_memoria) {
     int cantidad_de_paginas_a_liberar = proceso_en_memoria->cantidad_entradas;
     list_destroy(proceso_en_memoria->paginas_en_memoria);
 
-    log_info(memoria_logger, "PID: %d - Tamaño: %d", proceso_en_memoria->pid, cantidad_de_paginas_a_liberar);
+    log_info(memoria_logger, "PID: %d - Paginas a liberar: %d\n", proceso_en_memoria->pid, cantidad_de_paginas_a_liberar);
 
 }
 
@@ -167,13 +166,13 @@ static void liberar_swap(int pid) {
     enviar_paquete(paquete, socket_fs);
     eliminar_paquete(paquete);
 
+	log_info(memoria_logger,"Enviando pedido de liberacion de bloques en swap\n");
     int ok_finalizacion_swap;
     recv(socket_fs, &ok_finalizacion_swap, sizeof(int), 0);
-	log_info(memoria_logger,"Liberando bloques reservados\n");
 
     if (ok_finalizacion_swap != 1)
     {
-        log_error(memoria_logger, "No se pudieron crear reservar los bloques");
+        log_error(memoria_logger, "No se pudieron liberar los bloques en FS\n");
     }
 }
 
