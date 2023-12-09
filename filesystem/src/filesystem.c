@@ -43,7 +43,6 @@ int main(void)
 
     diccionario_archivos_abiertos = dictionary_create();
 
-
     inicializar_bitarray();
     
     levantar_fat(tamanio_fat);

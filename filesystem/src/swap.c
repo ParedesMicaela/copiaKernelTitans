@@ -47,7 +47,6 @@ t_list* reservar_bloques(int pid, int cantidad_bloques)
             return NULL;
         }
     }
-
     list_add(procesos_en_filesystem, (void*)proceso_en_filesystem);
     return proceso_en_filesystem->bloques_reservados;
 }

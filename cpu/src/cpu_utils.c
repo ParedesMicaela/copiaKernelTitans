@@ -57,7 +57,6 @@ void cargar_configuracion(char *path)
 void realizar_handshake()
 {
     enviar_handshake();
-    log_info(cpu_logger, "Handshake enviado a memoria \n");
     recibir_handshake();
 }
 
@@ -76,7 +75,6 @@ static void recibir_handshake()
     if (paquete->codigo_operacion == HANDSHAKE)
     {
         tam_pagina = sacar_entero_de_paquete(&stream);
-        log_info(cpu_logger, "Tamanio de pagina %d para realizar handshake :)", tam_pagina);
     }
     else
     {
@@ -131,8 +129,6 @@ void atender_dispatch(int socket_cliente_dispatch)
     // el kernel nos va a pasar el pcb al momento de poner a ejecutar un proceso
     if (paquete->codigo_operacion == PCB)
     {
-        log_info(cpu_logger, "Recibi un PCB del Kernel :)\n");
-
         contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
         contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
         contexto_ejecucion->prioridad = sacar_entero_de_paquete(&stream);

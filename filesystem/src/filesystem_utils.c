@@ -51,15 +51,13 @@ void atender_clientes_filesystem(void* conexion) {
 	int pid =-1;
 	int nro_pag;
     int bloques_a_reservar = -1;
-	bool corriendo = true;
 	void* contenido_a_escrbir = NULL;
 	int tam_bloque = config_valores_filesystem.tam_bloque;
 	int posicion_swap;
 	int marco;
 	
-	while (corriendo) //hace falta esto???
+	while (1) 
 	{		
-		//recibe paquete que le envia el kernel cada que le llega algo de archivos
 		t_paquete* paquete = recibir_paquete(cliente_fd);
 		void* stream = paquete->buffer->stream;
 
@@ -149,8 +147,8 @@ void atender_clientes_filesystem(void* conexion) {
 			break;
 
 			default:
-				printf("Operacion desconocida \n");
-				abort();
+				//printf("Operacion desconocida \n");
+				//abort();
 			break;
 		}
 		eliminar_paquete(paquete);

@@ -33,12 +33,13 @@ void cargar_configuracion(char* path){
 // ATENDER CLIENTES CON HILOS//
 int atender_clientes_memoria(int socket_servidor){
 
-	int socket_cliente = esperar_cliente(socket_servidor); 
+	   int* cliente_fd = malloc(sizeof(int));
+        *cliente_fd = esperar_cliente(socket_servidor);
 
-	if(socket_cliente != -1){
+	if(cliente_fd != -1){
 		log_info(memoria_logger, "Se conecto un cliente \n");
 		pthread_t hilo_cliente;
-		pthread_create(&hilo_cliente, NULL, (void*) manejo_conexiones, &socket_cliente);
+		pthread_create(&hilo_cliente, NULL, (void*) manejo_conexiones, cliente_fd);
 		pthread_detach(hilo_cliente);
 		return 1;
 	}else {
@@ -47,9 +48,9 @@ int atender_clientes_memoria(int socket_servidor){
 	return 0;
 }
 
-void manejo_conexiones(void* socket_cliente)
+void manejo_conexiones(void* conexion)
 {
-	int cliente = *(int*)socket_cliente;
+	int cliente = *(int*)conexion;
 	int posicion_pedida = 0;
 	int pid_proceso = 0;
 	uint32_t valor_registro = 0;
@@ -118,9 +119,7 @@ void manejo_conexiones(void* socket_cliente)
 
 	case LISTA_BLOQUES_RESERVADOS:
 	    t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid_fs); 
-
 		proceso_en_memoria->bloques_reservados = sacar_lista_de_cadenas_de_paquete(&stream);
-        //log_info(memoria_logger, "Se ha recibido correctamente el listado de bloques");
 
 		sem_post(&swap_creado);
 		break;
