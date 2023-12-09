@@ -110,7 +110,7 @@ int dividirRedondeando(int numero1 , int numero2);
 //int crearArchivo(char *nombre,char *carpeta, char ***vectoreRutas, int *cantidadPaths);
 
 //void truncarArchivo(char *nombre, int tamanioNuevo);
-void truncar_archivo(char *nombre, int tamanio_nuevo);
+void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel);
 
 void ampliar_tamanio_archivo (int nuevo_tamanio_archivo,fcb* fcb_archivo);
 

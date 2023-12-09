@@ -148,7 +148,7 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 	free(path_archivo); 
 }
 
-void truncar_archivo(char *nombre, int tamanio_nuevo)
+void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel)
 {	
 	int tamanio_archivos_bloques = config_valores_filesystem.tam_bloque * config_valores_filesystem.cant_bloques_total;
 	int cant_espacio_swap = config_valores_filesystem.cant_bloques_swap - 1;
@@ -156,7 +156,7 @@ void truncar_archivo(char *nombre, int tamanio_nuevo)
 
 	fcb* fcb_a_truncar = levantar_fcb(nombre);
 
-	log_info(filesystem_logger,"Truncando archivo: Nombre %s, tamanio %d, bloque inicial %d \n",fcb_a_truncar->nombre_archivo, fcb_a_truncar->tamanio_archivo, fcb_a_truncar->bloque_inicial);
+	log_info(filesystem_logger,"Truncando archivo: Nombre %s, tamanio %d, Bloque inicial %d \n",fcb_a_truncar->nombre_archivo, fcb_a_truncar->tamanio_archivo, fcb_a_truncar->bloque_inicial);
 
 	//comparar el tamanio del archivo actual con el nuevo
 	if(fcb_a_truncar->tamanio_archivo < tamanio_nuevo && tamanio_nuevo < cant_espacio_fat)
@@ -169,7 +169,7 @@ void truncar_archivo(char *nombre, int tamanio_nuevo)
 		log_info(filesystem_logger,"reducimos\n");
 		reducir_tamanio_archivo(tamanio_nuevo, fcb_a_truncar);
 	}
-	else printf("Bueno bueno, para... No se puede hacer eso");
+	else printf("Bueno bueno, para... No se puede hacer eso\n");
 	
 	//actualizamos la estructura fcb y la cargamos al archivo
 
@@ -181,9 +181,8 @@ void truncar_archivo(char *nombre, int tamanio_nuevo)
 	free(nuevo_fcb);
 	log_info(filesystem_logger,"Terminamos y mandamos el fcb a actualizarse\n");
 
-	//enviamos paquetE
-	//int truncado = 1;
-    send(socket_kernel, 1, sizeof(int), 0);
+	int truncado = 1;
+    send(socket_kernel, &truncado, sizeof(int), 0);
 }
 
 int calcular_bloque_inicial_archivo(int tamanio)

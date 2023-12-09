@@ -78,8 +78,8 @@ void atender_clientes_filesystem(void* conexion) {
 			case TRUNCAR_ARCHIVO:
 				nombre_archivo = sacar_cadena_de_paquete(&stream);
 				nuevo_tamanio_archivo = sacar_entero_de_paquete(&stream);
-				log_info(filesystem_logger, "Truncar Archivo: %s- Tamaño: %d\n", nombre_archivo, nuevo_tamanio_archivo);
-				truncar_archivo(nombre_archivo, nuevo_tamanio_archivo);
+				log_info(filesystem_logger, "Truncar Archivo: %s - Tamaño: %d\n", nombre_archivo, nuevo_tamanio_archivo);
+				truncar_archivo(nombre_archivo, nuevo_tamanio_archivo, cliente_fd);
 				break;
 
 			case LEER_ARCHIVO:

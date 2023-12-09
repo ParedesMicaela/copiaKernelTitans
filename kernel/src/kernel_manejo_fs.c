@@ -216,7 +216,6 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
             archivo_para_escribir->fcb->lock_escritura = true;
             enviar_solicitud_fs(nombre_archivo, ESCRIBIR_ARCHIVO, 0, puntero, direccion_fisica);
-            log_info(kernel_logger, "enviamos solicitud a pa escribir");
         }
         break;
 

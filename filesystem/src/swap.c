@@ -65,7 +65,7 @@ bloque_swap* asignar_bloque_swap (int tam_bloque, int index, int pid)
 
     FILE* fd = fopen(config_valores_filesystem.path_bloques, "wb+");
     if (fd == NULL) {
-        perror("Error al abrir el archivo de bloques\n");
+        perror("Error al abrir el archivo de bloques de SWAP\n");
         free(bloque);
         return NULL;
     }
