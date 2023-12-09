@@ -17,14 +17,14 @@ void crear_filesystem_swap(int cant_paginas_proceso) {
 
     int tam = cant_paginas_proceso / 8;
 
-	void* aux = malloc(num_bytes);
+	void* aux = malloc(tam);
 	mapa_bits_swap = bitarray_create_with_mode(aux, tam, MSB_FIRST);
 
     int cant_bloques_swap = config_valores_filesystem.cant_bloques_swap;
 
 	for (int i=0; i < cant_bloques_swap; i++)
 	{
-        bloque_libre(i);
+        bloque_libre_swap(i);
 	}
 }
 
@@ -118,22 +118,7 @@ t_pagina_fs* buscar_pagina_swap(int nro_pagina, int pid)
 
 void swap_in(int pid, int nro_pagina)
 {
-    int datos_por_pagina = tam_pagina/4;
-    int fd = open(config_get_string_value(config_memoria, "PATH_SWAP"), O_RDWR, S_IRWXU | S_IRWXG);
-
-    void* datos_swap = malloc (config_get_int_value(config_memoria, "TAMANIO_SWAP"));
-    datos_swap = mmap(NULL, config_get_int_value(config_memoria, "TAMANIO_SWAP"), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-
-    t_list* marco = list_get(marcos_memoria, pagina->marco);
-
-    for (int j=0; j < datos_por_pagina; j++){
-        uint32_t* dato = list_get(marco, j);
-        memcpy(datos_swap + pagina->posicion_swap + j * 4, dato, 4);
-        log_info(logger_global, "Se copia dato de memoria principal a swap en marco %d, ofsset: %d ,dato: %d", pagina->marco, j * 4, *dato);         
-        }
-
-    munmap(datos_swap, tam_pagina);
-	close(fd); 
+ 
 }
 
 
@@ -143,7 +128,7 @@ void swap_out(int pid, int nro_pag_pf, int posicion_swap, int marco)
 
     //voy a buscar solamente el nro de pagina que va a ser igual a la posicion del bloque
     t_pagina_fs* pagina = buscar_pagina_swap(nro_pag_pf, pid);
-    int posicion_swap = pagina->posicion_swap;
+    posicion_swap = pagina->posicion_swap;
 
     //le mando a memoria el nro de pagina, como el id total la memoria no sabe nada apenas empieza
     t_paquete *paquete = crear_paquete(PAGINA_PARA_ESCRITURA);

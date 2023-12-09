@@ -74,7 +74,7 @@ typedef struct {
 
 typedef struct {
     void* data;  
-    t_pagina fs* pagina_guardada;
+    t_pagina_fs* pagina_guardada;
 } bloque_swap; 
 
 typedef struct{
@@ -143,6 +143,5 @@ void bloque_libre_swap (int i);
 bloque_swap* crear_bloque_swap(int tam_bloque, int index, int pid);
 void crear_filesystem_swap();
 void ocupar_bloque(int i);
-void swap_out(int pid, int nro_pag_pf);
-
+void swap_out(pid, nro_pag, posicion_swap, marco);
 #endif
