@@ -183,7 +183,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         mostrar_lista_pcb(cola_READY,"READY");
         pthread_mutex_unlock(&mutex_ready);
 
-        obtener_siguiente_ready();
+        proceso_en_ready();
     }
 
     if (string_equals_ignore_case(devuelto_por, "f_open"))

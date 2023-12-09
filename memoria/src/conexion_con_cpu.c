@@ -31,7 +31,7 @@ void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones, int inst_
     agregar_cadena_a_paquete(paquete, instruccion); 
 
     enviar_paquete(paquete, socket_cpu);
-	log_info(memoria_logger,"Instrucciones enviadas :)\n");
+	//log_info(memoria_logger,"Instrucciones enviadas :)\n");
 
     free_array(lista_instrucciones);
     free(instrucciones);

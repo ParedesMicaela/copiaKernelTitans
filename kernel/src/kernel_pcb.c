@@ -130,14 +130,12 @@ char* recibir_contexto(t_pcb* proceso)
     char* motivo_de_devolucion = NULL;
     t_paquete* paquete = recibir_paquete(socket_cpu_dispatch);
     void* stream = paquete->buffer->stream;
-    int program_counter =-1;
     int sleep_pedido = 0;
     int pagina_pedida = -1;
     
 	if(paquete->codigo_operacion == PCB)
 	{
-		//nosotros solamente vamos a sacar el contexto y el motivo, que es lo que mas nos importa
-        program_counter = sacar_entero_de_paquete(&stream);
+        proceso->program_counter = sacar_entero_de_paquete(&stream);
         AX = sacar_entero_sin_signo_de_paquete(&stream);
         BX = sacar_entero_sin_signo_de_paquete(&stream);
         CX = sacar_entero_sin_signo_de_paquete(&stream);
@@ -157,7 +155,6 @@ char* recibir_contexto(t_pcb* proceso)
         abort();
     }
 
-	proceso->program_counter = program_counter;
     proceso->sleep = sleep_pedido;
     proceso->motivo_bloqueo = motivo_de_devolucion;
     proceso->pagina_pedida = pagina_pedida;

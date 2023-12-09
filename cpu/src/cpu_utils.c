@@ -18,15 +18,15 @@ int tamanio_recursos;
 int tipo_interrupcion = -1;
 
 //======================= Funciones Internas ==============================================================================
-static void enviar_handshake(int socket_cliente_memoria);
-static void recibir_handshake(int socket_cliente_memoria);
+static void enviar_handshake();
+static void recibir_handshake();
 static int sumar_registros(char *registro_destino, char *registro_origen);
 static int restar_registros(char *registro_destino, char *registro_origen);
 static int tipo_inst(char *instruccion);
 static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char* recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int posicion, uint32_t direccion_fisica_proceso, int tamanio_archivo);
 static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int posicion, uint32_t direccion_fisica_proceso, int tamanio_archivo);
-static void pedir_instruccion(int socket_cliente_memoria,int posicion, int pid);
-static void recibir_instruccion(int socket_cliente_memoria);
+static void pedir_instruccion(int posicion, int pid);
+static void recibir_instruccion();
 static bool hay_interrupcion();
 static void mostrar_valores (t_contexto_ejecucion* contexto);
 
@@ -54,14 +54,14 @@ void cargar_configuracion(char *path)
 }
 
 //================================================== Handshake =====================================================================
-void realizar_handshake(int socket_cliente_memoria)
+void realizar_handshake()
 {
-    enviar_handshake(socket_cliente_memoria);
+    enviar_handshake();
     log_info(cpu_logger, "Handshake enviado a memoria \n");
-    recibir_handshake(socket_cliente_memoria);
+    recibir_handshake();
 }
 
-static void enviar_handshake(int socket_cliente_memoria)
+static void enviar_handshake()
 {
     t_paquete *paquete = crear_paquete(HANDSHAKE);
     agregar_entero_a_paquete(paquete, 1);
@@ -69,7 +69,7 @@ static void enviar_handshake(int socket_cliente_memoria)
     eliminar_paquete(paquete);
 }
 
-static void recibir_handshake(int socket_cliente_memoria)
+static void recibir_handshake()
 {
     t_paquete* paquete = recibir_paquete(socket_cliente_memoria);
     void* stream = paquete->buffer->stream;
@@ -89,7 +89,7 @@ static void recibir_handshake(int socket_cliente_memoria)
 
 //================================================== Instrucciones =====================================================================
 
-static void recibir_instruccion(int socket_cliente_memoria)
+static void recibir_instruccion()
 {
     t_paquete *paquete = recibir_paquete(socket_cliente_memoria);
     void *stream = paquete->buffer->stream;
@@ -106,7 +106,7 @@ static void recibir_instruccion(int socket_cliente_memoria)
     eliminar_paquete(paquete);
 }
 
-static void pedir_instruccion(int socket_cliente_memoria,int posicion, int pid)
+static void pedir_instruccion(int posicion, int pid)
 {
     t_paquete *paquete = crear_paquete(MANDAR_INSTRUCCIONES);
     agregar_entero_a_paquete(paquete,posicion);
@@ -118,7 +118,7 @@ static void pedir_instruccion(int socket_cliente_memoria,int posicion, int pid)
 //================================================== Dispatch =====================================================================
 
 // por aca el kernel nos va a mandar el pcb y es el canal importante donde recibimos y mandamos el contexto ejecucion
-void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
+void atender_dispatch(int socket_cliente_dispatch)
 {
     log_info(cpu_logger, "Espero recibir paquete");
     t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
@@ -151,7 +151,7 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
         }
 
         // iniciamos el procedimiento para procesar cualquier instruccion
-        ciclo_de_instruccion(socket_cliente_dispatch, socket_cliente_memoria, contexto_ejecucion);
+        ciclo_de_instruccion(socket_cliente_dispatch, contexto_ejecucion);
     }
     if(paquete->codigo_operacion != PCB)
     {
@@ -166,7 +166,7 @@ void atender_dispatch(int socket_cliente_dispatch, int socket_cliente_memoria)
 //================================================== Ciclo de Instruccion =====================================================================
 
 // le pasamos el socket del kernel y el socket de la memoria, porque son los modulos con los que voy a tener que relacionarme
-void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memoria, t_contexto_ejecucion *contexto_ejecucion)
+void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *contexto_ejecucion)
 {
     bool seguir_ejecutando = true;
     bool ejecuto_instruccion = true;
@@ -184,10 +184,10 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
         log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d\n", AX, BX, CX, DX);
 
         //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
-        pedir_instruccion(socket_cliente_memoria, contexto_ejecucion->program_counter, contexto_ejecucion->pid);
+        pedir_instruccion(contexto_ejecucion->program_counter, contexto_ejecucion->pid);
 
         //una vez que la recibo de memoria, la guardo en la var global de arriba
-        recibir_instruccion(socket_cliente_memoria);
+        recibir_instruccion();
         
         char **datos = string_split(instruccion, " ");
      
@@ -431,8 +431,6 @@ void atender_interrupt(void *socket_servidor_interrupt)
     while (1)
     {
         t_paquete *paquete = recibir_paquete(conexion);
-        //log_info(cpu_logger, "Recibi un aviso por interrupt del kernel");
-        printf("Recibi un aviso por interrupt del kernel");
         void *stream = paquete->buffer->stream;
 
         if (paquete->codigo_operacion == DESALOJO)
@@ -620,8 +618,6 @@ static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion
     (contexto_ejecucion->registros_cpu.CX) = CX;
     (contexto_ejecucion->registros_cpu.DX) = DX;
     enviar_contexto(socket_cliente, contexto_ejecucion, motivo, recurso, tiempo, numero_pagina, nombre_archivo, modo_apertura, posicion, direccion_fisica_proceso, tamanio_archivo);
-    log_info(cpu_logger, "Devolvi el contexto ejecucion al kernel por motivo de: %s \n", motivo);
-
 }
 
 static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int posicion, uint32_t direccion_fisica_proceso, int tamanio_archivo )

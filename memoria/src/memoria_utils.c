@@ -120,7 +120,7 @@ void manejo_conexiones(void* socket_cliente)
 	    t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid_fs); 
 
 		proceso_en_memoria->bloques_reservados = sacar_lista_de_cadenas_de_paquete(&stream);
-        log_info(memoria_logger, "Se ha recibido correctamente el listado de bloques");
+        //log_info(memoria_logger, "Se ha recibido correctamente el listado de bloques");
 
 		sem_post(&swap_creado);
 		break;

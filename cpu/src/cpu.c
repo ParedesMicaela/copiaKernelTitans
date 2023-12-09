@@ -39,7 +39,7 @@ int main(void)
     while (1)
     {
         // vamos a atender a nuestro cliente el kernel por aca para hacer todo MENOS las interrupciones
-        atender_dispatch(socket_cliente_dispatch, socket_cliente_memoria);
+        atender_dispatch(socket_cliente_dispatch);
     }
 
     // liberamos la memoria dinamica

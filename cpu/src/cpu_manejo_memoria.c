@@ -84,7 +84,7 @@ void mov_in(char* registro, uint32_t direccion_fisica, t_contexto_ejecucion* con
 
     setear_registro(registro,valor);
     
-    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %s \n", contexto_ejecucion->pid, "LEER", direccion_fisica, valor);
+    log_info(cpu_logger, "PID: %d - Accion: %s - Direccion Fisica: %d - Valor: %d \n", contexto_ejecucion->pid, "LEER", direccion_fisica, valor);
     }
 }
 
