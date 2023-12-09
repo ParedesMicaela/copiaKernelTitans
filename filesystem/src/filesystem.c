@@ -48,6 +48,7 @@ int main(void)
     levantar_fat(tamanio_fat);
     log_info(filesystem_logger,"Levanto el fat \n");
     levantar_archivo_bloque();
+    mapear_archivo_de_bloques();
     log_info(filesystem_logger,"Levanto el archivo bloque\n");
 
     //atender peticiones de kernel

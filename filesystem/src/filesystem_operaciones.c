@@ -54,6 +54,35 @@ fcb* levantar_fcb (char * nombre) {
 }
 
 void levantar_archivo_bloque() {
+
+	char *path_bloques = config_valores_filesystem.path_bloques;
+	
+    FILE* archivo_de_bloques = fopen(path_bloques, "r+b");
+
+    if (path_bloques == NULL) {
+        log_error(filesystem_logger, "No se pudo abrir el archivo.");
+    }
+}
+
+void crear_archivo_de_bloques()
+{
+	uint32_t fd;
+	char *path_bloques = config_valores_filesystem.path_bloques;
+
+    fd = open(path_bloques, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    if (fd == -1) {
+        log_error(filesystem_logger,"Error al abrir el Archivo de Bloques");
+    }
+
+  
+    if (ftruncate(fd, tamanio_archivo_bloques) == -1) {
+        log_error(filesystem_logger,"Error al truncar el Archivo de Bloques");
+    }
+
+    close (fd);
+}
+
+void mapear_archivo_de_bloques() {
     char *path_bloques = config_valores_filesystem.path_bloques;
 
     int fd_bloques = open(path_bloques, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);

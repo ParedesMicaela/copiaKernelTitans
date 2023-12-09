@@ -132,6 +132,7 @@ void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica);
 void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido);
 void cerrar_archivo(char* nombre_archivo);
+void mapear_archivo_de_bloques();
 
 //..................................FUNCIONES SWAP.....................................................................
 t_list* reservar_bloques(int pid, int cantidad_bloques);
