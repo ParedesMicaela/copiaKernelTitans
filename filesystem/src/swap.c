@@ -72,10 +72,10 @@ bloque_swap* asignar_bloque_swap (int tam_bloque, int index, int pid)
     }
 
     //seek end para que vaya al final y no sobreescriba datos
-    fseek(fd, index * sizeof(tam_bloque), SEEK_SET);
+    fseek(fd, index * sizeof(*bloque), SEEK_SET);
 
     //escribo el bloque completo en el archivo de bloques
-    fwrite(bloque, sizeof(tam_bloque), 1, fd);
+    fwrite(bloque, sizeof(*bloque), 1, fd);
     fclose(fd);
 
     return bloque;
@@ -138,7 +138,7 @@ void swap_out(int pid, int nro_pagina)
 
     bloque_swap* bloque_a_leer = buscar_pagina_swap(nro_pagina, pid);
 
-    while (fread(bloque_a_leer->posicion_swap, sizeof(bloque_swap), 1, fd) == 1) {
+    while (fread(bloque_a_leer, sizeof(*bloque_a_leer), 1, fd) == 1) {
         if (bloque_a_leer->nro_pagina == nro_pagina) {
             t_paquete* paquete = crear_paquete(PAGINA_PARA_ESCRITURA);
             agregar_entero_a_paquete(paquete, bloque_a_leer->nro_pagina);
