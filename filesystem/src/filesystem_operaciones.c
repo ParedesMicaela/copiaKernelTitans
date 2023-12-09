@@ -128,7 +128,7 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 		agregar_entero_a_paquete(paquete,direccion);
 		log_info(filesystem_logger, "Enviando confirmacion de que existe el archivo solicitado\n");
 
-		//diccionario de adrchivos abiertos
+		//diccionario de archivos abiertos
 		dictionary_put(diccionario_archivos_abiertos,nombre_archivo,archivo);
 		log_info(filesystem_logger, "Guardamos el tipo FILE en el diccionario\n");
 
@@ -291,12 +291,11 @@ void recorrer_tabla_fat(uint32_t bloque_inicial, uint32_t bloque_final, int tam_
 void cerrar_archivo(char* nombre_archivo)
 {
 	FILE* archivo = dictionary_get(diccionario_archivos_abiertos,nombre_archivo);
-	
+
 	fclose(archivo);
-	
+
 	log_info(filesystem_logger, "Cerramos el archivo\n");
 }
-
 //============================================= ACCESORIOS DE ARCHIVOS =================================================================
 
 void actualizar_fcb(fcb* nuevo_fcb)
@@ -420,9 +419,9 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 				if((cant_espacio_swap + posicion_bloque_agregado + 1) == (cant_espacio_swap + posicion_ultimo_bloque ) )
 				//El que tenemos creado en realidad seria el anteultimo y el siguiente el ultimo
 				{
-					nuevo_ultimo_bloque_bloques->data = "\0"; 
+					//nuevo_ultimo_bloque_bloques->data = "\0"; 
 					fwrite(nuevo_ultimo_bloque_bloques, sizeof(bloque_swap), 1, archivo_bloques);
-					nuevo_ultimo_bloque_bloques->data = UINT32_MAX; 
+					//nuevo_ultimo_bloque_bloques->data = UINT32_MAX; 
 					fwrite(nuevo_ultimo_bloque_bloques, sizeof(bloque_swap), 1, archivo_bloques);
 					
 					log_info(filesystem_logger,"actualizmos el ultimo bloque de archivo bloques\n");
@@ -430,7 +429,7 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 				else
 				//este no es el ultimo
 				{
-					nuevo_ultimo_bloque_bloques->data = "\0"; 
+					//nuevo_ultimo_bloque_bloques->data = "\0"; 
 					fwrite(nuevo_ultimo_bloque_bloques, sizeof(bloque_swap), 1, archivo_bloques);
 					
 					log_info(filesystem_logger,"actualizmos un bloque de archivo bloques\n");
@@ -500,7 +499,7 @@ void reducir_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
         // actualizar archivo de bloques
         fseek(archivo_bloques, (cant_espacio_swap + posicion_primer_bloque_a_quitar + posicion_bloque_agregado) * sizeof(bloque_swap), SEEK_SET);
         bloque_swap bloque_vacio;
-        bloque_vacio.data = "\0";
+        //bloque_vacio.data = "\0";
         fwrite(&bloque_vacio, sizeof(bloque_swap), 1, archivo_bloques);
 
         // cerrar archivos

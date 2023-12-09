@@ -31,6 +31,8 @@ extern int tamanio_fat;
 extern int tamanio_archivo_bloques;
 extern int espacio_de_FAT;
 extern t_bitarray* mapa_bits_swap;
+extern t_dictionary* diccionario_archivos_abiertos;
+
 
 //STRUCTS//
 typedef struct  
@@ -65,16 +67,12 @@ typedef struct
 } t_proceso_en_filesystem;
 
 typedef struct {
+    void* data;  
     int nro_pagina;
     int bit_presencia_swap;
     int posicion_swap;
     int pid;
-    int marco;
-}t_pagina_fs;
-
-typedef struct {
-    void* data;  
-    t_pagina_fs* pagina_guardada;
+    //int marco;
 } bloque_swap; 
 
 typedef struct{
@@ -86,7 +84,6 @@ extern fcb config_valores_fcb;
 extern arch_config config_valores_filesystem;
 extern t_bitarray* bitmap_archivo_bloques;
 extern bloque_swap* particion_swap;
-extern t_dictionary* diccionario_archivos_abiertos;
 
 
 void inicializar_bitarray();
@@ -132,19 +129,20 @@ void* liberar_bloque(bloque_swap* bloque_a_liberar);
 
 void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
-void cerrar_archivo(char* nombre_archivo);
-
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
 void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica);
 void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido);
+void cerrar_archivo(char* nombre_archivo);
 
 //..................................FUNCIONES SWAP.....................................................................
 t_list* reservar_bloques(int pid, int cantidad_bloques);
 void liberar_bloques(int pid);
-t_pagina_fs* buscar_pagina_swap(int nro_pagina, int pid);
+bloque_swap* buscar_pagina_swap(int nro_pagina, int pid);
 void bloque_libre_swap (int i);
-bloque_swap* crear_bloque_swap(int tam_bloque, int index, int pid);
+bloque_swap* asignar_bloque_swap(int tam_bloque, int index, int pid);
 void crear_filesystem_swap();
 void ocupar_bloque(int i);
-void swap_out(pid, nro_pag, posicion_swap, marco);
+void swap_out(int pid, int nro_pagina);
+void inicializar_swap();
+
 #endif

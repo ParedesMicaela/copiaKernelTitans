@@ -42,9 +42,8 @@ static bool memoria_llena() {
     int tamanio_memoria = config_valores_memoria.tam_memoria;
     int tam_pagina = config_valores_memoria.tam_pagina;
     int cantidad_maxima_de_paginas_en_memoria =  tamanio_memoria/tam_pagina;
-
-
-    int cantidad_paginas_procesos;
+    int cantidad_paginas_procesos = 0;
+    
     for (int i = 0; i < list_size(procesos_en_memoria); i++) {
     t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
     cantidad_paginas_procesos += proceso->cantidad_entradas;

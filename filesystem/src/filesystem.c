@@ -41,10 +41,11 @@ int main(void)
 
     procesos_en_filesystem = list_create();
 
-    inicializar_bitarray();
-    
     diccionario_archivos_abiertos = dictionary_create();
 
+
+    inicializar_bitarray();
+    
     levantar_fat(tamanio_fat);
     log_info(filesystem_logger,"Levanto el fat \n");
     levantar_archivo_bloque();

@@ -115,12 +115,18 @@ void atender_clientes_filesystem(void* conexion) {
 				bloques_reservados_a_enviar = reservar_bloques(pid,bloques_a_reservar); 
 				if(bloques_reservados_a_enviar != NULL) {
 					enviar_bloques_reservados(bloques_reservados_a_enviar);
-					list_destroy(bloques_reservados_a_enviar);
+					//list_destroy(bloques_reservados_a_enviar);
 				}
 				else{
 					log_info(filesystem_logger,"No se pudieron reservar los bloques");
 				}
 			break;
+
+			case CERRAR_ARCHIVO:
+				nombre_archivo = sacar_cadena_de_paquete(&stream);
+				log_info(filesystem_logger, "Cerrar Archivo: %s", nombre_archivo);
+				cerrar_archivo(nombre_archivo); 
+				break;
 
 			case LIBERAR_SWAP:
 				//bloques_a_liberar = sacar_lista_de_cadenas_de_paquete(&stream); 
@@ -131,22 +137,16 @@ void atender_clientes_filesystem(void* conexion) {
 			case PAGINA_SWAP_OUT:
 				pid = sacar_entero_de_paquete(&stream);
 				nro_pag = sacar_entero_de_paquete(&stream);
-				posicion_swap = sacar_entero_de_paquete(&stream);
-				marco = sacar_entero_de_paquete(&stream);
-				swap_out(pid, nro_pag, posicion_swap, marco); 
+				//posicion_swap = sacar_entero_de_paquete(&stream);
+				//marco = sacar_entero_de_paquete(&stream);
+				swap_out(pid, nro_pag); 
 			break;
 
 			case PAGINA_SWAP_IN:
 				nro_pag = sacar_entero_de_paquete(&stream);
 				pid = sacar_entero_de_paquete(&stream);
-				swap_in(pid, nro_pag);
+				//swap_in(pid, nro_pag);
 			break;
-
-			case CERRAR_ARCHIVO:
-				nombre_archivo = sacar_cadena_de_paquete(&stream);
-				log_info(filesystem_logger, "Crear Archivo: %s", nombre_archivo);
-				cerrar_archivo(nombre_archivo); 
-				break;
 
 			default:
 				printf("Operacion desconocida \n");

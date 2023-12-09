@@ -96,35 +96,41 @@ int obtener_tiempo_carga(){
 
 t_proceso_en_memoria* buscar_proceso_en_memoria(int pid) {
     int i;
-    for (i=0; i < list_size(procesos_en_memoria); i++){
-        if ( ((t_proceso_en_memoria*) list_get(procesos_en_memoria, i)) -> pid == pid){
-            break;            
+    for (i = 0; i < list_size(procesos_en_memoria); i++) {
+        if (((t_proceso_en_memoria*)list_get(procesos_en_memoria, i))->pid == pid) {
+            return list_get(procesos_en_memoria, i);
         }
     }
-    return list_get(procesos_en_memoria, i);
+
+    return NULL;
 }
 
-t_pagina* buscar_pagina(int pid, int num_pagina){
 
-    // Obtenemos proceso en memoria
+t_pagina* buscar_pagina(int pid, int num_pagina) 
+{
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid); 
 
-    // Iterar las entradas
-    for(int i = 0; i < proceso_en_memoria->cantidad_entradas; i++)
-    {
+    if (proceso_en_memoria == NULL) {
+        return NULL;
+    }
+
+    for (int i = 0; i < proceso_en_memoria->cantidad_entradas; i++) {
         t_pagina* pagina_actual = list_get(proceso_en_memoria->paginas_en_memoria, i);
+
+        if (pagina_actual == NULL) {
+            return NULL;  
+        }
 
         pagina_actual->tiempo_uso = obtener_tiempo(); 
 
-        // Si coincide el número de página, devolver la página
         if (pagina_actual->numero_de_pagina == num_pagina) {
             return pagina_actual;
         }
     }
 
-    // Si no consigue devuelvo NULL (Tratar después error)
     return NULL;
 }
+
 
 int buscar_marco(int pid, int num_pagina){
 
@@ -175,6 +181,3 @@ static void liberar_swap(int pid) {
         log_error(memoria_logger, "No se pudieron liberar los bloques en FS\n");
     }
 }
-
-
-
