@@ -464,7 +464,7 @@ void obtener_siguiente_blocked(t_pcb* proceso)
 
     log_info(kernel_logger, "PID[%d] sale de BLOCKED para meterse en READY\n", proceso->pid);
 
-    obtener_siguiente_ready();
+    proceso_en_ready(proceso);
 }
 
 t_pcb *obtener_siguiente_FIFO()

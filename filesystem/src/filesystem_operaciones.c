@@ -182,10 +182,8 @@ void truncar_archivo(char *nombre, int tamanio_nuevo)
 	log_info(filesystem_logger,"Terminamos y mandamos el fcb a actualizarse\n");
 
 	//enviamos paquetE
-	t_paquete *paquete = crear_paquete(ARCHIVO_TRUNCADO);
-	log_info(filesystem_logger, "Enviando confirmacion de que se termino el archivo\n");
-	enviar_paquete(paquete, socket_kernel);
-	eliminar_paquete(paquete);
+	//int truncado = 1;
+    send(socket_kernel, 1, sizeof(int), 0);
 }
 
 int calcular_bloque_inicial_archivo(int tamanio)

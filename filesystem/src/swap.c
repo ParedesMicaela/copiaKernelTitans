@@ -103,7 +103,7 @@ static t_proceso_en_filesystem* buscar_proceso_en_filesystem(int pid) {
 
 
 //cada bloque va a tener la pagina que guarda y la posicion del bloque es el nro de pagina
-bloque_swap* buscar_pagina_swap(int nro_pagina, int pid)
+bloque_swap* buscar_bloque_swap(int nro_pagina, int pid)
 {
     usleep(config_valores_filesystem.retardo_acceso_bloque);
     log_info(filesystem_logger, "Acceso SWAP: BLOQUE %d", nro_pagina);
@@ -136,14 +136,14 @@ void swap_out(int pid, int nro_pagina)
         return;
     }
 
-    bloque_swap* bloque_a_leer = buscar_pagina_swap(nro_pagina, pid);
+    bloque_swap* bloque_a_leer = buscar_bloque_swap(nro_pagina, pid);
 
     while (fread(bloque_a_leer, sizeof(*bloque_a_leer), 1, fd) == 1) {
         if (bloque_a_leer->nro_pagina == nro_pagina) {
             t_paquete* paquete = crear_paquete(PAGINA_PARA_ESCRITURA);
             agregar_entero_a_paquete(paquete, bloque_a_leer->nro_pagina);
             agregar_entero_a_paquete(paquete, bloque_a_leer->posicion_swap);
-            agregar_entero_a_paquete(paquete, bloque_a_leer->pid);
+            agregar_entero_a_paquete(paquete, pid);
 
             enviar_paquete(paquete, socket_memoria);
             eliminar_paquete(paquete);

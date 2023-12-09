@@ -121,9 +121,8 @@ t_pagina* buscar_pagina(int pid, int num_pagina)
             return NULL;  
         }
 
-        pagina_actual->tiempo_uso = obtener_tiempo(); 
-
         if (pagina_actual->numero_de_pagina == num_pagina) {
+            pagina_actual->tiempo_uso = obtener_tiempo(); 
             return pagina_actual;
         }
     }

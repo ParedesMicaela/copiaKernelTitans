@@ -128,7 +128,7 @@ void manejo_conexiones(void* socket_cliente)
 	case FINALIZAR_EN_MEMORIA:
 		int pid = sacar_entero_de_paquete(&stream);
 		log_info(memoria_logger,"Recibi pedido de eliminacion de estructuras en memoria\n");
-		//finalizar_en_memoria(pid);
+		finalizar_en_memoria(pid);
 	    int ok_finalizacion = 1;
         send(cliente, &ok_finalizacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras eliminadas en memoria exitosamente\n");

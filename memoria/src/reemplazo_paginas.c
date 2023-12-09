@@ -16,25 +16,37 @@ void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid){
     
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid);
 
-    t_pagina* pagina_recibida = buscar_pagina(pid, nro_pagina);
-    
-    if(memoria_llena()){
-        reemplazar_pagina(pagina_recibida, proceso_en_memoria);
+    if(proceso_en_memoria ==  NULL)
+    {
+        log_info(memoria_logger, "prpceso vacio");
+        abort();
     }else{
-        int marco = buscar_marco_libre();
-        //memcpy?
-        pagina_recibida->id = pid;
-        pagina_recibida->bit_de_presencia = 1;
-        pagina_recibida->bit_modificado = 0;
-        pagina_recibida->marco = marco;
-        pagina_recibida->tiempo_uso = obtener_tiempo();
-        pagina_recibida->tiempo_de_carga = obtener_tiempo_carga();
+        t_pagina* pagina_recibida = buscar_pagina(pid, nro_pagina);
 
-        list_add(proceso_en_memoria->paginas_en_memoria, (void*)pagina_recibida);
+        if(pagina_recibida ==  NULL)
+        {
+            log_info(memoria_logger, "pagina vacio");
+            abort();
+        }
+
+        if(memoria_llena()){
+            reemplazar_pagina(pagina_recibida, proceso_en_memoria);
+        }else{
+            int marco = buscar_marco_libre();
+            //memcpy?
+            pagina_recibida->id = pid;
+            pagina_recibida->bit_de_presencia = 1;
+            pagina_recibida->bit_modificado = 0;
+            pagina_recibida->marco = marco;
+            pagina_recibida->posicion_swap = posicion_swap;
+            pagina_recibida->tiempo_uso = obtener_tiempo();
+            pagina_recibida->tiempo_de_carga = obtener_tiempo_carga();
+
+            list_add(proceso_en_memoria->paginas_en_memoria, (void*)pagina_recibida);
+        }
+
+        log_info(memoria_logger, "SWAP IN -  PID: %d - Marco: %d - Page In: %d - %d",pid, pagina_recibida->marco, pid, nro_pagina);
     }
-
-    log_info(memoria_logger, "SWAP IN -  PID: %d - Marco: %d - Page In: %d - %d",pid, pagina_recibida->marco, pid, nro_pagina);
-    
 }
 
 static bool memoria_llena() {

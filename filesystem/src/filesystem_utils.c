@@ -98,8 +98,8 @@ void atender_clientes_filesystem(void* conexion) {
 				direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
 				log_info(filesystem_logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d ", nombre_archivo, puntero_archivo, direccion_fisica);
-
 				solicitar_informacion_memoria(direccion_fisica, tam_bloque, nombre_archivo, puntero_archivo);
+
 			break;
 
 			case ESCRIBIR_EN_ARCHIVO_BLOQUES:

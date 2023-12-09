@@ -136,24 +136,18 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         
         log_info(kernel_logger, "Espero a que me llegue que trunco bien\n");
         
-        bool truncando;
+        int respuesta = 0;
+        recv(socket_filesystem, &respuesta, sizeof(int),0);
+        printf("respuesta %d",respuesta);
+        printf("& respuesta %d",&respuesta);
         
-        while(truncando)
+        if (respuesta != 1)
         {
-            t_paquete* paquete = recibir_paquete(socket_filesystem);
-            void *stream = paquete->buffer->stream;
-            
-            if(paquete->codigo_operacion == ARCHIVO_TRUNCADO)
-            {
-                truncando=false;
-                proceso_en_execute(proceso);
-            }
-            else
-            {
-                perror("no me llego que se trunco, que pingo es esto");
-                abort();
-            }
+            log_error(kernel_logger, "Hubo un error con la respuesta de fs de truncar \n");
         }
+
+        proceso_en_execute(proceso);
+    
         break;
     case LEER_ARCHIVO:
 
@@ -222,6 +216,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
             archivo_para_escribir->fcb->lock_escritura = true;
             enviar_solicitud_fs(nombre_archivo, ESCRIBIR_ARCHIVO, 0, puntero, direccion_fisica);
+            log_info(kernel_logger, "enviamos solicitud a pa escribir");
         }
         break;
 

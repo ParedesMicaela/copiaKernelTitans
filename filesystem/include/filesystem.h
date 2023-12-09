@@ -67,7 +67,6 @@ typedef struct
 } t_proceso_en_filesystem;
 
 typedef struct {
-    void* data;  
     int nro_pagina;
     int bit_presencia_swap;
     int posicion_swap;
@@ -137,7 +136,7 @@ void cerrar_archivo(char* nombre_archivo);
 //..................................FUNCIONES SWAP.....................................................................
 t_list* reservar_bloques(int pid, int cantidad_bloques);
 void liberar_bloques(int pid);
-bloque_swap* buscar_pagina_swap(int nro_pagina, int pid);
+bloque_swap* buscar_bloque_swap(int nro_pagina, int pid);
 void bloque_libre_swap (int i);
 bloque_swap* asignar_bloque_swap(int tam_bloque, int index, int pid);
 void crear_filesystem_swap();
