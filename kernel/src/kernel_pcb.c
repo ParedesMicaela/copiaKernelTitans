@@ -164,14 +164,17 @@ char* recibir_contexto(t_pcb* proceso)
 
     if(string_equals_ignore_case(proceso->recurso_pedido, "basura")) {
         free(proceso->recurso_pedido);
+        proceso->recurso_pedido = NULL;
     }
 
     if(string_equals_ignore_case(proceso->nombre_archivo, "basura")) {
         free(proceso->nombre_archivo);
+        proceso->nombre_archivo = NULL;
     }
 
     if(string_equals_ignore_case(proceso->modo_apertura, "basura")) {
         free(proceso->modo_apertura); 
+        proceso->modo_apertura = NULL;
     }
     log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
 
