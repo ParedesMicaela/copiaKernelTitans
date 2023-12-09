@@ -22,6 +22,8 @@ int main(void) {
 
     procesos_en_memoria = list_create();
 
+    inicializar_semaforos();
+
     log_info(memoria_logger,"Inicializando memoria\n");
 
     int server_memoria = iniciar_servidor(config_valores_memoria.ip_memoria,config_valores_memoria.puerto_escucha);

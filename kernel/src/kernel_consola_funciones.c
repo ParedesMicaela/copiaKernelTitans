@@ -171,7 +171,7 @@ void consola_finalizar_proceso(int pid) {
 
         eliminar_pcb(pcb_asociado);
         sem_post(&grado_multiprogramacion);
-        }
+    }
     } else {
         printf("Proceso no encontrado. Intente nuevamente.\n");
     }

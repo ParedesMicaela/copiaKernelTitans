@@ -28,6 +28,9 @@ extern t_list* procesos_en_memoria;
 extern int socket_fs;
 extern sem_t solucionado_pf;
 extern sem_t swap_creado;
+extern pthread_mutex_t mutex_path;
+extern pthread_mutex_t mutex_instrucciones;
+extern pthread_mutex_t mutex_lista_instrucciones;
 
 //ESTRUCTURAS
 typedef struct  
@@ -71,6 +74,7 @@ typedef struct
 int atender_clientes_memoria(int);
 void manejo_conexiones(void* );
 void cargar_configuracion(char* );
+void inicializar_semaforos();
 
 /// @brief CPU + INSTRUCCIONES ///
 void enviar_paquete_handshake(int );

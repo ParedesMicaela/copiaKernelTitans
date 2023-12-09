@@ -49,8 +49,7 @@ void deteccion_deadlock (t_pcb* proceso, char* recurso_pedido)
         hay_deadlock = false;
     }
     //si no retiene recursos, entonces no puede estar en deadlockproceso->recurso_pedido
-    //sem_post(&analisis_deadlock_completo);
-    free(recurso_retenido);
+    //free(recurso_retenido);
 }
 
 bool proceso_reteniendo_recurso(t_pcb* proceso_involucrado, char* recurso) {
@@ -95,4 +94,3 @@ void mensaje_deadlock_detectado(t_pcb* proceso, char* recurso_requerido)
         free(recursos_totales); 
     }
 }
-

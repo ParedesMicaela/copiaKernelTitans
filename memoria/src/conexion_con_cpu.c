@@ -17,10 +17,14 @@ void enviar_paquete_handshake(int socket_cliente) {
 void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones, int inst_a_ejecutar)
 {
 	//armamos una lista de instrucciones con la cadena de instrucciones que lei, pero ahora las separo
+    pthread_mutex_lock(&mutex_lista_instrucciones);
 	char** lista_instrucciones = string_split(instrucciones, "\n");
+    pthread_mutex_unlock(&mutex_lista_instrucciones);
 
 	//a la cpu le mandamos SOLO la instruccion que me marca el prog_count
+    pthread_mutex_lock(&mutex_instrucciones);
     char *instruccion = lista_instrucciones[inst_a_ejecutar];
+    pthread_mutex_unlock(&mutex_instrucciones);
 
     t_paquete* paquete = crear_paquete(INSTRUCCIONES); 
 

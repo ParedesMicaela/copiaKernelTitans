@@ -283,7 +283,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             tiempo = atoi(datos[1]);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "", tiempo, -1, "", "", -1 , 0, -1); 
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "basura", tiempo, -1, "basura", "basura", -1 , 0, -1); 
             seguir_ejecutando = false;
             break;
 
@@ -292,7 +292,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             recurso = datos[1];
             //mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso, 0, -1, "", "", -1 , 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso, 0, -1, "basura", "basura", -1 , 0, -1);
             seguir_ejecutando = false;
             break;
 
@@ -301,7 +301,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             recurso = datos[1];
             //mostrar_valores(contexto_ejecucion);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal", recurso, 0, -1, "", "", -1 , 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal", recurso, 0, -1, "basura", "basura", -1 , 0, -1);
             seguir_ejecutando = false;
             break;
 
@@ -330,7 +330,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             nombre_archivo = datos[1];
             modo_apertura = datos[2];
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_open", "", 0, -1, nombre_archivo, modo_apertura, -1, 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_open", "basura", 0, -1, nombre_archivo, modo_apertura, -1, 0, -1);
             seguir_ejecutando = false;
             break;
 
@@ -338,7 +338,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             nombre_archivo = datos[1];
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_close", "", 0, -1, nombre_archivo, "", -1, 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_close", "basura", 0, -1, nombre_archivo, "basura", -1, 0, -1);
             seguir_ejecutando = false;
             break;
 
@@ -347,7 +347,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             nombre_archivo = datos[1];
             tamanio = atoi(datos[2]); // el tamanio va a ser el nuevo tamanio del archivo
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_truncate", "", 0, -1, nombre_archivo, "", -1, 0, tamanio);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_truncate", "basura", 0, -1, nombre_archivo, "basura", -1, 0, tamanio);
             seguir_ejecutando = false;
             break;
         
@@ -356,7 +356,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             nombre_archivo = datos[1];
             posicion = atoi(datos[2]);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_seek", "", 0, -1, nombre_archivo, "", posicion, 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_seek", "basura", 0, -1, nombre_archivo, "basura", posicion, 0, -1);
             seguir_ejecutando = false;
             break;
 
@@ -364,7 +364,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_read", "", 0, -1, nombre_archivo, "", -1, direccion_fisica, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_read", "basura", 0, -1, nombre_archivo, "basura", -1, direccion_fisica, -1);
             seguir_ejecutando = false;
             break;
 
@@ -372,13 +372,13 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             nombre_archivo = datos[1];
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_write", "", 0, -1, nombre_archivo, "", -1, direccion_fisica, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_write", "basura", 0, -1, nombre_archivo, "basura", -1, direccion_fisica, -1);
             seguir_ejecutando = false;
             break;
 
         case (INSTRUCCION_EXIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit","", 0, -1, "", "", -1 , 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit","basura", 0, -1, "basura", "basura", -1 , 0, -1);
             // eliminar_todas_las_entradas(contexto_ejecucion->pid);
             seguir_ejecutando = false;
             break;
@@ -391,7 +391,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "desalojo", "", 0, -1, "", "", -1 , 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "desalojo", "basura", 0, -1, "basura", "basura", -1 , 0, -1);
             seguir_ejecutando = false;
         }else if (hay_interrupcion() && tipo_interrupcion == 2)
         {
@@ -399,7 +399,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "finalizacion", "", 0, -1, "", "", -1 , 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "finalizacion", "basura", 0, -1, "basura", "basura", -1 , 0, -1);
             seguir_ejecutando = false;
         }else if (hay_interrupcion() && tipo_interrupcion == 3) 
         {
@@ -408,7 +408,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, int socket_cliente_memori
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0, numero_pagina_aux, "", "", -1 , 0, -1);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "basura", 0, numero_pagina_aux, "basura", "basura", -1 , 0, -1);
             //como tengo page fault notificó al kernel y no puedo seguir ejecutando el proceso hasta manejar el page fault
             seguir_ejecutando = false;
         }

@@ -6,6 +6,9 @@ int socket_fs;
 int chantada = 1;
 size_t tamanio_contenido;
 int pid_fs;
+pthread_mutex_t mutex_path;
+pthread_mutex_t mutex_instrucciones;
+pthread_mutex_t mutex_lista_instrucciones;
 
 
 // CONFIGURACION //
@@ -76,11 +79,14 @@ void manejo_conexiones(void* socket_cliente)
 		posicion_pedida = sacar_entero_de_paquete(&stream);
 		pid_proceso = sacar_entero_de_paquete(&stream);
 
+		usleep(config_valores_memoria.retardo_respuesta * 1000);  
+
 		//aca vamos a buscar el proceso con el pid que recibimos y obtener el path_asignado
+        pthread_mutex_lock(&mutex_path);
 		path_asignado = buscar_path_proceso(pid_proceso); 
+        pthread_mutex_unlock(&mutex_path);
 
 		//mandamos directamente el path del proceso porque ahi ya voy a tener las instrucciones leidas y cargadas
-		usleep(config_valores_memoria.retardo_respuesta * 1000);  //Retardo consigna
 		enviar_paquete_instrucciones(cliente, path_asignado, posicion_pedida);
 		break;
 
@@ -122,7 +128,7 @@ void manejo_conexiones(void* socket_cliente)
 	case FINALIZAR_EN_MEMORIA:
 		int pid = sacar_entero_de_paquete(&stream);
 		log_info(memoria_logger,"Recibi pedido de eliminacion de estructuras en memoria\n");
-		finalizar_en_memoria(pid);
+		//finalizar_en_memoria(pid);
 	    int ok_finalizacion = 1;
         send(cliente, &ok_finalizacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras eliminadas en memoria exitosamente\n");
@@ -200,3 +206,9 @@ void manejo_conexiones(void* socket_cliente)
 	}
 }
 
+void inicializar_semaforos()
+{
+    pthread_mutex_init(&mutex_instrucciones, NULL);
+    pthread_mutex_init(&mutex_lista_instrucciones, NULL);
+    pthread_mutex_init(&mutex_path, NULL);
+}
