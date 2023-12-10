@@ -93,8 +93,8 @@ void atender_clientes_filesystem(void* );
 FILE* levantar_archivo_bloque();
 void levantar_fat(size_t tamanio_fat);
 fcb* levantar_fcb (char * path);
-void crear_archivo (char *nombre_archivo, int socket_kernel);
-void abrir_archivo (char *nombre_archivo, int socket_kernel);
+void crear_archivo (char *nombre_archivo, int* socket_kernel);
+void abrir_archivo (char *nombre_archivo, int* socket_kernel);
 void liberar_bloque_individual(bloque_swap* bloque);
 char* devolver_direccion_archivo(char* nombre);
 

@@ -148,7 +148,7 @@ void manejo_conexiones(void* conexion)
 
 	case LEER_EN_MEMORIA:
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-		tam_contenido = sacar_entero_sin_signo_de_paquete(&stream);
+		tam_contenido = sacar_entero_de_paquete(&stream);
 		puntero_de_archivo = sacar_entero_sin_signo_de_paquete(&stream);
 		nombre_archivo = sacar_cadena_de_paquete(&stream);
 

@@ -61,7 +61,6 @@ void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica) {
 
     log_info(memoria_logger, "Acción: %s - Dirección física: %d ", "LEER EN MEMORIA", direccion_fisica);
 
-
 	return contenido; 
 }
 

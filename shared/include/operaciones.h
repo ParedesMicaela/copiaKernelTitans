@@ -58,8 +58,9 @@ typedef enum
 	CREAR_ARCHIVO,
 	TRUNCAR_ARCHIVO,
 	LEER_ARCHIVO,
-	ESCRIBIR_ARCHIVO,
+	SOLICITAR_INFO_ARCHIVO_MEMORIA,
 	ESCRIBIR_EN_ARCHIVO_BLOQUES,
+	ESCRIBIR_ARCHIVO,
 	INICIAR_PROCESO,
 	FINALIZAR_PROCESO,
 	LIBERAR_SWAP,
@@ -149,14 +150,14 @@ typedef struct
 
 typedef struct {   
 	fcb_proceso* fcb;
-    uint32_t* puntero_posicion; //si lo manejamos con file, como lo habias hecho creoque es mas facil
+    uint32_t puntero_posicion; //si lo manejamos con file, como lo habias hecho creoque es mas facil
 	char* modo_apertura;
 	//esto es distinto al bloque inical porque podemos usar FSEEK. el bloque incial es siempre el mismo para moverse mas facil
 } t_archivo_proceso;
 
 typedef struct {   
 	fcb_proceso* fcb;
-    uint32_t* puntero_posicion;
+    uint32_t puntero_posicion;
 	t_list* cola_solicitudes;
 } t_archivo;
 
@@ -177,7 +178,7 @@ typedef struct
 	char* path_proceso;
 	char* nombre_archivo;
     char* modo_apertura;
-    int posicion;
+    uint32_t puntero;
     uint32_t direccion_fisica_proceso;
     int tamanio_archivo;
 	t_list* archivos_abiertos;

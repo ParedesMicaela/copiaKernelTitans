@@ -60,7 +60,6 @@ t_pcb* crear_pcb(int prioridad, int cant_paginas_proceso, char* path)
 
     pcb->nombre_archivo = NULL;
     pcb->modo_apertura = NULL;
-    pcb->posicion = -1;
     pcb->direccion_fisica_proceso = 0;
     pcb->tamanio_archivo = -1;
 
@@ -104,12 +103,13 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 
     agregar_entero_a_paquete(paquete, pcb_a_enviar->pid);
     agregar_entero_a_paquete(paquete, pcb_a_enviar->program_counter);
-    agregar_entero_a_paquete(paquete, pcb_a_enviar->prioridad);
+    agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->puntero);
 
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.AX); 
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.BX);
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.CX);
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.DX);
+    agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->direccion_fisica_proceso);
 
     // Iterar sobre cada recurso y agregarlo al paquete
     for (int i = 0; i < tamanio_recursos; ++i) {
@@ -146,7 +146,7 @@ char* recibir_contexto(t_pcb* proceso)
         pagina_pedida = sacar_entero_de_paquete(&stream);
         proceso->nombre_archivo = sacar_cadena_de_paquete(&stream);
         proceso->modo_apertura = sacar_cadena_de_paquete(&stream);
-        proceso->posicion = sacar_entero_de_paquete(&stream);
+        proceso->puntero = sacar_entero_sin_signo_de_paquete(&stream);
         proceso->direccion_fisica_proceso = sacar_entero_sin_signo_de_paquete(&stream);
         proceso->tamanio_archivo = sacar_entero_de_paquete(&stream);
     }

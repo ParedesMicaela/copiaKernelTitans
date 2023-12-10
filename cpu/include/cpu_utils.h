@@ -47,10 +47,11 @@ typedef struct
 
 typedef struct
 {
-    int pid;
-    int program_counter;
-    int prioridad;
-    int pag_pf;
+   int pid;
+   int program_counter;
+   uint32_t puntero;
+   int pag_pf;
+   uint32_t direccion_fisica_proceso;
  	t_registros_cpu registros_cpu;
    t_recursos_asignados* recursos_asignados;  
 }t_contexto_ejecucion;

@@ -138,8 +138,6 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         
         int respuesta = 0;
         recv(socket_filesystem, &respuesta, sizeof(int),0);
-        printf("respuesta %d",respuesta);
-        printf("& respuesta %d",&respuesta);
         
         if (respuesta != 1)
         {
@@ -152,7 +150,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
     case LEER_ARCHIVO:
 
         nombre_archivo =  proceso->nombre_archivo;
-        puntero = proceso->posicion;
+        puntero = proceso->puntero;
         direccion_fisica = proceso->direccion_fisica_proceso;
 
         log_info(kernel_logger, "PID: %d - Leer Archivo: %s", proceso->pid, nombre_archivo);
@@ -200,8 +198,10 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
     case ESCRIBIR_ARCHIVO:
         nombre_archivo =  proceso->nombre_archivo;
-        puntero = proceso->posicion;
         direccion_fisica = proceso->direccion_fisica_proceso;
+
+        printf(" escribir archivo direc %d", direccion_fisica);
+
 
         log_info(kernel_logger, "PID: %d - Escribir Archivo: %s", proceso->pid, nombre_archivo);
                 
@@ -212,16 +212,14 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         {                                     
             //meto al proceso en la cola de bloqueados del archivo
             list_add(archivo_para_escribir->cola_solicitudes,(void*)proceso);
-        }else{
-
-            archivo_para_escribir->fcb->lock_escritura = true;
-            enviar_solicitud_fs(nombre_archivo, ESCRIBIR_ARCHIVO, 0, puntero, direccion_fisica);
         }
+            archivo_para_escribir->fcb->lock_escritura = true;
+            enviar_solicitud_fs(nombre_archivo, SOLICITAR_INFO_ARCHIVO_MEMORIA, 0, proceso->puntero, direccion_fisica);
         break;
 
     case BUSCAR_ARCHIVO:
         nombre_archivo =  proceso->nombre_archivo;
-        puntero = proceso->posicion;
+        puntero = proceso->puntero;
 
         t_archivo_proceso* archivo_buscado = buscar_en_tabla_de_archivos_proceso(proceso, nombre_archivo);
         
@@ -231,7 +229,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             proceso_en_exit(proceso);       
         }
 
-        archivo_buscado->puntero_posicion = (uint32_t)puntero;
+        archivo_buscado->puntero_posicion = puntero;
         log_info(kernel_logger, "PID: %d - Actualizar puntero Archivo: %s - Puntero: %d\n",proceso->pid, nombre_archivo, archivo_buscado->puntero_posicion);
         proceso_en_execute(proceso);
         break;
@@ -337,14 +335,16 @@ static int tipo_motivo(char *motivo)
     return numero;
 }
 
-void enviar_solicitud_fs(char* nombre_archivo, op_code operacion, int tamanio, uint32_t posicion, uint32_t direccion_fisica)
+void enviar_solicitud_fs(char* nombre_archivo, op_code operacion, int tamanio, uint32_t puntero, uint32_t direccion_fisica)
 {
     t_paquete *paquete = crear_paquete(operacion);
     agregar_cadena_a_paquete(paquete, nombre_archivo);
     //agregar_cadena_a_paquete(paquete, archivo->fcb->bloque_inicial);
     agregar_entero_a_paquete(paquete, tamanio);
-    agregar_entero_a_paquete(paquete, posicion);
+    agregar_entero_sin_signo_a_paquete(paquete, puntero);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
+
+    printf("enviar solicitud direc %d", direccion_fisica);
     enviar_paquete(paquete, socket_filesystem);
     eliminar_paquete(paquete);
 }

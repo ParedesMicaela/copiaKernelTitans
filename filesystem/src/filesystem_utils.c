@@ -86,13 +86,13 @@ void atender_clientes_filesystem(void* conexion) {
 				leer_archivo(cliente_fd, nombre_archivo, puntero_archivo, direccion_fisica); 
 			break;
 
-			case ESCRIBIR_ARCHIVO:
-				nombre_archivo = sacar_cadena_de_paquete(&stream); 			
-				direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+			case SOLICITAR_INFO_ARCHIVO_MEMORIA:
+				nombre_archivo = sacar_cadena_de_paquete(&stream);
+				tamanio = sacar_entero_de_paquete(&stream); 			
 				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
+				direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 				log_info(filesystem_logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d ", nombre_archivo, puntero_archivo, direccion_fisica);
 				solicitar_informacion_memoria(direccion_fisica, tam_bloque, nombre_archivo, puntero_archivo);
-
 			break;
 
 			case ESCRIBIR_EN_ARCHIVO_BLOQUES:
@@ -101,6 +101,7 @@ void atender_clientes_filesystem(void* conexion) {
 				nombre_archivo = sacar_cadena_de_paquete(&stream); 
 				escribir_archivo(nombre_archivo,puntero_archivo,contenido_a_escrbir, cliente_fd);	
 			break;
+
 			case INICIALIZAR_SWAP:		
 				bloques_reservados_a_enviar = list_create();
 				pid = sacar_entero_de_paquete(&stream);

@@ -13,10 +13,10 @@ static void enviar_paquete_WRITE(uint32_t direccion_fisica, uint32_t registro, t
 /// MMU ///
 
 uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica, t_contexto_ejecucion* contexto_ejecucion) {
-    uint32_t numero_pagina;
-    uint32_t offset;
-    int numero_marco;
-    uint32_t direccion_fisica;
+    uint32_t numero_pagina = 0;
+    uint32_t offset = 0 ;
+    int numero_marco = 0;
+    uint32_t direccion_fisica = 0;
 
     // Calculamos numero_pagina y offset
     numero_pagina = floor(direccion_logica / tam_pagina);
@@ -54,12 +54,12 @@ static void pedir_numero_frame(uint32_t numero_pagina, t_contexto_ejecucion* con
 }
 
 static int numero_marco_pagina() {
-    int numero_marco;
+    int numero_marco = 0;
 
     t_paquete* paquete = recibir_paquete(socket_cliente_memoria);
     void* stream = paquete->buffer->stream;
 
-    if (paquete->codigo_operacion == NUMERO_MARCO) //LLEGA VALORREAD
+    if (paquete->codigo_operacion == NUMERO_MARCO) 
     {
         numero_marco = sacar_entero_de_paquete(&stream);
 

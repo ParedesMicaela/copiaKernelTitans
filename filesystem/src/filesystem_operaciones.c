@@ -107,7 +107,7 @@ void mapear_archivo_de_bloques() {
 }
 
 //================================================= OPERACIONES ARCHIVOS ============================================
-void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo unico que funciona
+void crear_archivo (char *nombre_archivo, int* socket_kernel) //literalmente lo unico que funciona
 {
     char *path_archivo = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
 	
@@ -138,7 +138,7 @@ void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo u
 	}
 } 
 
-void abrir_archivo (char *nombre_archivo, int socket_kernel)
+void abrir_archivo (char *nombre_archivo, int* socket_kernel)
 {
 	// /home/utnso/tp-2023-2c-KernelTitans/filesystem/fs/fat.dat
 	char *path_archivo = string_from_format("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
