@@ -84,6 +84,7 @@ extern t_bitarray* bitmap_archivo_bloques;
 extern bloque_swap* particion_swap;
 extern FILE* archivo_de_bloques;
 extern char* path_archivo_bloques;
+extern sem_t escritura_completada;
 
 
 void inicializar_bitarray();
@@ -131,7 +132,7 @@ void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
 void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica, int* cliente_fd);
-void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido, int* cliente_fd);
+void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido);
 void escribir_contenido_en_bloque(uint32_t bloque_final, uint32_t bloque_inicial, void* contenido, int tam_bloque);
 void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo);
 void crear_archivo_de_bloque();

@@ -225,7 +225,7 @@ int calcular_bloque_inicial_archivo(int tamanio)
 	return devolver;
 }
 
-void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido, int* cliente_fd){
+void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido){
 	
 	fcb* archivo_a_leer = levantar_fcb (nombre_archivo);
 
@@ -237,10 +237,6 @@ void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* cont
 	free(archivo_a_leer);
     
 	escribir_contenido_en_bloque(bloque_inicial,bloque_final, contenido, tam_bloque);
-
-	int ok_write = 1;
-	send(cliente_fd, &ok_write, sizeof(int), 0);
-
 }
 
 void escribir_contenido_en_bloque(uint32_t bloque_final, uint32_t bloque_inicial, void* contenido, int tam_bloque) {

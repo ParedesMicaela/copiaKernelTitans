@@ -14,6 +14,7 @@ int espacio_de_FAT;
 t_bitarray* bitmap_archivo_bloques;
 t_dictionary* diccionario_archivos_abiertos;
 char* path_archivo_bloques;
+sem_t escritura_completada;
 
 
 //============================================================================================================
@@ -44,7 +45,8 @@ int main(void)
     diccionario_archivos_abiertos = dictionary_create();
 
     inicializar_bitarray();
-    
+    sem_init(&(escritura_completada), 0 ,0);
+
     levantar_fat(tamanio_fat);
     log_info(filesystem_logger,"Levanto el fat \n");
     crear_archivo_de_bloque();

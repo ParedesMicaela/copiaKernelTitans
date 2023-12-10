@@ -52,16 +52,17 @@ t_pcb* crear_pcb(int prioridad, int cant_paginas_proceso, char* path)
         free(pcb);
         inicializar_consola_interactiva();
     }
-} else {
-    log_error(kernel_logger, "No me enviaste un path correcto\n");
-    free(pcb);
-    inicializar_consola_interactiva();
-}
+    } else {
+        log_error(kernel_logger, "No me enviaste un path correcto\n");
+        free(pcb);
+        inicializar_consola_interactiva();
+    }
 
     pcb->nombre_archivo = NULL;
     pcb->modo_apertura = NULL;
     pcb->direccion_fisica_proceso = 0;
     pcb->tamanio_archivo = -1;
+    pcb->puntero = 0;
 
     pcb->archivos_abiertos = list_create();
 
