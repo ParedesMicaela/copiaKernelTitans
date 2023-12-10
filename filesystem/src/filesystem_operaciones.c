@@ -6,7 +6,8 @@ void* fat_mapeado;
 uint32_t* tabla_fat_en_memoria;
 
 int proximo_bloque_inicial = 1;
-
+static void recorrer_tabla_fat(uint32_t bloque_inicial, uint32_t bloque_final, int tam_bloque, uint32_t direccion_fisica);
+void escribir_contenido_en_bloque(uint32_t bloque_final, uint32_t bloque_inicial, void* contenido, int tam_bloque);
 //============================================== INICIALIZACION ============================================
 
 void levantar_fat(size_t tamanio_fat)
@@ -238,7 +239,7 @@ void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* cont
 
 }
 
-void escribir_contenido_en_bloque(uint32_t bloque_final, void* contenido, int tam_bloque) {
+void escribir_contenido_en_bloque(uint32_t bloque_final, uint32_t bloque_inicial, void* contenido, int tam_bloque) {
 		
 		uint32_t nro_de_bloque = tabla_fat_en_memoria[bloque_final];
 		int tamanio = nro_de_bloque * tam_bloque;
@@ -247,7 +248,7 @@ void escribir_contenido_en_bloque(uint32_t bloque_final, void* contenido, int ta
     	memcpy((char*)fat_mapeado + tamanio, contenido, tamanio);
 		
 		//Le había hecho un malloc en memoria
-		free(contenido);
+		//free(contenido);
 }
 
 void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo)
@@ -286,7 +287,7 @@ void escribir_en_memoria(int tam_bloque, void* contenido, uint32_t direccion_fis
 	free(contenido);
 }
 
-void recorrer_tabla_fat(uint32_t bloque_inicial, uint32_t bloque_final, int tam_bloque, uint32_t direccion_fisica) {
+static void recorrer_tabla_fat(uint32_t bloque_inicial, uint32_t bloque_final, int tam_bloque, uint32_t direccion_fisica) {
 
 	uint32_t indice = bloque_inicial; 
 
@@ -363,7 +364,7 @@ void actualizar_fcb(fcb* nuevo_fcb)
 	config_save_in_file(archivo,path);
 
 	free(path);
-	config_destroy(config);
+	config_destroy(archivo);
 	log_info(filesystem_logger,"Actualizarmos bien el fcb\n");
 }
 
@@ -402,9 +403,8 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 		{
 			//ABRIMOS LOS DOS ARCHIVOS QUE VAMOS A MODIFICAR
 			
-			//fat
 			FILE* archivo_fat = fopen(config_valores_filesystem.path_fat, "wb+");
-			fseek(archivo_fat,posicion_bloque_agregado,SEEK_SET);
+			fseek(archivo_fat,posicion_bloque_agregado,SEEK_SET); //Revisar dsps
 			
 			//bloques
 			archivo_de_bloques = levantar_archivo_bloque();
@@ -460,7 +460,7 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 					log_info(filesystem_logger,"actualizmos un bloque de archivo bloques\n");
 				}
 				
-				fflush(archivo_fat);
+				//fflush(archivo_fat);
 				fflush(archivo_de_bloques);
 
 			}else printf("no existe/no se pudo abrir la tabla fat o el archivo de bloques"); 

@@ -37,6 +37,7 @@ void cargar_configuracion(char* path) {
       config_valores_filesystem.tam_bloque = config_get_int_value(config, "TAM_BLOQUE");
       config_valores_filesystem.retardo_acceso_bloque = config_get_int_value(config, "RETARDO_ACCESO_BLOQUE");
       config_valores_filesystem.retardo_acceso_fat = config_get_int_value(config, "RETARDO_ACCESO_FAT");
+
 }
 
 void atender_clientes_filesystem(void* conexion) {
