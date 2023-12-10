@@ -1,11 +1,5 @@
 #include "filesystem.h"
 
-
-//mmap trae a memoria
-//msink sincroiniza el void* al archivo
-//cada que escribir, metes en el archivo con msink
-
-int socket_kernel;
 fcb config_valores_fcb;
 t_list* bloques_reservados_a_enviar;
 t_list *tabla_fat; //lista con direcciones
@@ -89,14 +83,14 @@ void atender_clientes_filesystem(void* conexion) {
 				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream); 
 				direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 				log_info(filesystem_logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d", nombre_archivo, puntero_archivo, direccion_fisica);
-				leer_archivo(nombre_archivo, puntero_archivo, direccion_fisica); 
+				leer_archivo(cliente_fd, nombre_archivo, puntero_archivo, direccion_fisica); 
 			break;
 
 			case ESCRIBIR_ARCHIVO:
 				nombre_archivo = sacar_cadena_de_paquete(&stream); 			
 				direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
-				//log_info(filesystem_logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d ", nombre_archivo, puntero_archivo, direccion_fisica);
+				log_info(filesystem_logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d ", nombre_archivo, puntero_archivo, direccion_fisica);
 				solicitar_informacion_memoria(direccion_fisica, tam_bloque, nombre_archivo, puntero_archivo);
 
 			break;
@@ -105,7 +99,7 @@ void atender_clientes_filesystem(void* conexion) {
 				contenido_a_escrbir = sacar_bytes_de_paquete(&stream, tam_bloque); 			
 				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
 				nombre_archivo = sacar_cadena_de_paquete(&stream); 
-				escribir_archivo(nombre_archivo,puntero_archivo,contenido_a_escrbir);	
+				escribir_archivo(nombre_archivo,puntero_archivo,contenido_a_escrbir, cliente_fd);	
 			break;
 			case INICIALIZAR_SWAP:		
 				bloques_reservados_a_enviar = list_create();
@@ -114,7 +108,6 @@ void atender_clientes_filesystem(void* conexion) {
 				bloques_reservados_a_enviar = reservar_bloques(pid,bloques_a_reservar); 
 				if(bloques_reservados_a_enviar != NULL) {
 					enviar_bloques_reservados(bloques_reservados_a_enviar);
-					//list_destroy(bloques_reservados_a_enviar);
 				}
 				else{
 					log_info(filesystem_logger,"No se pudieron reservar los bloques");

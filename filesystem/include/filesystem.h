@@ -21,7 +21,6 @@
 extern t_config *config;
 extern t_log *filesystem_logger;
 extern int socket_memoria;
-extern int socket_kernel; 
 extern int server_fd;
 extern t_list *bloques_reservados;
 extern t_list* procesos_en_filesystem;
@@ -131,8 +130,8 @@ void* liberar_bloque(bloque_swap* bloque_a_liberar);
 void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
-void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica);
-void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido);
+void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica, int cliente_fd);
+void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido, int cliente_fd);
 void cerrar_archivo(char* nombre_archivo);
 void mapear_archivo_de_bloques();
 
