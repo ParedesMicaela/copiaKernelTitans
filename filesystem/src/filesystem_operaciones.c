@@ -7,16 +7,16 @@ uint32_t* tabla_fat_en_memoria;
 int tam_bloque;
 
 int proximo_bloque_inicial = 1;
-//static void recorrer_tabla_fat(uint32_t bloque_inicial, uint32_t bloque_final, int tam_bloque, uint32_t direccion_fisica, int cliente_fd);
 static uint32_t buscar_bloque_en_FAT(uint32_t bloque_final, uint32_t bloque_inicial);
 static void escribir_en_memoria(int tam_bloque, void* contenido, uint32_t direccion_fisica);
+static void leer_contenido_archivo (uint32_t nro_bloque);
 //============================================== INICIALIZACION ============================================
 
-void levantar_fat(size_t tamanio_fat)
+void levantar_fat()
 {
     char *path = config_valores_filesystem.path_fat;
     uint32_t tam_entrada = tamanio_fat / sizeof(uint32_t);
-   	uint32_t valor_inicial = 0;
+    uint32_t valor_inicial = 0;
 
     FILE *archivo_fat = fopen(path, "rb+");
     if (archivo_fat == NULL)
@@ -25,23 +25,33 @@ void levantar_fat(size_t tamanio_fat)
         archivo_fat = fopen(path, "wb+");
         if (archivo_fat != NULL)
         {
-            
-		if (ftruncate(archivo_fat, tamanio_fat) == -1) {
-        log_error(filesystem_logger,"Error al truncar la tabla FAT");
-    		}
+            fclose(archivo_fat); //Por el truncar
+
+            // Vuelve a abrir el archivo en modo "wb+" para truncarlo
+            archivo_fat = fopen(path, "wb+");
+            if (archivo_fat == NULL)
+            {
+                log_error(filesystem_logger, "Error al abrir el archivo FAT en modo escritura");
+                return;
+            }
+
+            if (ftruncate(fileno(archivo_fat), tamanio_fat) == -1)
+            {
+                log_error(filesystem_logger, "Error al truncar la tabla FAT");
+            }
+
             for (size_t i = 1; i < tam_entrada; i++)
             {
                 fwrite(&valor_inicial, sizeof(uint32_t), 1, archivo_fat);
             }
             fflush(archivo_fat);
             fclose(archivo_fat);
-			//msync(fat_mapeado, espacio_de_FAT, MS_SYNC);
         }
     }
 
-	int fd_tabla_FAT = open(path, O_RDWR); 
-	tabla_fat_en_memoria = mmap(NULL, tam_entrada, PROT_WRITE, MAP_SHARED, fd_tabla_FAT, 0);
-	close(fd_tabla_FAT);
+    int fd_tabla_FAT = open(path, O_RDWR);
+    tabla_fat_en_memoria = mmap(NULL, tam_entrada, PROT_WRITE, MAP_SHARED, fd_tabla_FAT, 0);
+    close(fd_tabla_FAT);
 }
 
 fcb* levantar_fcb (char * nombre) {
@@ -109,7 +119,7 @@ void mapear_archivo_de_bloques() {
 }
 
 //================================================= OPERACIONES ARCHIVOS ============================================
-void crear_archivo (char *nombre_archivo, int* socket_kernel) //literalmente lo unico que funciona
+void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo unico que funciona
 {
     char *path_archivo = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
 	
@@ -234,73 +244,66 @@ void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* cont
 	uint32_t bloque_inicial = archivo_a_leer->bloque_inicial; 
 	int tamanio_archivo = archivo_a_leer->tamanio_archivo;
 	int tam_bloque = config_valores_filesystem.tam_bloque;
-	uint32_t bloque_a_escribir = (puntero_archivo + bloque_inicial);
+	uint32_t bloque_a_escribir = puntero_archivo/tam_bloque;
 	free(archivo_a_leer);
 
-	escribir_contenido_en_bloque(bloque_a_escribir,bloque_inicial, contenido, tam_bloque);
+	escribir_contenido_en_bloque(bloque_a_escribir,bloque_inicial, contenido);
 }
 
 
-void escribir_contenido_en_bloque(uint32_t bloque_a_escribir, uint32_t bloque_inicial, void* contenido, int tam_bloque) {
+void escribir_contenido_en_bloque(uint32_t bloque_a_escribir, uint32_t bloque_inicial, void* contenido) {
+	
+	uint32_t nro_bloque = buscar_bloque_en_FAT(bloque_a_escribir, bloque_inicial);
 
-/*		
-	//El dato que se encuentra adentro del bloque final
-	uint32_t dato_a_copiar = buscar_bloque_en_FAT(bloque_a_escribir, bloque_inicial);
-	
-	//bloques
-	archivo_de_bloques = levantar_archivo_bloque();
-	int posicion_archivo_bloques = tamanio_swap + bloque_a_escribir + bloque_inicial;
-	
-	uint32_t offset = tamanio_swap + direccion_bloque;
-	
-	fseek(archivo_de_bloques, offset, SEEK_SET);
-	
-	fwrite(contenido,tam_bloque, 1, archivo_de_bloques); //revisar el contenido si se escribe asi
-
-	//Offset
-	int tamanio = dato_a_copiar * tam_bloque;
-		
-	//Copio los datos desde el archivo contenido al bloque del fat mappeado 
-	memcpy((char*)fat_mapeado + tamanio, contenido, tamanio); 
-	
-	//Le había hecho un malloc en memoria
-	//free(contenido);
-
-	printf("\ndato %d\n", dato_a_copiar);
-*/
+	leer_contenido_archivo(nro_bloque);
 }
 
-/*
-static uint32_t buscar_bloque_en_FAT(uint32_t bloque_final, uint32_t bloque_inicial) {
+static uint32_t buscar_bloque_en_FAT(uint32_t cantidad_bloques_a_leer, uint32_t bloque_inicial)
+{
+	uint32_t nro_bloque = 0;
 
-	uint32_t dato_a_copiar = 0;
+	int retardo = config_valores_filesystem.retardo_acceso_fat;
 
-	uint32_t indice = bloque_inicial;
+	uint32_t indice = bloque_inicial; 
 
-	FILE* archivo_fat = fopen(config_valores_filesystem.path_fat, "wb+");
-	fseek(archivo_fat, bloque_a_escribir, SEEK_SET); 
-
-	uint32_t* contenido_bloque_fat = malloc(sizeof(uint32_t));
-
-	fread(contenido_bloque_fat, tam_bloque, 1, archivo_fat);
-
-	uint32_t direccion_bloque = (uint32_t*)tam_bloque * contenido_bloque_fat;
-
-	//Mientras no acceda al bloque_final o al EOF
- 	while (tabla_fat_en_memoria[indice] != UINT32_MAX && tabla_fat_en_memoria[indice] != bloque_final) {		
-
-	//Leemos el próximo bloque
-	indice = tabla_fat_en_memoria[indice]; 
-
-		printf("\n indice %d\n", indice);
+	for (int i = 0; i < cantidad_bloques_a_leer; i++) {
+		usleep(1000* retardo);
+		cantidad_bloques_a_leer = tabla_fat_en_memoria[i];
 	}
 
 	//El indice que cumple la condicion, es donde está el dato
-	dato_a_copiar = tabla_fat_en_memoria[indice];
-	printf("\ndato %d\n", dato_a_copiar);
+	nro_bloque = cantidad_bloques_a_leer;
 
-	return dato_a_copiar;
-}*/
+	leer_contenido_archivo(nro_bloque);
+	
+	return nro_bloque;
+}
+
+static void leer_contenido_archivo (uint32_t nro_bloque) {
+
+	void* buffer = NULL;
+	int retardo = config_valores_filesystem.retardo_acceso_bloque;
+
+	uint32_t direccion_bloque = tam_bloque * nro_bloque;
+
+	uint32_t offset = direccion_bloque + tamanio_swap;
+	
+	//Abrimos archivo
+	archivo_de_bloques = levantar_archivo_bloque();
+
+	//Nos posicionamos en el dato
+	fseek(archivo_de_bloques, offset, SEEK_SET);
+
+	void* buffer = malloc(tam_bloque);
+
+	usleep(1000* retardo);
+	fread(buffer, tam_bloque, 1, archivo_de_bloques);
+
+	mem_hexdump(buffer, sizeof(buffer));
+
+}
+
+
 
 void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo)
 {
@@ -312,7 +315,7 @@ void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, ch
 	enviar_paquete(paquete, socket_memoria);
 	eliminar_paquete(paquete);
 }
-void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica, int* cliente_fd)
+void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica, int cliente_fd)
 {	
 	uint32_t dato_a_copiar;
 	int tamanio;
@@ -335,7 +338,7 @@ void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direc
 	tamanio = dato_a_copiar * tam_bloque;
 
 	//Creo un buffer temporal
-	buffer = malloc(tam_bloque); //Revisar el tamanio del malloc (Espacio FAT?)
+	buffer = malloc(tam_bloque); 
 		    
 	//Copio los datos desde el archivo mapeado al nuevo buffer 
 	memcpy(buffer, (char*)fat_mapeado + tamanio, tamanio);
@@ -357,34 +360,6 @@ static void escribir_en_memoria(int tam_bloque, void* contenido, uint32_t direcc
 	eliminar_paquete(paquete);
 	free(contenido);
 }
-/*
-static void recorrer_tabla_fat(uint32_t bloque_inicial, uint32_t bloque_final, int tam_bloque, uint32_t direccion_fisica, int cliente_fd) {
-
-	uint32_t indice = bloque_inicial; 
-
- 	while (tabla_fat_en_memoria[indice] != UINT32_MAX && indice != bloque_final) {		
-
-		uint32_t dato_a_copiar = tabla_fat_en_memoria[indice];
-		int tamanio = dato_a_copiar * tam_bloque;
-
-		//Creo un buffer temporal
-		void *buffer = malloc(espacio_de_FAT);
-		    
-		//Copio los datos desde el archivo mapeado al nuevo buffer 
-		memcpy(buffer, (char*)fat_mapeado + tamanio, tamanio);
-
-		//Mandamos el contenido(buffer) a que se persista en memoria
-		escribir_en_memoria(tam_bloque, buffer, direccion_fisica);
-
-		//Leemos el próximo bloque
-		indice = tabla_fat_en_memoria[bloque_inicial]; 
-	}
-
-	//Avisa al kernel que terminó
-	int ok_read = 1;
-    send(cliente_fd, &ok_read, sizeof(int), 0);
-}
-*/
 
 void cerrar_archivo(char* nombre_archivo)
 {
@@ -521,15 +496,12 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 					//nuevo_ultimo_bloque_bloques->data = UINT32_MAX; 
 					fwrite(nuevo_ultimo_bloque_bloques, tam_bloque, 1, archivo_de_bloques);
 					
-					log_info(filesystem_logger,"actualizmos el ultimo bloque de archivo bloques\n");
 				}
 				else
 				//este no es el ultimo
 				{
 					//nuevo_ultimo_bloque_bloques->data = "\0"; 
 					fwrite(nuevo_ultimo_bloque_bloques, tam_bloque, 1, archivo_de_bloques);
-					
-					log_info(filesystem_logger,"actualizmos un bloque de archivo bloques\n");
 				}
 				
 				//fflush(archivo_fat);

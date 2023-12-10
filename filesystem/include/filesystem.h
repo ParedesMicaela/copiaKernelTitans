@@ -93,7 +93,7 @@ void cargar_configuracion(char*);
 void*conexion_inicial_memoria();
 void atender_clientes_filesystem(void* ); 
 FILE* levantar_archivo_bloque();
-void levantar_fat(size_t tamanio_fat);
+void levantar_fat();
 fcb* levantar_fcb (char * path);
 void crear_archivo (char *nombre_archivo, int* socket_kernel);
 void abrir_archivo (char *nombre_archivo, int* socket_kernel);
@@ -134,7 +134,7 @@ void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
 void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica, int* cliente_fd);
 void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido);
-void escribir_contenido_en_bloque(uint32_t bloque_final, uint32_t bloque_inicial, void* contenido, int tam_bloque);
+void escribir_contenido_en_bloque(uint32_t bloque_a_escribir, uint32_t bloque_inicial, void* contenido);
 void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo);
 void crear_archivo_de_bloque();
 void cerrar_archivo(char* nombre_archivo);

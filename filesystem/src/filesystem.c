@@ -48,7 +48,7 @@ int main(void)
     inicializar_bitarray();
     sem_init(&(escritura_completada), 0 ,0);
 
-    levantar_fat(tamanio_fat);
+    levantar_fat();
     log_info(filesystem_logger,"Levanto el fat \n");
     crear_archivo_de_bloque();
     mapear_archivo_de_bloques();

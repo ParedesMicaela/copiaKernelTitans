@@ -212,10 +212,10 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         }
             archivo_para_escribir->fcb->lock_escritura = true;
             enviar_solicitud_fs(nombre_archivo, SOLICITAR_INFO_ARCHIVO_MEMORIA, 0, proceso->puntero, direccion_fisica);
-            int respuesta_leer = 0;
-            recv(socket_filesystem, &respuesta_leer, sizeof(int),0);
+            int escribir_ok = 0;
+            recv(socket_filesystem, &escribir_ok, sizeof(int),0);
 
-            if(respuesta_leer !=1){
+            if(escribir_ok !=1){
                 log_info(kernel_logger, "problema");
             }else{
                 proceso_en_execute(proceso);
