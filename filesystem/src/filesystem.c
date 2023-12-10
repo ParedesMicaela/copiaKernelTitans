@@ -39,6 +39,7 @@ int main(void)
     tamanio_archivo_bloques = config_valores_filesystem.cant_bloques_total * config_valores_filesystem.tam_bloque;
     espacio_de_FAT = tamanio_archivo_bloques - tamanio_swap;
     path_archivo_bloques = config_valores_filesystem.path_bloques;
+    tam_bloque = config_valores_filesystem.tam_bloque;
 
     procesos_en_filesystem = list_create();
 

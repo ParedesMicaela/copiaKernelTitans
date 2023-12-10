@@ -85,6 +85,7 @@ extern bloque_swap* particion_swap;
 extern FILE* archivo_de_bloques;
 extern char* path_archivo_bloques;
 extern sem_t escritura_completada;
+extern int tam_bloque;
 
 
 void inicializar_bitarray();

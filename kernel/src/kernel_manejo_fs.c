@@ -200,21 +200,27 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         nombre_archivo =  proceso->nombre_archivo;
         direccion_fisica = proceso->direccion_fisica_proceso;
 
-        printf(" escribir archivo direc %d", direccion_fisica);
-
-
         log_info(kernel_logger, "PID: %d - Escribir Archivo: %s", proceso->pid, nombre_archivo);
                 
         t_archivo* archivo_para_escribir = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
 
         //si hay un lock de escritura, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
-        if(archivo_para_escribir->fcb->lock_escritura == true)
+        if(archivo_para_escribir->fcb->lock_escritura)
         {                                     
             //meto al proceso en la cola de bloqueados del archivo
             list_add(archivo_para_escribir->cola_solicitudes,(void*)proceso);
         }
             archivo_para_escribir->fcb->lock_escritura = true;
             enviar_solicitud_fs(nombre_archivo, SOLICITAR_INFO_ARCHIVO_MEMORIA, 0, proceso->puntero, direccion_fisica);
+            int respuesta_leer = 0;
+            recv(socket_filesystem, &respuesta_leer, sizeof(int),0);
+
+            if(respuesta_leer !=1){
+                log_info(kernel_logger, "problema");
+            }else{
+                proceso_en_execute(proceso);
+            }
+
         break;
 
     case BUSCAR_ARCHIVO:

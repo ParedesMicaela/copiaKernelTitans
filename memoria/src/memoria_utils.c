@@ -96,6 +96,8 @@ void manejo_conexiones(void* conexion)
 		if(chantada == 1){
 			socket_fs = crear_conexion(config_valores_memoria.ip_filesystem, config_valores_memoria.puerto_filesystem);
 			chantada--;
+		}else{
+			printf("chantada no iguala 1\n");
 		}
 
 		pid_proceso = sacar_entero_de_paquete(&stream);
@@ -151,7 +153,6 @@ void manejo_conexiones(void* conexion)
 		tam_contenido = sacar_entero_de_paquete(&stream);
 		puntero_de_archivo = sacar_entero_sin_signo_de_paquete(&stream);
 		nombre_archivo = sacar_cadena_de_paquete(&stream);
-
 		contenido = leer_en_memoria(tam_contenido, direccion_fisica);
 		bloques_para_escribir(tam_contenido, contenido, puntero_de_archivo, nombre_archivo);
 		break;
