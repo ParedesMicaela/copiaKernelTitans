@@ -130,14 +130,18 @@ void* liberar_bloque(bloque_swap* bloque_a_liberar);
 void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
-void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica, int cliente_fd);
-void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido, int cliente_fd);
+void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica, int* cliente_fd);
+void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido, int* cliente_fd);
+void escribir_contenido_en_bloque(uint32_t bloque_final, uint32_t bloque_inicial, void* contenido, int tam_bloque);
+void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo);
+void crear_archivo_de_bloque();
 void cerrar_archivo(char* nombre_archivo);
 void mapear_archivo_de_bloques();
 
 //..................................FUNCIONES SWAP.....................................................................
 t_list* reservar_bloques(int pid, int cantidad_bloques);
 void liberar_bloques(int pid);
+void enviar_bloques_reservados(t_list* bloques_reservados);
 bloque_swap* buscar_bloque_swap(int nro_pagina, int pid);
 void bloque_libre_swap (int i);
 bloque_swap* asignar_bloque_swap(int tam_bloque, int index, int pid);
@@ -145,6 +149,5 @@ void crear_filesystem_swap();
 void ocupar_bloque(int i);
 void swap_out(int pid, int nro_pagina);
 void inicializar_swap();
-void crear_archivo_de_bloque();
 
 #endif
