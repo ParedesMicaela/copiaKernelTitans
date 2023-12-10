@@ -2,18 +2,18 @@
 
 t_list* procesos_en_filesystem;
 t_bitarray* mapa_bits_swap;
+FILE* archivo_de_bloques;
 
 static t_proceso_en_filesystem* buscar_proceso_en_filesystem(int pid);
 
 //==============================================================================================================
 void inicializar_swap()
 {
-    char* path = config_valores_filesystem.path_bloques;
-    FILE* fd = fopen(path, "w");
+    archivo_de_bloques = levantar_archivo_bloque();
 
-    fseek(fd, tamanio_swap , SEEK_SET);
-    fputc('\0', fd);
-    fclose(fd);
+    fseek(archivo_de_bloques, tamanio_swap , SEEK_SET);
+    fputc('\0', archivo_de_bloques);
+    fclose(archivo_de_bloques);
 
 	for (int i=0; i < config_valores_filesystem.cant_bloques_swap ; i++)
 	{
@@ -63,19 +63,19 @@ bloque_swap* asignar_bloque_swap (int tam_bloque, int index, int pid)
     bloque->posicion_swap = posicion_en_swap; 
     bloque->pid = pid;
 
-    FILE* fd = fopen(config_valores_filesystem.path_bloques, "wb+");
-    if (fd == NULL) {
-        perror("Error al abrir el archivo de bloques de SWAP\n");
+    archivo_de_bloques = levantar_archivo_bloque();
+    if (archivo_de_bloques == NULL) {
+        perror("Error al abrir el archivo de bloques de SWAP para asignar\n");
         free(bloque);
         return NULL;
     }
 
     //seek end para que vaya al final y no sobreescriba datos
-    fseek(fd, index * sizeof(*bloque), SEEK_SET);
+    fseek(archivo_de_bloques, index * sizeof(*bloque), SEEK_SET);
 
     //escribo el bloque completo en el archivo de bloques
-    fwrite(bloque, sizeof(*bloque), 1, fd);
-    fclose(fd);
+    fwrite(bloque, sizeof(*bloque), 1, archivo_de_bloques);
+    fclose(archivo_de_bloques);
 
     return bloque;
 }
@@ -129,15 +129,15 @@ bloque_swap* buscar_bloque_swap(int nro_pagina, int pid)
 void swap_out(int pid, int nro_pagina)
 {
     //no va a pasar que el bloque no exista
-    FILE* fd = fopen(config_valores_filesystem.path_bloques, "rb+");
-    if (fd == NULL) {
-        perror("Error al abrir el archivo de bloques\n");
+    archivo_de_bloques = levantar_archivo_bloque();
+    if (archivo_de_bloques == NULL) {
+        perror("Error al abrir el archivo de bloques de SWAP en swap out\n");
         return;
     }
 
     bloque_swap* bloque_a_leer = buscar_bloque_swap(nro_pagina, pid);
 
-    while (fread(bloque_a_leer, sizeof(*bloque_a_leer), 1, fd) == 1) {
+    while (fread(bloque_a_leer, sizeof(*bloque_a_leer), 1, archivo_de_bloques) == 1) {
         if (bloque_a_leer->nro_pagina == nro_pagina) {
             t_paquete* paquete = crear_paquete(PAGINA_PARA_ESCRITURA);
             agregar_entero_a_paquete(paquete, bloque_a_leer->nro_pagina);
@@ -150,7 +150,7 @@ void swap_out(int pid, int nro_pagina)
         }
     }
 
-    fclose(fd);
+    fclose(archivo_de_bloques);
 }
 
 void swap_in(int pid, int nro_pag_pf, int posicion_swap, int marco)

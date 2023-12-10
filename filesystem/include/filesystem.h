@@ -83,13 +83,15 @@ extern fcb config_valores_fcb;
 extern arch_config config_valores_filesystem;
 extern t_bitarray* bitmap_archivo_bloques;
 extern bloque_swap* particion_swap;
+extern FILE* archivo_de_bloques;
+extern char* path_archivo_bloques;
 
 
 void inicializar_bitarray();
 void cargar_configuracion(char*);
 void*conexion_inicial_memoria();
 void atender_clientes_filesystem(void* ); 
-void levantar_archivo_bloque();
+FILE* levantar_archivo_bloque();
 void levantar_fat(size_t tamanio_fat);
 fcb* levantar_fcb (char * path);
 void crear_archivo (char *nombre_archivo, int socket_kernel);
@@ -144,5 +146,6 @@ void crear_filesystem_swap();
 void ocupar_bloque(int i);
 void swap_out(int pid, int nro_pagina);
 void inicializar_swap();
+void crear_archivo_de_bloque();
 
 #endif

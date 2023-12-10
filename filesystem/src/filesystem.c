@@ -13,6 +13,7 @@ int tamanio_archivo_bloques;
 int espacio_de_FAT;
 t_bitarray* bitmap_archivo_bloques;
 t_dictionary* diccionario_archivos_abiertos;
+char* path_archivo_bloques;
 
 
 //============================================================================================================
@@ -22,8 +23,6 @@ int main(void)
 	filesystem_logger = log_create("/home/utnso/tp-2023-2c-KernelTitans/filesystem/cfg/filesystem.log", "filesystem.log", 1, LOG_LEVEL_INFO);
 
 	cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/filesystem/cfg/filesystem.config");
-
-	log_info(filesystem_logger, "Archivo de configuracion cargada \n");
 
     // COMUNICACIÓN MEMORIA //
 	socket_memoria = crear_conexion(config_valores_filesystem.ip_memoria, config_valores_filesystem.puerto_memoria);
@@ -38,6 +37,7 @@ int main(void)
     tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
     tamanio_archivo_bloques = config_valores_filesystem.cant_bloques_total * config_valores_filesystem.tam_bloque;
     espacio_de_FAT = tamanio_archivo_bloques - tamanio_swap;
+    path_archivo_bloques = config_valores_filesystem.path_bloques;
 
     procesos_en_filesystem = list_create();
 
@@ -47,7 +47,7 @@ int main(void)
     
     levantar_fat(tamanio_fat);
     log_info(filesystem_logger,"Levanto el fat \n");
-    levantar_archivo_bloque();
+    crear_archivo_de_bloque();
     mapear_archivo_de_bloques();
     log_info(filesystem_logger,"Levanto el archivo bloque\n");
 
