@@ -55,9 +55,9 @@ void actualizar_bloque_fat(char* nombre_archivo, int numero_bloque, uint32_t dir
 		}
 	}
 }
-*/
 
-/*
+
+
 int escribirArchivo(char *nombreArchivo, uint32_t *puntero_archivo, size_t bytesAEscribir, void *memoriaAEscribir)
 { 
 	//abrir la tabla de fat buscar el block number y agarrar la direccino de ese bloque

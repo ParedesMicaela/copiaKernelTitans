@@ -39,9 +39,8 @@ void atender_clientes_filesystem(void* conexion) {
     char* nombre_archivo = NULL;
 	char* modo_apertura = NULL;
     int nuevo_tamanio_archivo = -1;
-    uint32_t puntero_archivo = NULL; 
+    uint32_t puntero_archivo = 0; 
     uint32_t direccion_fisica; 
-    char* informacion = NULL;
 	int tamanio = 0;
 	int pid =-1;
 	int nro_pag;
@@ -49,7 +48,6 @@ void atender_clientes_filesystem(void* conexion) {
 	void* contenido_a_escrbir = NULL;
 	int tam_bloque = config_valores_filesystem.tam_bloque;
 	int posicion_swap;
-	int marco;
 	
 	while (1) 
 	{		

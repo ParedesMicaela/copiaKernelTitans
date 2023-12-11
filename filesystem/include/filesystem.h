@@ -88,19 +88,21 @@ extern char* path_archivo_bloques;
 extern sem_t escritura_completada;
 extern sem_t lectura_completada;
 extern int tam_bloque;
-
+extern FILE* archivo_tabla_fat;
 
 void inicializar_bitarray();
 void cargar_configuracion(char*);
 void*conexion_inicial_memoria();
 void atender_clientes_filesystem(void* ); 
 FILE* levantar_archivo_bloque();
-void levantar_fat();
+FILE* levantar_tabla_FAT();
+void crear_fat();
 fcb* levantar_fcb (char * path);
 void crear_archivo (char *nombre_archivo, int socket_kernel);
 void abrir_archivo (char *nombre_archivo, int socket_kernel);
 void liberar_bloque_individual(bloque_swap* bloque);
 char* devolver_direccion_archivo(char* nombre);
+void cargamos_cambios_a_fcb(int tamanio_nuevo, char* nombre);
 
 int* buscar_y_rellenar_fcb(char* nombre);
 
@@ -117,9 +119,9 @@ int dividirRedondeando(int numero1 , int numero2);
 //void truncarArchivo(char *nombre, int tamanioNuevo);
 void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel);
 
-void ampliar_tamanio_archivo (int nuevo_tamanio_archivo,fcb* fcb_archivo);
+void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, int tamanio_actual_archivo, int bloque_inicial);
 
-void reducir_tamanio_archivo (int nuevo_tamanio_archivo,fcb* fcb_archivo);
+void reducir_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, int tamanio_actual_archivo, int bloque_inicial);
 
 void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
@@ -136,7 +138,7 @@ void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
 void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica);
 void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido);
-void escribir_contenido_en_bloque(uint32_t bloque_a_escribir, uint32_t bloque_inicial, void* contenido);
+void escribir_contenido_en_archivo(uint32_t bloque_a_escribir, uint32_t bloque_inicial, void* contenido, uint32_t puntero); 
 void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo);
 void crear_archivo_de_bloque();
 void cerrar_archivo(char* nombre_archivo);
