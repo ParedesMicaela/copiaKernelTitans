@@ -24,6 +24,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
     int tamanio = 0 ;
     int puntero = 0;
     uint32_t direccion_fisica = 0;
+    existe_en_tabla = false;
 
     switch(tipo_motivo(proceso->motivo_bloqueo)){  
 
@@ -144,55 +145,66 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             log_error(kernel_logger, "Hubo un error con la respuesta de fs de truncar \n");
         }
 
-        proceso_en_execute(proceso);
-    
+        obtener_siguiente_blocked(proceso);
         break;
-    case LEER_ARCHIVO:
 
+    case LEER_ARCHIVO:
         nombre_archivo =  proceso->nombre_archivo;
         puntero = proceso->puntero;
         direccion_fisica = proceso->direccion_fisica_proceso;
 
-        log_info(kernel_logger, "PID: %d - Leer Archivo: %s", proceso->pid, nombre_archivo);
-                
-        t_archivo* archivo_para_leer = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
+        t_archivo_proceso* archivo_para_leer = buscar_en_tabla_de_archivos_proceso(proceso, nombre_archivo);
+        modo_apertura = archivo_para_leer->modo_apertura;
 
-        //si hay un lock de escritura, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
-        if(archivo_para_leer->fcb->lock_escritura == true)
-        {                                     
-            //meto al proceso en la cola de bloqueados del archivo
-            list_add(archivo_para_leer->cola_solicitudes,(void*)proceso);
+        if(string_equals_ignore_case(modo_apertura, "r") || string_equals_ignore_case(modo_apertura, "w") )
+        {
+            log_info(kernel_logger, "PID: %d - Leer Archivo: %s", proceso->pid, nombre_archivo);
+                    
+            t_archivo* archivo_para_leer = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
 
-        }else{
-            
-            /*
-            //si no existe lock de escritura veo si existe un lock de lectura
-            if(archivo_para_leer->fcb->lock_lectura == true)
-            {
-                //lo meto a la lista de los que van a leer
-                list_add(cola_locks_lectura, (void*)proceso);
-            
+            //si hay un lock de escritura, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
+            if(archivo_para_leer->fcb->lock_escritura == true)
+            {                                     
+                //meto al proceso en la cola de bloqueados del archivo
+                list_add(archivo_para_leer->cola_solicitudes,(void*)proceso);
+
             }else{
+                
+                /*
+                //si no existe lock de escritura veo si existe un lock de lectura
+                if(archivo_para_leer->fcb->lock_lectura == true)
+                {
+                    //lo meto a la lista de los que van a leer
+                    list_add(cola_locks_lectura, (void*)proceso);
+                
+                }else{
 
-                //si no hay una lista de lectura porque nadie lo esta leyendo, creo la lista y agrego  el proceso como participante
-                archivo_para_leer->fcb->lock_lectura = true;
+                    //si no hay una lista de lectura porque nadie lo esta leyendo, creo la lista y agrego  el proceso como participante
+                    archivo_para_leer->fcb->lock_lectura = true;
+                    list_add(cola_locks_lectura, (void*)proceso);
+                }
+                */
                 list_add(cola_locks_lectura, (void*)proceso);
+
+                enviar_solicitud_fs(nombre_archivo, LEER_ARCHIVO, 0, 0, direccion_fisica);
+
+                printf("mande al fs para leer\n");
+
+                //el proceso se bloquea hasta que el fs me informe la finalizacion de la operacion
+                int ok_read = 0;
+                recv(socket_filesystem, &ok_read, sizeof(int),0);
+
+                if (ok_read != 1)
+                {
+                    log_error(kernel_logger, "Hubo un error con la respuesta de fs\n");
+                }
+
+                obtener_siguiente_blocked(proceso);
             }
-            */
-            list_add(cola_locks_lectura, (void*)proceso);
-
-            enviar_solicitud_fs(nombre_archivo, LEER_ARCHIVO, 0, 0, direccion_fisica);
-
-            //el proceso se bloquea hasta que el fs me informe la finalizacion de la operacion
-            int ok_read = 0;
-            recv(socket_filesystem, &ok_read, sizeof(int),0);
-
-            if (ok_read != 1)
-            {
-                log_error(kernel_logger, "Hubo un error con la respuesta de fs\n");
-            }
-
-            proceso_en_execute(proceso);
+        }else{
+            log_info(kernel_logger, "El proceso no puede realizar esta operacion sobre este archivo");
+            log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
+            proceso_en_exit(proceso);       
         }
         break;
 
@@ -200,27 +212,37 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         nombre_archivo =  proceso->nombre_archivo;
         direccion_fisica = proceso->direccion_fisica_proceso;
 
-        log_info(kernel_logger, "PID: %d - Escribir Archivo: %s", proceso->pid, nombre_archivo);
-                
-        t_archivo* archivo_para_escribir = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
+        t_archivo_proceso* archivo_para_escribir = buscar_en_tabla_de_archivos_proceso(proceso, nombre_archivo);
+        modo_apertura = archivo_para_escribir->modo_apertura;
 
-        //si hay un lock de escritura, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
-        if(archivo_para_escribir->fcb->lock_escritura)
-        {                                     
-            //meto al proceso en la cola de bloqueados del archivo
-            list_add(archivo_para_escribir->cola_solicitudes,(void*)proceso);
-        }
-            archivo_para_escribir->fcb->lock_escritura = true;
-            enviar_solicitud_fs(nombre_archivo, SOLICITAR_INFO_ARCHIVO_MEMORIA, 0, proceso->puntero, direccion_fisica);
-            int escribir_ok = 0;
-            recv(socket_filesystem, &escribir_ok, sizeof(int),0);
+        if(string_equals_ignore_case(modo_apertura, "w"))
+        {
+            log_info(kernel_logger, "PID: %d - Escribir Archivo: %s", proceso->pid, nombre_archivo);
+                    
+            t_archivo* archivo_para_escribir = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
 
-            if(escribir_ok !=1){
-                log_info(kernel_logger, "problema");
-            }else{
-                proceso_en_execute(proceso);
+            //si hay un lock de escritura, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
+            if(archivo_para_escribir->fcb->lock_escritura)
+            {                                     
+                //meto al proceso en la cola de bloqueados del archivo
+                list_add(archivo_para_escribir->cola_solicitudes,(void*)proceso);
             }
+                archivo_para_escribir->fcb->lock_escritura = true;
+                enviar_solicitud_fs(nombre_archivo, SOLICITAR_INFO_ARCHIVO_MEMORIA, 0, proceso->puntero, direccion_fisica);
+                int escribir_ok = 0;
+                recv(socket_filesystem, &escribir_ok, sizeof(int),0);
 
+                if(escribir_ok !=1){
+                    log_info(kernel_logger, "problema");
+                }else{
+                    
+                    obtener_siguiente_blocked(proceso);
+                }
+        }else{
+            log_info(kernel_logger, "El proceso no puede realizar esta operacion sobre este archivo");
+            log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
+            proceso_en_exit(proceso);       
+        }
         break;
 
     case BUSCAR_ARCHIVO:
@@ -375,7 +397,6 @@ void asignar_archivo_al_proceso(t_archivo* archivo,t_pcb* proceso, char* modo_ap
 
     log_info(kernel_logger, "Se guardo el archivo %s en la tabla de archivos del proceso PID [%d]\n",nuevo_archivo->fcb->nombre_archivo ,proceso->pid);
 }
-
 
 t_archivo_proceso* buscar_en_tabla_de_archivos_proceso(t_pcb* proceso, char* nombre_a_buscar)
 {

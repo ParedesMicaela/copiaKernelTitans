@@ -30,7 +30,7 @@ void escribir_en_swap(t_pagina* pagina_a_escribir, int pid){
     agregar_entero_a_paquete(paquete, pid);
     agregar_entero_a_paquete(paquete, pagina_a_escribir->numero_de_pagina);
     agregar_entero_a_paquete(paquete, pagina_a_escribir->posicion_swap);
-    agregar_entero_a_paquete(paquete, pagina_a_escribir->marco);
+    //agregar_entero_a_paquete(paquete, pagina_a_escribir->marco);
     enviar_paquete(paquete, socket_fs);
     eliminar_paquete(paquete);
 }
@@ -77,5 +77,5 @@ void bloques_para_escribir(int tam_bloque, void* contenido, uint32_t puntero_arc
 void enviar_paquete_confirmacion_escritura() {
     t_paquete* paquete = crear_paquete(ESCRITURA_EN_MEMORIA_CONFIRMADA);
     agregar_entero_a_paquete(paquete, 1);
-    enviar_paquete(socket_fs);
+    enviar_paquete(paquete, socket_fs);
 }

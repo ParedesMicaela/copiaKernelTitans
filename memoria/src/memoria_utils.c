@@ -158,6 +158,7 @@ void manejo_conexiones(void* conexion)
 		break;
 
 	case WRITE:
+		//mov_out
 		pid_proceso = sacar_entero_de_paquete(&stream);
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 		valor_registro = sacar_entero_sin_signo_de_paquete(&stream);
@@ -167,6 +168,7 @@ void manejo_conexiones(void* conexion)
 		break;
 
 	case READ:
+		//mov_in
 		pid_proceso = sacar_entero_de_paquete(&stream);
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 		uint32_t valor_a_enviar = leer(direccion_fisica);

@@ -153,10 +153,24 @@ void swap_out(int pid, int nro_pagina)
     fclose(archivo_de_bloques);
 }
 
-void swap_in(int pid, int nro_pag_pf, int posicion_swap, int marco)
+void swap_in(int pid, int nro_pag, int posicion_swap)
 {
+    archivo_de_bloques = levantar_archivo_bloque();
+    if (archivo_de_bloques == NULL) {
+        perror("Error al abrir el archivo de bloques de SWAP en swap out\n");
+        return;
+    }
 
+    bloque_swap* bloque_a_escribir = buscar_bloque_swap(nro_pag, pid);
 
+    bloque_a_escribir->bit_presencia_swap = 1;
+    bloque_a_escribir->posicion_swap = posicion_swap;
+
+    if (fwrite(bloque_a_escribir, sizeof(bloque_swap), 1, archivo_de_bloques) != 1) {
+        perror("Error al escribir en el archivo binario\n");
+    }
+
+    fclose(archivo_de_bloques);
 }
 
 //=================================================== FINALIZACION =========================================
@@ -177,7 +191,7 @@ void liberar_bloques(int pid)
         bloque_a_liberar->posicion_swap = 0; //tiene que ser el bloque dentro de todoe l swap
         bloque_a_liberar->pid = 0;
 		list_replace(proceso_en_filesystem->bloques_reservados, i, bloque_a_liberar);
-        bitarray_clean_bit(bitmap_archivo_bloques, i);
+        //bitarray_clean_bit(bitmap_archivo_bloques, i); no se si lo usamos al final
         liberar_bloque_individual(bloque_a_liberar);
 	}
 

@@ -147,15 +147,15 @@ void atender_clientes_filesystem(void* conexion) {
 			case PAGINA_SWAP_OUT:
 				pid = sacar_entero_de_paquete(&stream);
 				nro_pag = sacar_entero_de_paquete(&stream);
-				//posicion_swap = sacar_entero_de_paquete(&stream);
-				//marco = sacar_entero_de_paquete(&stream);
 				swap_out(pid, nro_pag); 
 			break;
 
 			case PAGINA_SWAP_IN:
-				nro_pag = sacar_entero_de_paquete(&stream);
 				pid = sacar_entero_de_paquete(&stream);
-				//swap_in(pid, nro_pag);
+				nro_pag = sacar_entero_de_paquete(&stream);
+				posicion_swap = sacar_entero_de_paquete(&stream);
+				//marco = sacar_entero_de_paquete(&stream);
+				swap_in(pid, nro_pag,posicion_swap);
 			break;
 
 			default:

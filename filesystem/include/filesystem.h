@@ -152,6 +152,7 @@ bloque_swap* asignar_bloque_swap(int tam_bloque, int index, int pid);
 void crear_filesystem_swap();
 void ocupar_bloque(int i);
 void swap_out(int pid, int nro_pagina);
+void swap_in(int pid, int nro_pag_pf, int posicion_swap);
 void inicializar_swap();
 
 #endif

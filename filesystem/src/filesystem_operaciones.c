@@ -279,8 +279,10 @@ static void escribir_contenido_en_archivo (uint32_t nro_bloque, void* contenido)
 
 	int retardo = config_valores_filesystem.retardo_acceso_bloque;
 
+	//direccion ultimo bloque a leer
 	uint32_t direccion_bloque = tam_bloque * nro_bloque;
 
+	//tiene que ser puntero + tam_swap
 	uint32_t offset = direccion_bloque + tamanio_swap;
 	
 	//Abrimos archivo
@@ -296,8 +298,6 @@ static void escribir_contenido_en_archivo (uint32_t nro_bloque, void* contenido)
 
 }
 
-
-
 void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo)
 {
 	t_paquete* paquete = crear_paquete(LEER_EN_MEMORIA);
@@ -308,6 +308,7 @@ void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, ch
 	enviar_paquete(paquete, socket_memoria);
 	eliminar_paquete(paquete);
 }
+
 void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica)
 {	
 	uint32_t nro_bloque;
@@ -325,11 +326,11 @@ void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direc
 	//Busco el bloque con el contenido
 	nro_bloque = buscar_bloque_en_FAT(bloque_a_escribir, bloque_inicial);
 	
-	//Direccion en archivo_de_bloques
+	//Direccion en archivo_de_bloques (direccion del ultimo bloque a leer?)
 	direccion_bloque = tam_bloque * nro_bloque;
 
-	//Me muevo a la particion
-	offset = direccion_bloque + tamanio_swap;
+	//Me muevo a la particion (posicion del primer bloque a leer?)
+	offset = puntero_archivo + tamanio_swap;
 
 	//Abrimos archivo
 	archivo_de_bloques = levantar_archivo_bloque();
@@ -480,7 +481,6 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 					
 					free(nuevo_ultimo_bloque_fat);
 					//free(nuevo_ultimo_bloque);
-					log_info(filesystem_logger,"actualizmos un bloque de archivo fat\n");
 				}
 				
 
