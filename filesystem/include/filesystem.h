@@ -7,6 +7,7 @@
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include <commons/bitarray.h>
+#include <commons/memory.h>
 #include <pthread.h>
 #include "socket.h"
 #include "logconfig.h"
@@ -85,6 +86,7 @@ extern bloque_swap* particion_swap;
 extern FILE* archivo_de_bloques;
 extern char* path_archivo_bloques;
 extern sem_t escritura_completada;
+extern sem_t lectura_completada;
 extern int tam_bloque;
 
 
@@ -95,8 +97,8 @@ void atender_clientes_filesystem(void* );
 FILE* levantar_archivo_bloque();
 void levantar_fat();
 fcb* levantar_fcb (char * path);
-void crear_archivo (char *nombre_archivo, int* socket_kernel);
-void abrir_archivo (char *nombre_archivo, int* socket_kernel);
+void crear_archivo (char *nombre_archivo, int socket_kernel);
+void abrir_archivo (char *nombre_archivo, int socket_kernel);
 void liberar_bloque_individual(bloque_swap* bloque);
 char* devolver_direccion_archivo(char* nombre);
 
@@ -132,7 +134,7 @@ void* liberar_bloque(bloque_swap* bloque_a_liberar);
 void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
-void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica, int* cliente_fd);
+void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica);
 void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido);
 void escribir_contenido_en_bloque(uint32_t bloque_a_escribir, uint32_t bloque_inicial, void* contenido);
 void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo);

@@ -9,7 +9,7 @@ int tam_bloque;
 int proximo_bloque_inicial = 1;
 static uint32_t buscar_bloque_en_FAT(uint32_t bloque_final, uint32_t bloque_inicial);
 static void escribir_en_memoria(int tam_bloque, void* contenido, uint32_t direccion_fisica);
-static void leer_contenido_archivo (uint32_t nro_bloque);
+static void escribir_contenido_en_archivo (uint32_t nro_bloque, void* contenido);
 //============================================== INICIALIZACION ============================================
 
 void levantar_fat()
@@ -150,7 +150,7 @@ void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo u
 	}
 } 
 
-void abrir_archivo (char *nombre_archivo, int* socket_kernel)
+void abrir_archivo (char *nombre_archivo, int socket_kernel)
 {
 	// /home/utnso/tp-2023-2c-KernelTitans/filesystem/fs/fat.dat
 	char *path_archivo = string_from_format("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
@@ -242,8 +242,6 @@ void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* cont
 	fcb* archivo_a_leer = levantar_fcb (nombre_archivo);
 
 	uint32_t bloque_inicial = archivo_a_leer->bloque_inicial; 
-	int tamanio_archivo = archivo_a_leer->tamanio_archivo;
-	int tam_bloque = config_valores_filesystem.tam_bloque;
 	uint32_t bloque_a_escribir = puntero_archivo/tam_bloque;
 	free(archivo_a_leer);
 
@@ -255,7 +253,7 @@ void escribir_contenido_en_bloque(uint32_t bloque_a_escribir, uint32_t bloque_in
 	
 	uint32_t nro_bloque = buscar_bloque_en_FAT(bloque_a_escribir, bloque_inicial);
 
-	leer_contenido_archivo(nro_bloque);
+	escribir_contenido_en_archivo(nro_bloque, contenido);
 }
 
 static uint32_t buscar_bloque_en_FAT(uint32_t cantidad_bloques_a_leer, uint32_t bloque_inicial)
@@ -273,15 +271,12 @@ static uint32_t buscar_bloque_en_FAT(uint32_t cantidad_bloques_a_leer, uint32_t 
 
 	//El indice que cumple la condicion, es donde está el dato
 	nro_bloque = cantidad_bloques_a_leer;
-
-	leer_contenido_archivo(nro_bloque);
 	
 	return nro_bloque;
 }
 
-static void leer_contenido_archivo (uint32_t nro_bloque) {
+static void escribir_contenido_en_archivo (uint32_t nro_bloque, void* contenido) {
 
-	void* buffer = NULL;
 	int retardo = config_valores_filesystem.retardo_acceso_bloque;
 
 	uint32_t direccion_bloque = tam_bloque * nro_bloque;
@@ -294,12 +289,10 @@ static void leer_contenido_archivo (uint32_t nro_bloque) {
 	//Nos posicionamos en el dato
 	fseek(archivo_de_bloques, offset, SEEK_SET);
 
-	void* buffer = malloc(tam_bloque);
-
 	usleep(1000* retardo);
-	fread(buffer, tam_bloque, 1, archivo_de_bloques);
+	fwrite(contenido, tam_bloque, 1, archivo_de_bloques);
 
-	mem_hexdump(buffer, sizeof(buffer));
+	mem_hexdump(contenido, sizeof(contenido));
 
 }
 
@@ -315,46 +308,52 @@ void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, ch
 	enviar_paquete(paquete, socket_memoria);
 	eliminar_paquete(paquete);
 }
-void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica, int cliente_fd)
+void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica)
 {	
-	uint32_t dato_a_copiar;
-	int tamanio;
-	void* buffer = NULL;
+	uint32_t nro_bloque;
+	uint32_t direccion_bloque;
+	uint32_t offset;
+	void* contenido = NULL;
+	uint32_t bloque_a_escribir = puntero_archivo/tam_bloque;
+	int retardo = config_valores_filesystem.retardo_acceso_bloque;
 
+	//Obtengo el bloque_inicial
 	fcb* archivo_a_leer = levantar_fcb (nombre_archivo);
-
 	uint32_t bloque_inicial = archivo_a_leer->bloque_inicial; 
-	int tamanio_archivo = archivo_a_leer->tamanio_archivo;
-	int tam_bloque = config_valores_filesystem.tam_bloque;
-	uint32_t bloque_final = puntero_archivo/tam_bloque;
-	
 	free(archivo_a_leer);
 	
-	//recorrer_tabla_fat(bloque_inicial,bloque_final, tam_bloque, direccion_fisica, cliente_fd);
+	//Busco el bloque con el contenido
+	nro_bloque = buscar_bloque_en_FAT(bloque_a_escribir, bloque_inicial);
 	
-	//El dato que se encuentra adentro del bloque final
-	//dato_a_copiar = buscar_bloque_en_FAT(bloque_final, bloque_inicial);
+	//Direccion en archivo_de_bloques
+	direccion_bloque = tam_bloque * nro_bloque;
 
-	tamanio = dato_a_copiar * tam_bloque;
+	//Me muevo a la particion
+	offset = direccion_bloque + tamanio_swap;
+
+	//Abrimos archivo
+	archivo_de_bloques = levantar_archivo_bloque();
+
+	//Nos posicionamos en el dato
+	fseek(archivo_de_bloques, offset, SEEK_SET);
 
 	//Creo un buffer temporal
-	buffer = malloc(tam_bloque); 
-		    
-	//Copio los datos desde el archivo mapeado al nuevo buffer 
-	memcpy(buffer, (char*)fat_mapeado + tamanio, tamanio);
+	contenido = malloc(tam_bloque); 
 
-	//Mandamos el contenido(buffer) a que se persista en memoria
-	escribir_en_memoria(tam_bloque, buffer, direccion_fisica);
+	usleep(1000* retardo);
+	fread(contenido, tam_bloque, 1, archivo_de_bloques);
 
-	//Avisa al kernel que terminó
-	int ok_read = 1;
-    send(cliente_fd, &ok_read, sizeof(int), 0);
+	mem_hexdump(contenido, sizeof(contenido));
+
+	//Mandamos el contenido a que se persista en memoria
+	escribir_en_memoria(tam_bloque, contenido, direccion_fisica);
+
 }
 
 static void escribir_en_memoria(int tam_bloque, void* contenido, uint32_t direccion_fisica) {
 	t_paquete *paquete = crear_paquete(ESCRIBIR_EN_MEMORIA); 
 	agregar_entero_a_paquete(paquete, tam_bloque);
-	agregar_bytes_a_paquete(paquete,contenido,tam_bloque); //Revisar dsps 
+	agregar_bytes_a_paquete(paquete,contenido,tam_bloque); 
 	agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica); 
 	enviar_paquete(paquete,socket_memoria);
 	eliminar_paquete(paquete);
@@ -418,9 +417,7 @@ void actualizar_fcb(fcb* nuevo_fcb)
 //AMPLIAR Y REDUCIR NICO
 void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 {
-	int tamanio_archivos_bloques = config_valores_filesystem.tam_bloque * config_valores_filesystem.cant_bloques_total;
 	int cant_espacio_swap = config_valores_filesystem.cant_bloques_swap - 1;
-	int cant_espacio_fat = tamanio_archivos_bloques - cant_espacio_swap;
 
 	//calculamos cantidad a agregar
 	int bloques_a_agregar = nuevo_tamanio_archivo - fcb_archivo->tamanio_archivo;
@@ -524,9 +521,7 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 
 void reducir_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 {
-	int tamanio_archivos_bloques = config_valores_filesystem.tam_bloque * config_valores_filesystem.cant_bloques_total;
 	int cant_espacio_swap = config_valores_filesystem.cant_bloques_swap - 1;
-	int cant_espacio_fat = tamanio_archivos_bloques - cant_espacio_swap;
 
 	//calculamos cantidad a agregar //en realidad a sacar uis
 	//int bloques_a_agregar = nuevo_tamanio_archivo - fcb_archivo->tamanio_archivo;
@@ -586,38 +581,4 @@ void reducir_tamanio_archivo (int nuevo_tamanio_archivo, fcb* fcb_archivo)
 
 }
 
-char* devolver_direccion_archivo(char* nombre)
-{
-	//creamos el comandito pa entrar al directorio y empezar a buscar el archivo
-	char comando[256];
-	snprintf(comando, sizeof(comando), "ls -1 %s", "filesystem/fs/fcbs"); //carpeta de lo fcbs
-	FILE *tuberia_conexion = popen(comando, "r");
-
-    if (tuberia_conexion != NULL) {
-        
-		char nombre_archivo_buscado[256];
-
-        // Leer los nombres de los archivos en el directorio (en cada ciclo de while avanza???)
-        while (fscanf(tuberia_conexion, "%255s", nombre_archivo_buscado) != EOF) //no creo que tenga mas de 255
-		{
-            if (strcmp(nombre_archivo_buscado, nombre) == 0)
-			{
-                printf("Se encontró el archivo: %s\n", nombre_archivo_buscado);
-				char* direccion = sprintf("filesystem/fs/fcbs/%s.dats",nombre_archivo_buscado);
-				
-				pclose(tuberia_conexion);		
-				return direccion;
-            }
-        }
-		printf("No encontró el archivo %s, se llego al final\n", nombre_archivo_buscado);
-        pclose(tuberia_conexion);
-		return NULL;
-    }
-	else 
-	{
-        perror("Error al abrir la carpeta");
-        pclose(tuberia_conexion);
-		return NULL;
-    }
-}
-
+//Mnade una funcion a codigo muerto

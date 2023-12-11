@@ -184,10 +184,10 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             enviar_solicitud_fs(nombre_archivo, LEER_ARCHIVO, 0, 0, direccion_fisica);
 
             //el proceso se bloquea hasta que el fs me informe la finalizacion de la operacion
-            int respuesta = 0;
-            recv(socket_filesystem, &respuesta, sizeof(int),0);
+            int ok_read = 0;
+            recv(socket_filesystem, &ok_read, sizeof(int),0);
 
-            if (respuesta != 1)
+            if (ok_read != 1)
             {
                 log_error(kernel_logger, "Hubo un error con la respuesta de fs\n");
             }
@@ -350,7 +350,6 @@ void enviar_solicitud_fs(char* nombre_archivo, op_code operacion, int tamanio, u
     agregar_entero_sin_signo_a_paquete(paquete, puntero);
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
 
-    printf("enviar solicitud direc %d", direccion_fisica);
     enviar_paquete(paquete, socket_filesystem);
     eliminar_paquete(paquete);
 }

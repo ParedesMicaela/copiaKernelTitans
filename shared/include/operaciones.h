@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h> // para los uint32_t de los registros de CPU
+#include <stdint.h> 
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netdb.h>
@@ -60,6 +60,7 @@ typedef enum
 	LEER_ARCHIVO,
 	SOLICITAR_INFO_ARCHIVO_MEMORIA,
 	ESCRIBIR_EN_ARCHIVO_BLOQUES,
+	ESCRITURA_EN_MEMORIA_CONFIRMADA,
 	ESCRIBIR_ARCHIVO,
 	INICIAR_PROCESO,
 	FINALIZAR_PROCESO,

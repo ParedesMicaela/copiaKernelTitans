@@ -83,9 +83,19 @@ void atender_clientes_filesystem(void* conexion) {
 				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream); 
 				direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 				log_info(filesystem_logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d", nombre_archivo, puntero_archivo, direccion_fisica);
-				leer_archivo(cliente_fd, nombre_archivo, puntero_archivo, direccion_fisica); 
+				leer_archivo(nombre_archivo, puntero_archivo, direccion_fisica); 
+
+				sem_wait(&lectura_completada);
+				//Avisa al kernel que terminó
+				int ok_read = 1;
+				send(cliente_fd, &ok_read, sizeof(int), 0);
 			break;
 
+			case ESCRITURA_EN_MEMORIA_CONFIRMADA:
+				int numero = sacar_entero_de_paquete(&stream);
+				sem_post(&lectura_completada);
+			break;
+			
 			case SOLICITAR_INFO_ARCHIVO_MEMORIA:
 				nombre_archivo = sacar_cadena_de_paquete(&stream);
 				tamanio = sacar_entero_de_paquete(&stream); 			

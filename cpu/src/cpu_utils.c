@@ -391,7 +391,6 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
         //CHECK INTERRUPT
         if(hay_interrupcion() && tipo_interrupcion == 1) 
         {
-            //printf("\nDetectamos interrupcion\n");
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
@@ -399,7 +398,6 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             seguir_ejecutando = false;
         }else if (hay_interrupcion() && tipo_interrupcion == 2)
         {
-            printf("\nDetectamos interrupcion\n");
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
@@ -407,13 +405,10 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             seguir_ejecutando = false;
         }else if (hay_interrupcion() && tipo_interrupcion == 3) 
         {
-            //log_info(cpu_logger, "Oh no hermano, tenemos Page Fault: PID %d - Número de página %d", contexto_ejecucion->pid, contexto_ejecucion->pag_pf);
-            printf("\nDetectamos interrupcion\n");
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "basura", 0, numero_pagina_aux, "basura", "basura", -1);
-            //como tengo page fault notificó al kernel y no puedo seguir ejecutando el proceso hasta manejar el page fault
             seguir_ejecutando = false;
         }
 
@@ -644,7 +639,6 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->direccion_fisica_proceso);
     agregar_entero_a_paquete(paquete, tamanio_archivo);
 
-    printf("se envia direccion %d\n", contexto_ejecucion->direccion_fisica_proceso);
     // agregar_entero_a_paquete(paquete, contexto_ejecucion->hay_que_bloquear);
     enviar_paquete(paquete, socket_cliente);
     eliminar_paquete(paquete);

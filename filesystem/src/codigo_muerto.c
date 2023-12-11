@@ -1,4 +1,39 @@
 /*
+char* devolver_direccion_archivo(char* nombre) 
+{
+	//creamos el comandito pa entrar al directorio y empezar a buscar el archivo
+	char comando[256];
+	snprintf(comando, sizeof(comando), "ls -1 %s", "filesystem/fs/fcbs"); //carpeta de lo fcbs
+	FILE *tuberia_conexion = popen(comando, "r");
+
+    if (tuberia_conexion != NULL) {
+        
+		char nombre_archivo_buscado[256];
+
+        // Leer los nombres de los archivos en el directorio (en cada ciclo de while avanza???)
+        while (fscanf(tuberia_conexion, "%255s", nombre_archivo_buscado) != EOF) //no creo que tenga mas de 255
+		{
+            if (strcmp(nombre_archivo_buscado, nombre) == 0)
+			{
+                printf("Se encontró el archivo: %s\n", nombre_archivo_buscado);
+				char* direccion = sprintf("filesystem/fs/fcbs/%s.dats",nombre_archivo_buscado);
+				
+				pclose(tuberia_conexion);		
+				return direccion;
+            }
+        }
+		printf("No encontró el archivo %s, se llego al final\n", nombre_archivo_buscado);
+        pclose(tuberia_conexion);
+		return NULL;
+    }
+	else 
+	{
+        perror("Error al abrir la carpeta");
+        pclose(tuberia_conexion);
+		return NULL;
+    }
+}
+
 void actualizar_bloque_fat(char* nombre_archivo, int numero_bloque, uint32_t direccion_bloque, int numero_bloque_a_reemplazar)
 {
 	t_bloque* datos_bloque = malloc(sizeof(t_bloque));

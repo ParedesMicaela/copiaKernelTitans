@@ -46,8 +46,7 @@ void escribir_en_memoria(void* contenido, size_t tamanio_contenido, uint32_t dir
 
     log_info(memoria_logger, "Acción: %s - Dirección física: %d ", "ESCRIBIR EN MEMORIA", direccion_fisica);
 
-    int se_ha_escrito = 1;
-    send(socket_fs, &se_ha_escrito, sizeof(int), 0 );
+    enviar_paquete_confirmacion_escritura();
  }
 
 void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica) {
@@ -73,4 +72,10 @@ void bloques_para_escribir(int tam_bloque, void* contenido, uint32_t puntero_arc
 	agregar_cadena_a_paquete(paquete, nombre_archivo);
     enviar_paquete(paquete, socket_fs);
     eliminar_paquete(paquete);
+}
+
+void enviar_paquete_confirmacion_escritura() {
+    t_paquete* paquete = crear_paquete(ESCRITURA_EN_MEMORIA_CONFIRMADA);
+    agregar_entero_a_paquete(paquete, 1);
+    enviar_paquete(socket_fs);
 }
