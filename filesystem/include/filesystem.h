@@ -75,6 +75,10 @@ typedef struct {
 } bloque_swap; 
 
 typedef struct{
+    void* data;
+} bloque_archivo_bloques;
+
+typedef struct{
     t_list* bloques_de_swap;
 }t_archivo_de_bloques;
 
@@ -134,6 +138,11 @@ int calcular_bloque_inicial_archivo(int tamanio);
 void* liberar_bloque(bloque_swap* bloque_a_liberar);
 
 void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
+
+//static void actualizar_tabla_fat_ampliar(int posicion_bloque_agregado, int posicion_ultimo_bloque, uint32_t* nuevo_ultimo_bloque_fat);
+
+//static void actualizar_archivo_de_bloques_ampliar(int posicion_bloque_agregado, int posicion_ultimo_bloque, bloque_archivo_bloques* nuevo_ultimo_bloque_bloques);
+
 
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
 void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica);
