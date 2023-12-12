@@ -15,6 +15,8 @@ pthread_mutex_t mutex_exec;
 pthread_mutex_t mutex_exit;
 pthread_mutex_t mutex_colas;
 pthread_mutex_t mutex_corriendo;
+pthread_mutex_t mutex_contexto;
+pthread_mutex_t mutex_cpu;
 pthread_cond_t cond_corriendo;
 
 sem_t hay_proceso_nuevo;
@@ -28,6 +30,7 @@ int id_evento_cpu;
 static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2);
 static void a_mimir(t_pcb* proceso);
 static void atender_round_robin(int* evento_para_interrupt);
+static void aumentar_evento_cpu();
 //====================================================== Planificadores ========================================================
 void inicializar_planificador()
 {
@@ -56,6 +59,8 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_recursos, NULL);
     pthread_mutex_init(&mutex_corriendo , NULL);
     pthread_mutex_init(&cond_corriendo , NULL);
+    pthread_mutex_init(&mutex_contexto , NULL);
+    pthread_mutex_init(&mutex_cpu , NULL);
 
     sem_init(&grado_multiprogramacion, 0, config_valores_kernel.grado_multiprogramacion_ini);
     sem_init(&(hay_proceso_nuevo), 0, 0);
@@ -114,7 +119,7 @@ void proceso_en_ready()
     // creamos un proceso, que va a ser el elegido por obtener_siguiente_ready_segun_algoritmo
     t_pcb *siguiente_proceso = obtener_siguiente_ready();
 
-    log_info(kernel_logger, "PID[%d] ingresando a EXEC\n", siguiente_proceso->pid);
+    //log_info(kernel_logger, "PID[%d] ingresando a EXEC\n", siguiente_proceso->pid);
 
     // metemos el proceso en la cola de execute
     pthread_mutex_lock(&mutex_exec);
@@ -129,7 +134,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     //si es rr hay que ver los tiempos  
     if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR") == 0)
     {
-        id_evento_cpu++;
+        aumentar_evento_cpu();
 
         pthread_t hilo_round_robin;
 
@@ -147,9 +152,11 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     enviar_pcb_a_cpu(proceso_seleccionado);
 
     //La CPU nos dice pq finalizo
+    pthread_mutex_lock(&mutex_contexto);
     char *devuelto_por = recibir_contexto(proceso_seleccionado);
+    pthread_mutex_unlock(&mutex_contexto);
 
-    id_evento_cpu++;
+    aumentar_evento_cpu();
 
     // Observamos los motivos de devolucion
     if (string_equals_ignore_case(devuelto_por, "exit"))
@@ -283,7 +290,7 @@ static void a_mimir(t_pcb* proceso){
     } else if (es_una_operacion_con_archivos(proceso->motivo_bloqueo)) {
         pthread_t peticiones_fs;
         if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
-            pthread_join(peticiones_fs, NULL);
+            pthread_detach(peticiones_fs);
         } else {
             log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", proceso->motivo_bloqueo);
             abort();
@@ -364,7 +371,7 @@ t_pcb *obtener_siguiente_new()
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, NEW), 0);
     pthread_mutex_unlock(&mutex_new);
 
-    log_info(kernel_logger, "PID[%d] sale de NEW para planificacion \n", proceso_seleccionado->pid);
+    //log_info(kernel_logger, "PID[%d] sale de NEW para planificacion \n", proceso_seleccionado->pid);
 
     return proceso_seleccionado;
 }
@@ -429,19 +436,19 @@ algoritmo obtener_algoritmo()
     if (strcmp(algoritmo_actual, "FIFO") == 0)
     {
         switcher = FIFO;
-        log_info(kernel_logger, "El algoritmo de planificacion elegido es FIFO \n");
+        //log_info(kernel_logger, "El algoritmo de planificacion elegido es FIFO \n");
     }
     // PRIORIDADES
     if (strcmp(algoritmo_actual, "PRIORIDADES") == 0)
     {
         switcher = PRIORIDADES;
-        log_info(kernel_logger, "El algoritmo de planificacion elegido es PRIORIDADES \n");
+        //log_info(kernel_logger, "El algoritmo de planificacion elegido es PRIORIDADES \n");
     }
     // RR
     if (strcmp(algoritmo_actual, "RR") == 0)
     {
         switcher = RR;
-        log_info(kernel_logger, "El algoritmo de planificacion elegido es RR \n");
+        //log_info(kernel_logger, "El algoritmo de planificacion elegido es RR \n");
     }
     return switcher;
 }
@@ -467,9 +474,11 @@ void obtener_siguiente_blocked(t_pcb* proceso)
     proceso_en_ready(proceso);
 }
 
+
+//ACA CAPAZ HAY CARRERA
 t_pcb *obtener_siguiente_FIFO()
 {
-    log_info(kernel_logger, "Inicio la planificacion FIFO \n");
+    //log_info(kernel_logger, "Inicio la planificacion FIFO \n");
 
     /*voy a seleccionar el primer proceso que esta en ready usando esta funcion porque me retorna el proceso
     que le pido y tambien me lo borra. Como FIFO va a ejecutar todo hasta terminar, me biene barbaro*/
@@ -477,7 +486,7 @@ t_pcb *obtener_siguiente_FIFO()
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
     pthread_mutex_unlock(&mutex_ready);
 
-    log_info(kernel_logger, "PID[%d] sale de READY por planificacion FIFO \n", proceso_seleccionado->pid);
+    //log_info(kernel_logger, "PID[%d] sale de READY por planificacion FIFO \n", proceso_seleccionado->pid);
     return proceso_seleccionado;
 }
 
@@ -499,7 +508,7 @@ static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2)
 
 t_pcb *obtener_siguiente_PRIORIDADES()
 {
-    log_info(kernel_logger, "Inicio la planificacion PRIORIDADES \n");
+    //log_info(kernel_logger, "Inicio la planificacion PRIORIDADES \n");
 
     // Nos fijamos si hay procesos
     pthread_mutex_lock(&mutex_exec);
@@ -563,13 +572,13 @@ t_pcb *obtener_siguiente_PRIORIDADES()
 
 t_pcb *obtener_siguiente_RR()
 {
-    log_info(kernel_logger, "Inicio la planificacion RR \n");
+    //log_info(kernel_logger, "Inicio la planificacion RR \n");
 
     pthread_mutex_lock(&mutex_ready);
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
     pthread_mutex_unlock(&mutex_ready);
 
-    log_info(kernel_logger, "PID[%d] sale de READY por planificacion RR \n", proceso_seleccionado->pid);
+    //log_info(kernel_logger, "PID[%d] sale de READY por planificacion RR \n", proceso_seleccionado->pid);
     return proceso_seleccionado;
 }
 
@@ -685,4 +694,11 @@ void detener_planificacion () {
             pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
         }
         pthread_mutex_unlock(&mutex_corriendo);
+}
+
+static void aumentar_evento_cpu() {
+    pthread_mutex_lock(&mutex_cpu);
+    id_evento_cpu++;
+    pthread_mutex_unlock(&mutex_cpu);
+
 }

@@ -91,5 +91,5 @@ void atender_page_fault(t_pcb *proceso)
     int a = 0;
     recv(socket_memoria, &a,sizeof(int),0);
 
-    log_info(kernel_logger, "Volvio del tratamiento de Page Fault, proceso:  %d", proceso -> pid);
+    //log_info(kernel_logger, "Volvio del tratamiento de Page Fault, proceso:  %d", proceso -> pid);
 }

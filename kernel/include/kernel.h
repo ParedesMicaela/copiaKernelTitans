@@ -187,4 +187,5 @@ void iniciar_tabla_archivos_abiertos();
 void enviar_solicitud_fs(char* nombre_archivo, op_code operacion, int tamanio, uint32_t posicion, uint32_t direccion_fisica);
 void agregar_archivo_tgaa(char* nombre_archivo, int tamanio, uint32_t direccion);
 void asignar_archivo_al_proceso(t_archivo* archivo,t_pcb* proceso, char* modo_apertura);
+void bloquear_proceso_por_archivo(char* nombre_archivo, t_pcb* proceso, char* modo_apertura);
 #endif
