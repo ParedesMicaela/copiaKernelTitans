@@ -173,7 +173,7 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 
 		//diccionario de archivos abiertos
 		dictionary_put(diccionario_archivos_abiertos,nombre_archivo,archivo);
-		log_info(filesystem_logger, "Guardamos el tipo FILE en el diccionario\n");
+		log_info(filesystem_logger, "Guardamos el tipo FILE en el diccionario e enviamos al kernel que abrimos archivo\n");
 
 		//fclose(archivo); esto creo que no, solo cuando mandan FCLOSE
 		enviar_paquete(paquete, socket_kernel);
@@ -391,7 +391,7 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, i
 
 		actualizar_tabla_fat_ampliar(posicion_bloque_agregado, posicion_ultimo_bloque, nuevo_ultimo_bloque_fat);		
 		
-		actualizar_archivo_de_bloques_ampliar(posicion_bloque_agregado, posicion_ultimo_bloque, nuevo_ultimo_bloque_bloques);
+		//actualizar_archivo_de_bloques_ampliar(posicion_bloque_agregado, posicion_ultimo_bloque, nuevo_ultimo_bloque_bloques);
 	}
 }
 
@@ -423,21 +423,7 @@ static void actualizar_tabla_fat_ampliar(int posicion_bloque_agregado, int posic
 	fclose(archivo_tabla_fat);
 }
 
-static void actualizar_archivo_de_bloques_ampliar(int posicion_bloque_agregado, int posicion_ultimo_bloque, bloque_archivo_bloques* nuevo_ultimo_bloque_bloques) {
-	
-	int posicion_archivo_bloques = tamanio_swap + posicion_bloque_agregado;
 
-	tam_bloque = config_valores_filesystem.tam_bloque;
-
-	archivo_de_bloques = levantar_archivo_bloque();
-	fseek(archivo_de_bloques,posicion_archivo_bloques,SEEK_SET); //Revisar dsps
-	
-	//Solo tenemos que actualizar el que nos manden, no importa si el ultimo es el siguiente
-	nuevo_ultimo_bloque_bloques->data = "/0";
-	fwrite(nuevo_ultimo_bloque_bloques, tam_bloque, 1, archivo_de_bloques);
-
-	fclose(archivo_de_bloques);
-}
 
 void reducir_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, int tamanio_actual_archivo, int bloque_inicial)
 {
@@ -449,7 +435,7 @@ void reducir_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, i
 
 	actualizar_tabla_fat_reducir(posicion_bloque_agregado, bloques_a_quitar, posicion_primer_bloque_a_quitar);
 	
-	actualizar_archivo_de_bloques_reducir(posicion_bloque_agregado, bloques_a_quitar, posicion_primer_bloque_a_quitar);
+	//actualizar_archivo_de_bloques_reducir(posicion_bloque_agregado, bloques_a_quitar, posicion_primer_bloque_a_quitar);
 
     }
 
@@ -484,22 +470,3 @@ void actualizar_tabla_fat_reducir(int posicion_bloque_agregado, int bloques_a_qu
 	fclose(archivo_tabla_fat);
 
 }
-
-static void actualizar_archivo_de_bloques_reducir(int posicion_bloque_agregado, int bloques_a_quitar, int posicion_primer_bloque_a_quitar) {
-
-    archivo_de_bloques = levantar_archivo_bloque(); 
-
-	if (archivo_de_bloques == NULL) {
-		perror("No se pudo abrir el archivo de bloques");
-		abort();
-	}
-    
-	fseek(archivo_de_bloques, (tamanio_swap + posicion_primer_bloque_a_quitar + posicion_bloque_agregado) * tam_bloque, SEEK_SET);
-    
-	bloque_swap bloque_vacio;
-    
-	fwrite(&bloque_vacio, tam_bloque, 1, archivo_de_bloques);
-
-    fclose(archivo_de_bloques);
-}
-

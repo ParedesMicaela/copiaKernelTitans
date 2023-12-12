@@ -754,3 +754,41 @@ int devolver_bloque_inicial_de_fcb(char* nombre)
 
 */
 //..................................FUNCIONES UTILES PUNTEROS....................................................................
+
+/*
+static void actualizar_archivo_de_bloques_reducir(int posicion_bloque_agregado, int bloques_a_quitar, int posicion_primer_bloque_a_quitar) {
+
+    archivo_de_bloques = levantar_archivo_bloque(); 
+
+	if (archivo_de_bloques == NULL) {
+		perror("No se pudo abrir el archivo de bloques");
+		abort();
+	}
+    
+	fseek(archivo_de_bloques, (tamanio_swap + posicion_primer_bloque_a_quitar + posicion_bloque_agregado) * tam_bloque, SEEK_SET);
+    
+	bloque_swap bloque_vacio;
+    
+	fwrite(&bloque_vacio, tam_bloque, 1, archivo_de_bloques);
+
+    fclose(archivo_de_bloques);
+}
+*/
+
+/*
+static void actualizar_archivo_de_bloques_ampliar(int posicion_bloque_agregado, int posicion_ultimo_bloque, bloque_archivo_bloques* nuevo_ultimo_bloque_bloques) {
+	
+	int posicion_archivo_bloques = tamanio_swap + posicion_bloque_agregado;
+
+	tam_bloque = config_valores_filesystem.tam_bloque;
+
+	archivo_de_bloques = levantar_archivo_bloque();
+	fseek(archivo_de_bloques,posicion_archivo_bloques,SEEK_SET); //Revisar dsps
+	
+	//Solo tenemos que actualizar el que nos manden, no importa si el ultimo es el siguiente
+	nuevo_ultimo_bloque_bloques->data = "/0";
+	fwrite(nuevo_ultimo_bloque_bloques, tam_bloque, 1, archivo_de_bloques);
+
+	fclose(archivo_de_bloques);
+}
+*/

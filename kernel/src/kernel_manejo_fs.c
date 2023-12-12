@@ -47,6 +47,8 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             while(!apertura_terminada)
             {
                 //recibimos paquete de fs con info
+                log_info(kernel_logger, "Espero paquete de fs\n");
+
                 t_paquete* paquete = recibir_paquete(socket_filesystem);
                 void *stream = paquete->buffer->stream;
                 int tamanio;
@@ -67,6 +69,8 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                 }
                 else if(paquete->codigo_operacion == ARCHIVO_ABIERTO){
                     
+                    log_info(kernel_logger, "Me llego paquete de archivo abierto %s\n", nombre_archivo);
+
                     //si el fs me dice que abrio el archivo, lo agrego a la tgaa
                     tamanio = sacar_entero_de_paquete(&stream);
                     uint32_t direccion_archivo = sacar_entero_de_paquete(&stream); //direccion inicial (creo que esta bien esto)

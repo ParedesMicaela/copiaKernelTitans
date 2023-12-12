@@ -300,6 +300,7 @@ static void a_mimir(t_pcb* proceso){
     } else if (es_una_operacion_con_archivos(proceso->motivo_bloqueo)) {
         pthread_t peticiones_fs;
         if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
+            log_info(kernel_logger,"Es una operacion con archivos, mandamos a hacer el hilo\n");
             pthread_detach(peticiones_fs);
         } else {
             log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", proceso->motivo_bloqueo);
