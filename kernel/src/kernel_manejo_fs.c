@@ -4,6 +4,7 @@ sem_t instruccion_tipo_archivo;
 
 t_list *tabla_global_archivos_abiertos;
 bool existe_en_tabla = true;
+pthread_mutex_t cola_locks;
  
 t_list *cola_locks_lectura; //tiene a todos los archivos que se estan leyendo
 op_code devuelto_por=-1;
@@ -84,6 +85,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             //si fue abierto, independientemente de si tiene lock de escritura o lectura, si quiero escribir tengo que esperar a que termine el resto
             if (string_equals_ignore_case(proceso->modo_apertura, "W"))
             {
+                archivo_buscado_tabla->fcb->lock_escritura = true;
                 list_add(archivo_buscado_tabla->cola_solicitudes,(void*)proceso);
                 bloquear_proceso_por_archivo(nombre_archivo, proceso, "ESCRIBIR");
             }
@@ -96,19 +98,22 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         {
             //bloqueamos hasta que termine de escribir el otro proceso
             list_add(archivo_encontrado->cola_solicitudes,(void*)proceso);
+            archivo_encontrado->fcb->lock_lectura = true;
             bloquear_proceso_por_archivo(nombre_archivo, proceso, "LEER");
 
         }else if(string_equals_ignore_case(proceso->modo_apertura, "R") && !archivo_encontrado->fcb->lock_escritura)
         {
             //si yo quiere leer y nadie esta escribiendo, lo asigno
             asignar_archivo_al_proceso(archivo_encontrado, proceso, modo_apertura);
-            consola_proceso_estado();
+            //consola_proceso_estado();
+            archivo_encontrado->fcb->lock_lectura = true;
             proceso_en_execute(proceso);
 
         //si quiero escribir y nadie esta leyendo, lo asigno
         }else if(string_equals_ignore_case(proceso->modo_apertura, "W") && !(archivo_encontrado->fcb->lock_escritura && archivo_encontrado->fcb->lock_lectura))
         {
             asignar_archivo_al_proceso(archivo_encontrado, proceso, modo_apertura);
+            archivo_encontrado->fcb->lock_escritura = true;
             proceso_en_execute(proceso);       
 
         //si quiero escribir y alguien esta usando el archivo, lo bloqueo    
@@ -134,10 +139,10 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         
         enviar_solicitud_fs(proceso->nombre_archivo, TRUNCAR_ARCHIVO, tamanio, 0, 0);
                 
-        int respuesta = 0;
-        recv(socket_filesystem, &respuesta, sizeof(int),0);
+        int truncado = 0;
+        recv(socket_filesystem, &truncado, sizeof(int),0);
         
-        if (respuesta != 1)
+        if (truncado != 1)
         {
             log_error(kernel_logger, "Hubo un error con la respuesta de fs de truncar \n");
         }else{
@@ -381,7 +386,7 @@ void bloquear_proceso_por_archivo(char* nombre_archivo, t_pcb* proceso, char* mo
     meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
     pthread_mutex_unlock(&mutex_blocked);
 
-    log_info(kernel_logger, "PID[%d] bloqueado por accion: %s en archivo <%s>\n", proceso->pid, modo_apertura ,nombre_archivo);
+    log_info(kernel_logger, "PID[%d] bloqueado por accion: %s - Archivo: %s\n", proceso->pid, modo_apertura ,nombre_archivo);
 }
 //============================================= TABLA ARCHIVOS ABIERTOS DEL PROCESO =======================================
 

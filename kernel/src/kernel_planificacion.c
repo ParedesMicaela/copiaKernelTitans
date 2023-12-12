@@ -18,6 +18,7 @@ pthread_mutex_t mutex_corriendo;
 pthread_mutex_t mutex_contexto;
 pthread_mutex_t mutex_cpu;
 pthread_cond_t cond_corriendo;
+pthread_mutex_t cola_locks;
 
 sem_t hay_proceso_nuevo;
 sem_t grado_multiprogramacion;
@@ -61,6 +62,7 @@ void inicializar_semaforos()
     pthread_mutex_init(&cond_corriendo , NULL);
     pthread_mutex_init(&mutex_contexto , NULL);
     pthread_mutex_init(&mutex_cpu , NULL);
+    pthread_mutex_init(&cola_locks , NULL);
 
     sem_init(&grado_multiprogramacion, 0, config_valores_kernel.grado_multiprogramacion_ini);
     sem_init(&(hay_proceso_nuevo), 0, 0);
