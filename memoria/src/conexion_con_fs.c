@@ -64,7 +64,7 @@ void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica) {
 }
 
 
-void bloques_para_escribir(int tam_bloque, void* contenido, uint32_t puntero_archivo, char* nombre_archivo){
+void bloques_para_escribir(int tam_bloque, void* contenido, uint32_t puntero_archivo, char* nombre_archivo) {
 
     t_paquete* paquete = crear_paquete(ESCRIBIR_EN_ARCHIVO_BLOQUES);
     agregar_bytes_a_paquete(paquete, contenido, tam_bloque);

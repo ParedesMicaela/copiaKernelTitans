@@ -9,6 +9,7 @@ int pid_fs;
 pthread_mutex_t mutex_path;
 pthread_mutex_t mutex_instrucciones;
 pthread_mutex_t mutex_lista_instrucciones;
+sem_t swap_finalizado;
 
 
 // CONFIGURACION //
@@ -96,8 +97,6 @@ void manejo_conexiones(void* conexion)
 		if(chantada == 1){
 			socket_fs = crear_conexion(config_valores_memoria.ip_filesystem, config_valores_memoria.puerto_filesystem);
 			chantada--;
-		}else{
-			printf("chantada no iguala 1\n");
 		}
 
 		pid_proceso = sacar_entero_de_paquete(&stream);
@@ -121,8 +120,8 @@ void manejo_conexiones(void* conexion)
 
 	case LISTA_BLOQUES_RESERVADOS:
 	    t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid_fs); 
-		proceso_en_memoria->bloques_reservados = sacar_lista_de_cadenas_de_paquete(&stream);
-
+		proceso_en_memoria->bloques_reservados = sacar_lista_de_cadenas_de_paquete(&stream); //ERROR ACA
+		//int num_prueba = sacar_entero_de_paquete(&stream);
 		sem_post(&swap_creado);
 		break;
 
@@ -130,9 +129,16 @@ void manejo_conexiones(void* conexion)
 		int pid = sacar_entero_de_paquete(&stream);
 		log_info(memoria_logger,"Recibi pedido de eliminacion de estructuras en memoria\n");
 		finalizar_en_memoria(pid);
+
+		sem_wait(&swap_finalizado);
 	    int ok_finalizacion = 1;
         send(cliente, &ok_finalizacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras eliminadas en memoria exitosamente\n");
+		break;
+		
+	case FILESYSTEM_LIBERA_BLOQUES:
+		int entero_fs = sacar_entero_de_paquete(&stream);
+		sem_post(&swap_finalizado);
 		break;
 
 	case TRADUCIR_PAGINA_A_MARCO:

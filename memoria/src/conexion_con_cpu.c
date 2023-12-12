@@ -1,6 +1,6 @@
 #include "memoria.h"
 
-static size_t tamanio_array(char **lista);
+
 //================================================= Handshake =====================================================================
 void enviar_paquete_handshake(int socket_cliente) {
 
@@ -22,8 +22,6 @@ void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones, int inst_
 	char** lista_instrucciones = string_split(instrucciones, "\n");
     pthread_mutex_unlock(&mutex_lista_instrucciones);
 
-    //if(inst_a_ejecutar <= tamanio_array(lista_instrucciones));
-
 	//a la cpu le mandamos SOLO la instruccion que me marca el prog_count
     pthread_mutex_lock(&mutex_instrucciones);
     char *instruccion = lista_instrucciones[inst_a_ejecutar];
@@ -41,13 +39,6 @@ void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones, int inst_
 	eliminar_paquete(paquete);
 }
 
-static size_t tamanio_array(char **lista) {
-    size_t size = 0;
-    while (lista[size] != NULL) {
-        size++;
-    }
-    return size;
-}
 
 char* leer_archivo_instrucciones(char* path_instrucciones) {
     FILE* instr_f = fopen(path_instrucciones, "r");
@@ -65,7 +56,7 @@ char* leer_archivo_instrucciones(char* path_instrucciones) {
         if (cadena_completa == NULL) {
             cadena_completa = strdup(linea);
         } else {
-            char* temp = malloc(strlen(cadena_completa) + strlen(linea) + 1);
+            char* temp = malloc(strlen(cadena_completa) + strlen(linea) + 1); 
             strcpy(temp, cadena_completa);
             strcat(temp, linea);
             free(cadena_completa);

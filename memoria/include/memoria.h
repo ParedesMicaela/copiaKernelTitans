@@ -31,6 +31,8 @@ extern sem_t swap_creado;
 extern pthread_mutex_t mutex_path;
 extern pthread_mutex_t mutex_instrucciones;
 extern pthread_mutex_t mutex_lista_instrucciones;
+extern sem_t swap_finalizado;
+
 
 //ESTRUCTURAS
 typedef struct  
@@ -110,5 +112,7 @@ int obtener_tiempo_carga();
 void escribir_en_swap(t_pagina* pagina, int pid);
 void swap_in_tabla_proceso (int nro_pagina, int pid);
 void recibir_pagina_swap (int pid);
+void enviar_paquete_confirmacion_escritura();
+void bloques_para_escribir(int tam_bloque, void* contenido, uint32_t puntero_archivo, char* nombre_archivo);
 
 #endif

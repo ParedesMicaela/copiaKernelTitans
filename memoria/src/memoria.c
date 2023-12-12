@@ -30,6 +30,8 @@ int main(void) {
     
     sem_init(&(swap_creado), 0, 0);
     sem_init(&(solucionado_pf), 0, 0);
+    sem_init(&(swap_finalizado), 0, 0);
+
 
     log_info(memoria_logger,"Servidor creado\n");
     log_info(memoria_logger, "Memoria lista para recibir al modulo cliente \n");

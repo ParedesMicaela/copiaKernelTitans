@@ -287,6 +287,12 @@ void free_array (char ** array){
 	free(array);
 }
 
+void free_list(t_list* lista) {
+	int tamanio = list_size(lista);
+    for (int i = 0; i < tamanio; i++) {
+        free(list_get(lista, i));  
+    }
+}
 
 /*/================================================== BUFFER =====================================================================
 void* recibir_buffer(int* size, int socket_cliente) {
