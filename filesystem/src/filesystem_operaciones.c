@@ -93,6 +93,21 @@ void crear_archivo_de_bloque()
     if (ftruncate(fd, tamanio_archivo_bloques) == -1) {
         log_error(filesystem_logger,"Error al truncar el Archivo de Bloques");
     }
+	else //creó al archivo, ahora lo rellenamos
+	{
+		FILE *archivo_bloques = fopen(path_archivo_bloques,"wb+");
+		fseek(archivo_bloques,0,SEEK_SET);
+		char* bloque_inicializacion_archivo_bloques = '\0';
+		
+		for(int i=0;i<tamanio_archivo_bloques;i++)
+		{
+			fseek(archivo_bloques,i,SEEK_SET);
+			fwrite(bloque_inicializacion_archivo_bloques,tam_bloque,1,archivo_de_bloques);
+		}
+		//fflush(archivo_bloques); 
+		
+		fclose(archivo_bloques);
+	}
 
     close (fd);
 }
