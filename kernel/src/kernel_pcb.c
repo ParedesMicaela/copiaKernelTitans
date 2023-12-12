@@ -184,7 +184,7 @@ void eliminar_pcb(t_pcb* proceso)
 {
     eliminar_recursos_asignados(proceso);
     if (proceso->path_proceso != NULL) {
-        free(proceso->path_proceso);
+        //free(proceso->path_proceso);
     }
      if (proceso->recurso_pedido != NULL) {
         free(proceso->recurso_pedido);
@@ -194,7 +194,7 @@ void eliminar_pcb(t_pcb* proceso)
 void eliminar_recursos_asignados(t_pcb* proceso) {
 
     liberar_todos_recurso(proceso);
-    free(proceso->recursos_asignados);
+    //free(proceso->recursos_asignados);
 }
 
 void liberar_todos_recurso(t_pcb* proceso)

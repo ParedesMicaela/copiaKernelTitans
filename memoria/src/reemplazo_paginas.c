@@ -18,22 +18,25 @@ void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid){
 
     if(proceso_en_memoria ==  NULL)
     {
-        log_info(memoria_logger, "prpceso vacio");
+        log_info(memoria_logger, "proceso vacio");
         abort();
+
     }else{
+
         t_pagina* pagina_recibida = buscar_pagina(pid, nro_pagina);
 
         if(pagina_recibida ==  NULL)
         {
-            log_info(memoria_logger, "pagina vacio");
+            log_info(memoria_logger, "pagina vacia");
             abort();
         }
 
         if(memoria_llena()){
             reemplazar_pagina(pagina_recibida, proceso_en_memoria);
         }else{
-            int marco = buscar_marco_libre();
+            
             //memcpy?
+            int marco = buscar_marco_libre();
             pagina_recibida->id = pid;
             pagina_recibida->bit_de_presencia = 1;
             pagina_recibida->bit_modificado = 0;
@@ -56,14 +59,19 @@ static bool memoria_llena() {
     int cantidad_maxima_de_paginas_en_memoria =  tamanio_memoria/tam_pagina;
     int cantidad_paginas_procesos = 0;
     
+    /*
+    int cantidad_paginas_en_memoria = 0;
+
     for (int i = 0; i < list_size(procesos_en_memoria); i++) {
-    t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
-    cantidad_paginas_procesos += proceso->cantidad_entradas;
+        t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
+        cantidad_paginas_en_memoria += proceso->cantidad_entradas;
     }
 
-    if(cantidad_paginas_procesos >= cantidad_maxima_de_paginas_en_memoria) {
+    si la cantidad de paginas que tiene mi proceso, es mas grande que memoria
+    la paginacion es bajo demanda asi que solo voy a ausar las paginas que me van pidiendo
+    if (cantidad_paginas_en_memoria >= cantidad_maxima_de_paginas_en_memoria) {
         estoy_full = true;
-    }
+    }*/
 
     //no hay marcos disponibles
     if (buscar_marco_libre() == -1)
@@ -77,13 +85,13 @@ static bool memoria_llena() {
 static void reemplazar_pagina(t_pagina* pagina_reemplazante, t_proceso_en_memoria* proceso_en_memoria){ 
 	
 	//BUSCO TODAS LAS PAGINAS QUE SE PUEDAN REEMPLAZAR
-	t_list* paginas_en_MP = buscar_paginas_MP(); 
+    t_list* paginas_en_MP = list_create();
+	paginas_en_MP = buscar_paginas_MP(); 
 		
 	if(list_is_empty(paginas_en_MP)){
 		log_error(memoria_logger, "No hay paginas para sacar de la memoria\n");
-	}
-	
-	if(string_equals_ignore_case(config_valores_memoria.algoritmo_reemplazo, "LRU")){
+
+	}else if (string_equals_ignore_case(config_valores_memoria.algoritmo_reemplazo, "LRU")){
 		reemplazar_con_LRU(paginas_en_MP, pagina_reemplazante, proceso_en_memoria);
 	}
 	else if(string_equals_ignore_case(config_valores_memoria.algoritmo_reemplazo, "FIFO")){
@@ -128,7 +136,11 @@ static void reemplazar_con_LRU(t_list* paginas_totales, t_pagina* pagina_reempla
 static void reemplazar_con_FIFO(t_list* paginas_totales, t_pagina* pagina_reemplazante, t_proceso_en_memoria* proceso_en_memoria) {
 
     //Ordeno por quien se creó primero
-    list_sort(paginas_totales, (void*) mas_vieja); 
+    list_sort(paginas_totales, (void*) mas_vieja);
+
+    if(list_size(paginas_totales) == 0){
+        printf("lista esta vacia de pagina");
+    } 
 
     //Agarro la más vieja
     t_pagina* pagina_a_reemplazar = list_get(paginas_totales, 0);
@@ -207,6 +219,7 @@ static int buscar_marco_libre() {
         list_destroy(paginas_sin_presencia);
     }
 
+    //si todos los marcos estan llenos
     if(list_size(paginas_en_MV) == 0)
     {
         return -1;

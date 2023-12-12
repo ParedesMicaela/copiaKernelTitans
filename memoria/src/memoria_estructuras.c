@@ -6,7 +6,7 @@ t_list* marcos_memoria;
 t_bitarray* mapa_bits_principal;
 t_bitarray* mapa_bits_swap;
 t_list* procesos_en_memoria;
-t_list* paginas_en_memoria;
+//t_list* paginas_en_memoria;
 t_bitarray* status_tabla_paginas = NULL;
 int tiempo = 0;
 int tiempo_carga = 0;
@@ -189,7 +189,7 @@ static void liberar_tabla_de_paginas(t_proceso_en_memoria* proceso) {
     for (int i = 0; i < cantidad_de_paginas; i++) {
 
         t_pagina* pagina = list_get(proceso->paginas_en_memoria, i);
-        free(pagina);
+        //free(pagina);
     }
 
     list_destroy(proceso->paginas_en_memoria);

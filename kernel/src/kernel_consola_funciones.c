@@ -35,16 +35,15 @@ void consola_iniciar_planificacion() {
   
 }
 
-void consola_modificar_multiprogramacion(int valor) {
-    if (valor <= config_valores_kernel.grado_multiprogramacion_ini) {
-        printf("NO se puede modificador el grado de multiprogramacion \n"); 
-    }
-    else {
+void consola_modificar_multiprogramacion(int nuevo_valor) {
         int grado_anterior = config_valores_kernel.grado_multiprogramacion_ini;
-        config_valores_kernel.grado_multiprogramacion_ini = valor;
-        printf("Grado Anterior: %d - Grado Actual: %d \n", grado_anterior, valor);
+
+        sem_destroy(&grado_multiprogramacion);
+
+        sem_init(&grado_multiprogramacion, 0, nuevo_valor);
+        printf("Grado Anterior: %d - Grado Actual: %d \n", grado_anterior, nuevo_valor);
     }
-}
+
 
 void consola_proceso_estado() {
     mostrar_lista_pcb(cola_NEW, "NEW");
