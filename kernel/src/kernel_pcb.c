@@ -238,10 +238,10 @@ void liberar_todos_recurso(t_pcb* proceso)
                 instancias = instancias_del_recurso[indice_pedido];
                 instancias--;
                 instancias_del_recurso[indice_pedido] = instancias;
-
+            /*
                 for (int i = 0; i < tamanio_recursos; ++i) {
                     log_info(kernel_logger, "Recursos Asignados: %s - Cantidad: %d",pcb_desbloqueado->recursos_asignados[i].nombre_recurso, pcb_desbloqueado->recursos_asignados[i].instancias_recurso);
-                }
+                }*/
 
                 obtener_siguiente_blocked(pcb_desbloqueado);
             }            

@@ -17,6 +17,8 @@ pthread_mutex_t mutex_colas;
 pthread_mutex_t mutex_corriendo;
 pthread_mutex_t mutex_contexto;
 pthread_mutex_t mutex_cpu;
+pthread_mutex_t log_rr;
+pthread_mutex_t mutex_cpu_igualdad;
 pthread_cond_t cond_corriendo;
 
 sem_t hay_proceso_nuevo;
@@ -61,6 +63,10 @@ void inicializar_semaforos()
     pthread_mutex_init(&cond_corriendo , NULL);
     pthread_mutex_init(&mutex_contexto , NULL);
     pthread_mutex_init(&mutex_cpu , NULL);
+    pthread_mutex_init(&mutex_cpu_igualdad , NULL);
+    //pthread_mutex_init(&readline_mutex , NULL);
+    pthread_mutex_init(&log_rr , NULL);
+    pthread_mutex_init(&cola_locks , NULL);
 
     sem_init(&grado_multiprogramacion, 0, config_valores_kernel.grado_multiprogramacion_ini);
     sem_init(&(hay_proceso_nuevo), 0, 0);
@@ -145,7 +151,9 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         pthread_create(&hilo_round_robin, NULL, (void*)atender_round_robin, evento_para_interrupt);
         pthread_detach(hilo_round_robin);
 
+        pthread_mutex_lock(&log_rr);
         log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
+        pthread_mutex_unlock(&log_rr);
     }
 
      // La CPU despues nos dice pq regresa
@@ -243,8 +251,10 @@ static void atender_round_robin(int* evento_para_interrupt) {
         free(evento_para_interrupt);
 
         usleep(1000 * config_valores_kernel.quantum); 
-            
+        
+        pthread_mutex_lock(&mutex_cpu_igualdad);
         if (local_evento_interrupt == id_evento_cpu)
+        pthread_mutex_unlock(&mutex_cpu_igualdad);
         {
             // Debes enviar una señal de desalojo al proceso en CPU.
             t_paquete *paquete = crear_paquete(DESALOJO);
@@ -371,23 +381,16 @@ t_pcb *obtener_siguiente_new()
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, NEW), 0);
     pthread_mutex_unlock(&mutex_new);
 
-    //log_info(kernel_logger, "PID[%d] sale de NEW para planificacion \n", proceso_seleccionado->pid);
-
     return proceso_seleccionado;
 }
 
-/*esta funcion la voy a poner para que me haga todo el calculo de que proceso deberia ir primero dependiendo
-del algoritmo que estoy usando. Y la pongo aca porque es mas facil solamente poner una linea en la parte de
-obtener_siguiente_ready, que hacer todo este calculo alla arriba.*/
 t_pcb *obtener_siguiente_ready()
 {
-    // creamos un proceso para seleccionar
     t_pcb *proceso_seleccionado;
 
     int tamanio_cola_ready;
     int tamanio_cola_exec;
 
-    //obtenemos el tamanio de la cola ready
     pthread_mutex_lock(&mutex_ready);
     tamanio_cola_ready = list_size(cola_READY);
     pthread_mutex_unlock(&mutex_ready);
