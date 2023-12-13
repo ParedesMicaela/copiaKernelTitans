@@ -114,9 +114,18 @@ void escribir(uint32_t* valor, uint32_t direccion_fisica, uint32_t direccion_log
 
     t_pagina* pagina = buscar_pagina(pid, nro_pagina);
 
-    pagina->bit_modificado = 1;
-    pagina->tiempo_uso = obtener_tiempo(); 
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
 
+    if(valor == -1)
+    {
+        //si me dan para escribir -1 es que la pagina no esta en memoria
+        pagina->bit_de_presencia = 0;
+    }else{
+        pagina->bit_modificado = 1;
+        pagina->tiempo_uso = obtener_tiempo(); 
+    }
+
+    list_add(proceso->paginas_en_memoria, (void*)pagina);
     int se_ha_escrito = 1;
     send(socket_cpu, &se_ha_escrito, sizeof(int), 0); 
 }

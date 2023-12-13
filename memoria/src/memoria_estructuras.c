@@ -60,7 +60,7 @@ void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad
     
     pthread_mutex_init(&mutex_tiempo, NULL);
 
-    for (int i = 0; i <= cantidad_paginas_proceso; i++) {
+    for (int i = 0; i < cantidad_paginas_proceso; i++) {
 
         //creo una pagina por cada iteracion
         t_pagina* tp = malloc(sizeof(t_pagina));

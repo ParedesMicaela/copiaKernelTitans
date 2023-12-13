@@ -16,61 +16,59 @@ void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid){
     
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid);
 
-    if(proceso_en_memoria ==  NULL)
-    {
-        log_info(memoria_logger, "prpceso vacio");
-        abort();
+    t_pagina* pagina_recibida = buscar_pagina(pid, nro_pagina);
+
+    if(memoria_llena()){
+        printf("\n estoy en reemplazar pagina\n");
+        reemplazar_pagina(pagina_recibida, proceso_en_memoria);
     }else{
-        t_pagina* pagina_recibida = buscar_pagina(pid, nro_pagina);
+        //memcpy?
+        int marco = buscar_marco_libre();
+        pagina_recibida->id = pid;
+        pagina_recibida->bit_de_presencia = 1;
+        pagina_recibida->bit_modificado = 0;
+        pagina_recibida->marco = marco;
+        pagina_recibida->posicion_swap = posicion_swap;
+        pagina_recibida->tiempo_uso = obtener_tiempo();
+        pagina_recibida->tiempo_de_carga = obtener_tiempo_carga();
 
-        if(pagina_recibida ==  NULL)
-        {
-            log_info(memoria_logger, "pagina vacio");
-            abort();
-        }
-
-        if(memoria_llena()){
-            reemplazar_pagina(pagina_recibida, proceso_en_memoria);
-        }else{
-            int marco = buscar_marco_libre();
-            //memcpy?
-            pagina_recibida->id = pid;
-            pagina_recibida->bit_de_presencia = 1;
-            pagina_recibida->bit_modificado = 0;
-            pagina_recibida->marco = marco;
-            pagina_recibida->posicion_swap = posicion_swap;
-            pagina_recibida->tiempo_uso = obtener_tiempo();
-            pagina_recibida->tiempo_de_carga = obtener_tiempo_carga();
-
-            list_add(proceso_en_memoria->paginas_en_memoria, (void*)pagina_recibida);
-        }
+        list_add(proceso_en_memoria->paginas_en_memoria, (void*)pagina_recibida);
 
         log_info(memoria_logger, "SWAP IN -  PID: %d - Marco: %d - Page In: %d - %d",pid, pagina_recibida->marco, pid, nro_pagina);
     }
+
 }
 
 static bool memoria_llena() {
+
     bool estoy_full = false;
-    /*int tamanio_memoria = config_valores_memoria.tam_memoria;
+    int tamanio_memoria = config_valores_memoria.tam_memoria;
     int tam_pagina = config_valores_memoria.tam_pagina;
     int cantidad_maxima_de_paginas_en_memoria =  tamanio_memoria/tam_pagina;
-    int cantidad_paginas_procesos = 0;
-    
+
+    t_list* paginas_presentes_en_memoria = list_create();
+
     for (int i = 0; i < list_size(procesos_en_memoria); i++) {
-    t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
-    cantidad_paginas_procesos += proceso->cantidad_entradas;
+
+        //agarro cada proceso en memoria
+        t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
+
+        //busco dentro de las paginas de cada proceso, las que no estan presentes
+        t_list* paginas_presentes = list_filter(proceso->paginas_en_memoria, (void*)presente);
+
+        //pongo en la lista todas las paginas que no estan presentes
+        list_add_all(paginas_presentes_en_memoria, paginas_presentes);
+
+        // Liberamos la lista filtrada
+        list_destroy(paginas_presentes);
     }
 
-    if(cantidad_paginas_procesos >= cantidad_maxima_de_paginas_en_memoria) {
-        estoy_full = true;
-    }*/
-
-    //no hay marcos disponibles
-    if (buscar_marco_libre() == -1)
+    if(list_size(paginas_presentes_en_memoria) == cantidad_maxima_de_paginas_en_memoria)
     {
         estoy_full = true;
     }
 
+    list_destroy(paginas_presentes_en_memoria);
     return estoy_full;
 }
 
@@ -110,12 +108,10 @@ static void reemplazar_con_LRU(t_list* paginas_totales, t_pagina* pagina_reempla
 	{
 		escribir_en_swap(pagina_a_reemplazar, proceso_en_memoria->pid);
 	}
-	else
-	{
         //No está en MP
 		pagina_a_reemplazar->bit_de_presencia = 0;
+        pagina_reemplazante->bit_de_presencia = 1;
         //desocupar_frame(pagina_a_reemplazar->marco);
-	}
     
     loggear_reemplazo(pagina_a_reemplazar, pagina_reemplazante);
 
@@ -138,12 +134,11 @@ static void reemplazar_con_FIFO(t_list* paginas_totales, t_pagina* pagina_reempl
 	{
 		escribir_en_swap(pagina_a_reemplazar, proceso_en_memoria->pid);
 	}
-	else
-	{
-        //No está en MP
-		pagina_a_reemplazar->bit_de_presencia = 0;
-        //desocupar_frame(pagina_a_reemplazar->marco);
-	}
+
+    //No está en MP
+    pagina_a_reemplazar->bit_de_presencia = 0;
+    pagina_reemplazante->bit_de_presencia = 1;
+    //desocupar_frame(pagina_a_reemplazar->marco);
 
     loggear_reemplazo(pagina_a_reemplazar, pagina_reemplazante);
 
@@ -159,7 +154,7 @@ int mas_vieja(t_pagina* una_pag, t_pagina* otra_pag)
 }
 
 static void loggear_reemplazo(t_pagina* pagina_a_reemplazar, t_pagina* pagina_reemplazante) {
-    log_info(memoria_logger, "REEMPLAZO - Marco: %d - Page Out: %d-%d - Page In: %d-%d", pagina_a_reemplazar->marco, pagina_a_reemplazar->id, pagina_a_reemplazar->numero_de_pagina, pagina_reemplazante->id, pagina_reemplazante->marco);
+    log_info(memoria_logger, "REEMPLAZO - Marco: %d - Page Out: %d - %d - Page In: %d - %d\n", pagina_a_reemplazar->marco, pagina_a_reemplazar->id, pagina_a_reemplazar->numero_de_pagina, pagina_reemplazante->id, pagina_reemplazante->marco);
 }
 
 //================================================ BUSCAR =======================================================
@@ -192,25 +187,28 @@ static bool no_presente(t_pagina* pagina)
 	}
 
 static int buscar_marco_libre() {
+
     t_list* paginas_en_MV = list_create();
 
     for (int i = 0; i < list_size(procesos_en_memoria); i++) {
+
+        //agarro cada proceso en memoria
         t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
 
-        // Filtramos por las páginas que tengan P=0
+        //busco dentro de las paginas de cada proceso, las que no estan presentes
         t_list* paginas_sin_presencia = list_filter(proceso->paginas_en_memoria, (void*)no_presente);
 
-        // Concatenamos la lista filtrada a la lista principal
+        //pongo en la lista todas las paginas que no estan presentes
         list_add_all(paginas_en_MV, paginas_sin_presencia);
 
         // Liberamos la lista filtrada
         list_destroy(paginas_sin_presencia);
     }
-
+/*
     if(list_size(paginas_en_MV) == 0)
     {
         return -1;
-    }
+    }*/
 
     // Obtenemos la primer página de esa lista
     t_pagina* pag_en_mv = list_get(paginas_en_MV, 0);
