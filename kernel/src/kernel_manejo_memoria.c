@@ -52,8 +52,6 @@ void enviar_path_a_memoria(char* path)
     agregar_cadena_a_paquete(paquete,path);
     enviar_paquete(paquete, socket_memoria);
     eliminar_paquete(paquete);
-
-    log_info(kernel_logger, "Mandando a memoria el PATH: %s\n", path);
 }
 
 //lo vamos a usar cuando finaliza el proceso y le tenemos que decir a memoria que borre las estructuras
@@ -80,16 +78,14 @@ void atender_page_fault(t_pcb *proceso)
 {
     t_paquete* paquete = crear_paquete(SOLUCIONAR_PAGE_FAULT_MEMORIA);
 
-    //acá no haría falta agregarle el motivo de bloqueo, medio redundante sería
     agregar_entero_a_paquete(paquete,proceso->pid);
     agregar_entero_a_paquete(paquete,proceso->pagina_pedida);
 
     enviar_paquete(paquete, socket_memoria);
     eliminar_paquete(paquete);
 
-    // acá esperamos que memoria no mande el final de page fault
+    // Esperemos a que la memoria solucione el PF
     int a = 0;
     recv(socket_memoria, &a,sizeof(int),0);
 
-    //log_info(kernel_logger, "Volvio del tratamiento de Page Fault, proceso:  %d", proceso -> pid);
 }

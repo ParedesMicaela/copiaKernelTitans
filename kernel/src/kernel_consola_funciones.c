@@ -3,7 +3,7 @@
 // INICIAR PROCESO //
 void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
 {
-    log_info(kernel_logger, "Iniciando proceso \n");
+    printf(kernel_logger, "INICIALIZAMOS PROCESO \n");
 
     //Creamos un PCB, que comienza en NEW
     crear_pcb(prioridad, tam_proceso_swap, path);
