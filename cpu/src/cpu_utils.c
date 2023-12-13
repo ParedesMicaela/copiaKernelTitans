@@ -225,6 +225,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
         // toda esta parte la usamos para trabajar con registros (sumar,restar,poner)
         free(instruccion);
         char *registro = NULL;
+        char* registro_JNZ = NULL;
         char *registro_destino = NULL;
         char *registro_origen = NULL;
         char *recurso = NULL;
@@ -269,9 +270,9 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
 
         case(JNZ): 
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
-            registro = datos[1];
+            registro_JNZ = datos[1];
             num_instruccion = atoi(datos[2]);
-            if (registro != 0) {
+            if (registro_JNZ != 0) {
                  contexto_ejecucion->program_counter = num_instruccion;
             }
             break;
