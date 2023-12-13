@@ -36,16 +36,11 @@ void inicializar_planificador()
 {
     id_evento_cpu = 0;
 
-    // creamos todas las colas que vamos a usar
     inicializar_colas();
-    log_info(kernel_logger, "Iniciando colas.. \n");
 
-    // creamos los diccionarios donde vamos a meter las distintas colas
     inicializar_diccionarios();
-    log_info(kernel_logger, "Iniciando diccionarios.. \n");
 
     inicializar_semaforos();
-    log_info(kernel_logger, "Preparando planificacion.. \n");
 }
 
 void inicializar_semaforos()
@@ -86,10 +81,6 @@ void planificador_largo_plazo()
         mostrar_lista_pcb(cola_READY,"READY");
         pthread_mutex_unlock(&mutex_ready);
 
-         /*le avisamos al corto plazo que puede empezar a planificar. Aca solamente vamos a poner el proceso
-        en la cola de ready pero no vamos a elegir cual va a ejecutar el de corto plazo porque no hacemos eso
-        y le estamos robando el trabajo. Solamente vamos a poner el proceso en la cola de ready si el grado de
-        multiprogramacion lo permite y despues que se arregle el corto plazo*/
         sem_post(&hay_procesos_ready);
     }
 
@@ -131,18 +122,15 @@ void proceso_en_ready()
 
 void proceso_en_execute(t_pcb *proceso_seleccionado)
 {
-    //si es rr hay que ver los tiempos  
     if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR") == 0)
     {
         aumentar_evento_cpu();
 
         pthread_t hilo_round_robin;
 
-        int* evento_para_interrupt = malloc(sizeof(int));
-
-        memcpy(evento_para_interrupt, &id_evento_cpu, sizeof(int));
+        int evento_para_interrupt = id_evento_cpu;
         
-        pthread_create(&hilo_round_robin, NULL, (void*)atender_round_robin, evento_para_interrupt);
+        pthread_create(&hilo_round_robin, NULL, (void*)atender_round_robin, (void*)&evento_para_interrupt);
         pthread_detach(hilo_round_robin);
 
         log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
@@ -235,24 +223,19 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 }
 
 static void atender_round_robin(int* evento_para_interrupt) {
-  
-        int local_evento_interrupt;
-       
-        memcpy(&local_evento_interrupt, evento_para_interrupt, sizeof(int));
+    
+    int local_evento_interrupt = *evento_para_interrupt;
+    
+    usleep(1000 * config_valores_kernel.quantum);
 
-        free(evento_para_interrupt);
-
-        usleep(1000 * config_valores_kernel.quantum); 
-            
-        if (local_evento_interrupt == id_evento_cpu)
-        {
-            // Debes enviar una señal de desalojo al proceso en CPU.
-            t_paquete *paquete = crear_paquete(DESALOJO);
-            agregar_entero_a_paquete(paquete, 1);
-            enviar_paquete(paquete, socket_cpu_interrupt);
-            eliminar_paquete(paquete);
-
-        } 
+    pthread_mutex_lock(&mutex_cpu);
+    if (local_evento_interrupt == id_evento_cpu) {
+        t_paquete *paquete = crear_paquete(DESALOJO);
+        agregar_entero_a_paquete(paquete, 1);
+        enviar_paquete(paquete, socket_cpu_interrupt);
+        eliminar_paquete(paquete);
+    }
+    pthread_mutex_unlock(&mutex_cpu);
 }
 
 static void a_mimir(t_pcb* proceso){
@@ -641,7 +624,7 @@ void meter_en_cola(t_pcb *pcb, estado ESTADO, t_list *cola)
     pthread_mutex_lock(&mutex_colas);
     // list_add(dictionary_int_get(diccionario_colas, ESTADO), pcb);
     list_add(cola, pcb);
-    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual %s\n", pcb->pid, dictionary_int_get(diccionario_estados, estado_viejo), dictionary_int_get(diccionario_estados, ESTADO));
+    log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual %s\n", pcb->pid, (char*)dictionary_int_get(diccionario_estados, estado_viejo), (char*)dictionary_int_get(diccionario_estados, ESTADO));
     pthread_mutex_unlock(&mutex_colas);
 }
 
