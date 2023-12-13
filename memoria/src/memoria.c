@@ -8,7 +8,7 @@ int server_fd;
 arch_config config_valores_memoria;
 sem_t solucionado_pf;
 sem_t swap_creado;
-t_list* tabla_de_paginas;
+
 
 
 int main(void) {
@@ -16,21 +16,28 @@ int main(void) {
 
     ///CARGAR LA CONFIGURACION
     cargar_configuracion("/home/utnso/tp-2023-2c-KernelTitans/memoria/cfg/memoria.config");
+    log_info(memoria_logger,"Configuracion de memoria cargada correctamente\n");
 
     creacion_espacio_usuario();
 
     procesos_en_memoria = list_create();
-    tabla_de_paginas =list_create();
 
     inicializar_semaforos();
 
-    int server_memoria = iniciar_servidor(config_valores_memoria.ip_memoria,config_valores_memoria.puerto_escucha);
+    log_info(memoria_logger,"Inicializando memoria\n");
 
-    while(1) 
-    {
-        atender_clientes_memoria(server_memoria);
-    }
+    int server_memoria = iniciar_servidor(config_valores_memoria.ip_memoria,config_valores_memoria.puerto_escucha);
     
+    sem_init(&(swap_creado), 0, 0);
+    sem_init(&(solucionado_pf), 0, 0);
+
+    log_info(memoria_logger,"Servidor creado\n");
+    log_info(memoria_logger, "Memoria lista para recibir al modulo cliente \n");
+
+    	while(1) 
+        {
+            atender_clientes_memoria(server_memoria);
+        }
 	return 0;
 }
 

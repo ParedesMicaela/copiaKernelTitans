@@ -32,7 +32,9 @@ typedef enum
 	INSTRUCCIONES,
 	PCB,
 	FINALIZACION,
+	FINALIZACION_PROCESO,
 	FINALIZAR_EN_MEMORIA,
+	PAGE_FAULT,
 	SOLUCIONAR_PAGE_FAULT_MEMORIA,
 	SOLUCIONAR_PAGE_FAULT_FILESYSTEM,
 	TRADUCIR_PAGINA_A_MARCO,
@@ -66,8 +68,7 @@ typedef enum
 	CERRAR_ARCHIVO,
 	BUSCAR_ARCHIVO,
 	ARCHIVO_ABIERTO,
-	ARCHIVO_TRUNCADO,
-	FILESYSTEM_LIBERA_BLOQUES
+	ARCHIVO_TRUNCADO
 } op_code;
 
 typedef enum{
@@ -207,7 +208,6 @@ void agregar_a_paquete(t_paquete* , void* , int );
 void agregar_bytes_a_paquete(t_paquete* , void* , uint32_t);
 void* serializar_paquete(t_paquete* , int );
 void free_array (char ** );
-void free_list(t_list* lista);
 t_paquete* recibir_paquete(int );
 char* sacar_cadena_de_paquete(void** );
 int sacar_entero_de_paquete(void** );

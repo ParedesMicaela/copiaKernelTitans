@@ -35,15 +35,16 @@ void consola_iniciar_planificacion() {
   
 }
 
-void consola_modificar_multiprogramacion(int nuevo_valor) {
-        int grado_anterior = config_valores_kernel.grado_multiprogramacion_ini;
-
-        sem_destroy(&grado_multiprogramacion);
-
-        sem_init(&grado_multiprogramacion, 0, nuevo_valor);
-        printf("Grado Anterior: %d - Grado Actual: %d \n", grado_anterior, nuevo_valor);
+void consola_modificar_multiprogramacion(int valor) {
+    if (valor <= config_valores_kernel.grado_multiprogramacion_ini) {
+        printf("NO se puede modificador el grado de multiprogramacion \n"); 
     }
-
+    else {
+        int grado_anterior = config_valores_kernel.grado_multiprogramacion_ini;
+        config_valores_kernel.grado_multiprogramacion_ini = valor;
+        printf("Grado Anterior: %d - Grado Actual: %d \n", grado_anterior, valor);
+    }
+}
 
 void consola_proceso_estado() {
     mostrar_lista_pcb(cola_NEW, "NEW");
@@ -127,10 +128,9 @@ void consola_finalizar_proceso(int pid) {
 
         //Lo desalojo
         if(estado == EXEC) {
-        t_paquete *paquete_fin = crear_paquete(DESALOJO); //FINALIZAR_PROCESO
-        //int interrupcion_FINALIZAR = 2;
-        //agregar_entero_a_paquete(paquete_fin, interrupcion_FINALIZAR);
-        agregar_entero_a_paquete(paquete_fin, 1);
+        t_paquete *paquete_fin = crear_paquete(FINALIZACION_PROCESO);
+        int interrupcion_exit = 2;
+        agregar_entero_a_paquete(paquete_fin, interrupcion_exit);
         enviar_paquete(paquete_fin, socket_cpu_interrupt);
         eliminar_paquete(paquete_fin);
 

@@ -50,10 +50,12 @@ t_pcb* crear_pcb(int prioridad, int cant_paginas_proceso, char* path)
     if (pcb->path_proceso == NULL) {
         log_error(kernel_logger, "No se pudo alocar memoria\n");
         free(pcb);
+        inicializar_consola_interactiva();
     }
     } else {
         log_error(kernel_logger, "No me enviaste un path correcto\n");
         free(pcb);
+        inicializar_consola_interactiva();
     }
 
     pcb->nombre_archivo = NULL;
@@ -85,6 +87,7 @@ static void enviar_creacion_estructuras(t_pcb* pcb, int cant_paginas_proceso, ch
     agregar_entero_a_paquete(paquete,cant_paginas_proceso);
     agregar_cadena_a_paquete(paquete,path);
     enviar_paquete(paquete, socket_memoria);
+    log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso \n");
     eliminar_paquete(paquete);
 
     int respuesta = 0;
@@ -171,7 +174,7 @@ char* recibir_contexto(t_pcb* proceso)
         free(proceso->modo_apertura); 
         proceso->modo_apertura = NULL;
     }
-    //log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
+    log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
 
     eliminar_paquete(paquete);
     return motivo_de_devolucion;
@@ -181,7 +184,7 @@ void eliminar_pcb(t_pcb* proceso)
 {
     eliminar_recursos_asignados(proceso);
     if (proceso->path_proceso != NULL) {
-        //free(proceso->path_proceso);
+        free(proceso->path_proceso);
     }
      if (proceso->recurso_pedido != NULL) {
         free(proceso->recurso_pedido);
@@ -191,7 +194,7 @@ void eliminar_pcb(t_pcb* proceso)
 void eliminar_recursos_asignados(t_pcb* proceso) {
 
     liberar_todos_recurso(proceso);
-    //free(proceso->recursos_asignados);
+    free(proceso->recursos_asignados);
 }
 
 void liberar_todos_recurso(t_pcb* proceso)
@@ -235,10 +238,10 @@ void liberar_todos_recurso(t_pcb* proceso)
                 instancias = instancias_del_recurso[indice_pedido];
                 instancias--;
                 instancias_del_recurso[indice_pedido] = instancias;
-            /*
+
                 for (int i = 0; i < tamanio_recursos; ++i) {
                     log_info(kernel_logger, "Recursos Asignados: %s - Cantidad: %d",pcb_desbloqueado->recursos_asignados[i].nombre_recurso, pcb_desbloqueado->recursos_asignados[i].instancias_recurso);
-                }*/
+                }
 
                 obtener_siguiente_blocked(pcb_desbloqueado);
             }            

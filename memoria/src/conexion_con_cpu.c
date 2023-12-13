@@ -1,6 +1,6 @@
 #include "memoria.h"
 
-//static size_t string_array_length(char** array);
+static size_t tamanio_array(char **lista);
 //================================================= Handshake =====================================================================
 void enviar_paquete_handshake(int socket_cliente) {
 
@@ -17,43 +17,37 @@ void enviar_paquete_handshake(int socket_cliente) {
 //============================================ Instrucciones a CPU =====================================================================
 void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones, int inst_a_ejecutar)
 {
-    //pthread_mutex_lock(&mutex_lista_instrucciones);
-    char** lista_instrucciones = string_split(instrucciones, "\n");
+	//armamos una lista de instrucciones con la cadena de instrucciones que lei, pero ahora las separo
+    pthread_mutex_lock(&mutex_lista_instrucciones);
+	char** lista_instrucciones = string_split(instrucciones, "\n");
+    pthread_mutex_unlock(&mutex_lista_instrucciones);
 
-    free(instrucciones);
+    //if(inst_a_ejecutar <= tamanio_array(lista_instrucciones));
 
-    // Acceder a la instrucción corregida
+	//a la cpu le mandamos SOLO la instruccion que me marca el prog_count
+    pthread_mutex_lock(&mutex_instrucciones);
     char *instruccion = lista_instrucciones[inst_a_ejecutar];
+    pthread_mutex_unlock(&mutex_instrucciones);
 
-    t_paquete* paquete = crear_paquete(INSTRUCCIONES);
-    agregar_cadena_a_paquete(paquete, instruccion);
+    t_paquete* paquete = crear_paquete(INSTRUCCIONES); 
+
+    agregar_cadena_a_paquete(paquete, instruccion); 
+
     enviar_paquete(paquete, socket_cpu);
+	//log_info(memoria_logger,"Instrucciones enviadas :)\n");
+
     free_array(lista_instrucciones);
-
-    //pthread_mutex_unlock(&mutex_lista_instrucciones);
-
-    eliminar_paquete(paquete);
+    free(instrucciones);
+	eliminar_paquete(paquete);
 }
 
-/*
-static size_t string_array_length(char** array) {
-    if (array == NULL) {
-        return 0;
+static size_t tamanio_array(char **lista) {
+    size_t size = 0;
+    while (lista[size] != NULL) {
+        size++;
     }
-
-    size_t count = 0;
-    while (array[count] != NULL) {
-        count++;
-    }
-
-    return count;
+    return size;
 }
-
- int cantidad_instrucciones = string_array_length(lista_instrucciones);
-    if (inst_a_ejecutar > cantidad_instrucciones) {
-        inst_a_ejecutar = 0;  
-    }
-*/
 
 char* leer_archivo_instrucciones(char* path_instrucciones) {
     FILE* instr_f = fopen(path_instrucciones, "r");
@@ -71,7 +65,7 @@ char* leer_archivo_instrucciones(char* path_instrucciones) {
         if (cadena_completa == NULL) {
             cadena_completa = strdup(linea);
         } else {
-            char* temp = malloc(strlen(cadena_completa) + strlen(linea) + 1); 
+            char* temp = malloc(strlen(cadena_completa) + strlen(linea) + 1);
             strcpy(temp, cadena_completa);
             strcat(temp, linea);
             free(cadena_completa);
@@ -85,33 +79,35 @@ char* leer_archivo_instrucciones(char* path_instrucciones) {
     return cadena_completa;
 }
 
-char* buscar_path_proceso(int pid) {
-    pthread_mutex_lock(&mutex_procesos);
+char* buscar_path_proceso(int pid)
+{
+    if (procesos_en_memoria == NULL) {
+        log_error(memoria_logger, "Error: lista_procesos esta vacia");
+        return NULL;
+    }
 
-    int cantidad_procesos_en_memoria = list_size(procesos_en_memoria);
-    char* path_encontrado = NULL;
-
-    for (int i = 0; i < cantidad_procesos_en_memoria; i++) {
+    for (int i = 0; i < list_size(procesos_en_memoria); i++)
+    {
         t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
 
-        if (proceso != NULL && proceso->pid == pid) {
-            path_encontrado = strdup(proceso->path_proceso);
-            break;  
+        if (proceso != NULL && proceso->pid == pid)
+        {
+            return strdup(proceso->path_proceso);
         }
     }
 
-    pthread_mutex_unlock(&mutex_procesos);
-
-    return path_encontrado;
+    log_error(memoria_logger, "No se encontró un proceso con PID %d", pid);
+    return NULL;
 }
 
 //============================================ Instrucciones de CPU =====================================================================
 /// Buscar Marco Pedido ///
 void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid) {
+    int marco;
 
-    // Si encuentra -1, CPU tira PF
-    int marco = buscar_marco(num_pagina, pid);
+    marco = buscar_marco(pid, num_pagina);
     t_paquete* paquete = crear_paquete(NUMERO_MARCO);
+    // El -1 lo vemos desde la cpu (Page Fault)
     agregar_entero_a_paquete(paquete, marco);
     enviar_paquete(paquete, socket_cpu);   
     eliminar_paquete(paquete);

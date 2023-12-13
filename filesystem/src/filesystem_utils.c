@@ -118,11 +118,12 @@ void atender_clientes_filesystem(void* conexion) {
 			break;
 
 			case INICIALIZAR_SWAP:		
+				bloques_reservados_a_enviar = list_create();
 				pid = sacar_entero_de_paquete(&stream);
 				bloques_a_reservar = sacar_entero_de_paquete(&stream);
 				bloques_reservados_a_enviar = reservar_bloques(pid,bloques_a_reservar); 
 				if(bloques_reservados_a_enviar != NULL) {
-					enviar_bloques_reservados(bloques_reservados_a_enviar, pid);
+					enviar_bloques_reservados(bloques_reservados_a_enviar);
 				}
 				else{
 					log_info(filesystem_logger,"No se pudieron reservar los bloques");
@@ -156,6 +157,8 @@ void atender_clientes_filesystem(void* conexion) {
 			break;
 
 			default:
+				//printf("Operacion desconocida \n");
+				//abort();
 			break;
 		}
 		eliminar_paquete(paquete);
