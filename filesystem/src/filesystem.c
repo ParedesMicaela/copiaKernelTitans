@@ -29,11 +29,8 @@ int main(void)
     // COMUNICACIÓN MEMORIA //
 	socket_memoria = crear_conexion(config_valores_filesystem.ip_memoria, config_valores_filesystem.puerto_memoria);
 
-    // LEVANTAR ARCHIVOS //
-
     /// CREA LA CONEXION CON KERNEL Y MEMORIA ///
     int server_fd = iniciar_servidor(config_valores_filesystem.ip_filesystem,config_valores_filesystem.puerto_escucha);
-    log_info(filesystem_logger, "Filesystem listo para recibir al modulo cliente \n");
 
     tamanio_fat = (config_valores_filesystem.cant_bloques_total - config_valores_filesystem.cant_bloques_swap) * sizeof(uint32_t);
     tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
@@ -50,10 +47,9 @@ int main(void)
     sem_init(&(lectura_completada), 0 ,0);
 
     crear_fat();
-    log_info(filesystem_logger,"Levanto el fat \n");
     crear_archivo_de_bloque();
-    mapear_archivo_de_bloques();
-    log_info(filesystem_logger,"Levanto el archivo bloque\n");
+    
+    //mapear_archivo_de_bloques();
 
     //atender peticiones de kernel
     while(1) 

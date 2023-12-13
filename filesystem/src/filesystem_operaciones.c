@@ -152,7 +152,6 @@ void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo u
 
 void abrir_archivo (char *nombre_archivo, int socket_kernel)
 {
-	// /home/utnso/tp-2023-2c-KernelTitans/filesystem/fs/fat.dat
 	char *path_archivo = string_from_format("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
 	
 	printf("entramos al path: %s\n", path_archivo);
@@ -341,7 +340,6 @@ void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel)
 	char* nombre_archivo = fcb_a_truncar->nombre_archivo;
 	int tamanio_actual_archivo = fcb_a_truncar->tamanio_archivo;
 	int bloque_inicial = fcb_a_truncar->bloque_inicial;
-	tam_bloque = config_valores_filesystem.tam_bloque;
 	free(fcb_a_truncar);
 
 
@@ -355,7 +353,7 @@ void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel)
 	else if (tamanio_actual_archivo > tamanio_nuevo)
 	{
 		reducir_tamanio_archivo(tamanio_nuevo, nombre_archivo, tamanio_actual_archivo, bloque_inicial);
-		log_info(filesystem_logger,"reducimos\n");
+		log_info(filesystem_logger,"Reducimos\n");
 	}
 	else{
 		printf("Bobi no truncaste\n");
@@ -376,8 +374,7 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, i
 	
 	int posicion_ultimo_bloque = bloque_inicial + bloques_a_agregar;
 
-	tam_bloque = config_valores_filesystem.tam_bloque;
-	//Por posicion bloque_agregado (NO se que significa) ((nos ponemos en la posicion que tenemos que agregar dependiendo del blopque inicial))
+	//Nos ponemos en la posicion que tenemos que agregar dependiendo del blooque inicial
 	for (int posicion_bloque_agregado = 0; posicion_bloque_agregado < bloques_a_agregar; posicion_bloque_agregado++)
 	{
 		uint32_t* nuevo_ultimo_bloque_fat = malloc(tam_bloque);
@@ -391,7 +388,7 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, i
 
 		actualizar_tabla_fat_ampliar(posicion_bloque_agregado, posicion_ultimo_bloque, nuevo_ultimo_bloque_fat);		
 		
-		actualizar_archivo_de_bloques_ampliar(posicion_bloque_agregado, posicion_ultimo_bloque, nuevo_ultimo_bloque_bloques);
+		//actualizar_archivo_de_bloques_ampliar(posicion_bloque_agregado, posicion_ultimo_bloque, nuevo_ultimo_bloque_bloques);
 	}
 }
 
@@ -427,8 +424,6 @@ static void actualizar_archivo_de_bloques_ampliar(int posicion_bloque_agregado, 
 	
 	int posicion_archivo_bloques = tamanio_swap + posicion_bloque_agregado;
 
-	tam_bloque = config_valores_filesystem.tam_bloque;
-
 	archivo_de_bloques = levantar_archivo_bloque();
 	fseek(archivo_de_bloques,posicion_archivo_bloques,SEEK_SET); //Revisar dsps
 	
@@ -449,7 +444,7 @@ void reducir_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, i
 
 	actualizar_tabla_fat_reducir(posicion_bloque_agregado, bloques_a_quitar, posicion_primer_bloque_a_quitar);
 	
-	actualizar_archivo_de_bloques_reducir(posicion_bloque_agregado, bloques_a_quitar, posicion_primer_bloque_a_quitar);
+	//actualizar_archivo_de_bloques_reducir(posicion_bloque_agregado, bloques_a_quitar, posicion_primer_bloque_a_quitar);
 
     }
 

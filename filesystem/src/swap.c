@@ -11,14 +11,14 @@ void inicializar_swap()
 {
     archivo_de_bloques = levantar_archivo_bloque();
 
-    fseek(archivo_de_bloques, tamanio_swap , SEEK_SET);
-    fputc('\0', archivo_de_bloques);
-    fclose(archivo_de_bloques);
+    fseek(archivo_de_bloques, 0 , SEEK_SET);
+    
+    for (int i = 0; i < tamanio_swap; ++i) {
+        fputc('\0', archivo_de_bloques);
+    }
 
-	for (int i=0; i < config_valores_filesystem.cant_bloques_swap ; i++)
-	{
-        bloque_libre_swap(i);
-	}    
+    fclose(archivo_de_bloques);
+ 
 } 
 
 //fs va a reservar 1 bloque para cada pagina del proceso, la memoria solo sabe la cant de paginas que tinee, no sabe las paginas
@@ -30,8 +30,10 @@ t_list* reservar_bloques(int pid, int cantidad_bloques)
     proceso_en_filesystem->bloques_reservados = list_create();
 
     int tam_bloque = config_valores_filesystem.tam_bloque;
+
     int bloques_necesarios = (cantidad_bloques  / tam_bloque);
 
+    // Por cada pagina le asigno un nuevo bloque
     for (int index = 0; index < bloques_necesarios; index++){
 
         //voy a crear swap segun las paginas que tiene el proceso
