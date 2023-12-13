@@ -28,6 +28,7 @@ extern t_list* procesos_en_memoria;
 extern int socket_fs;
 extern sem_t solucionado_pf;
 extern sem_t swap_creado;
+extern swap_finalizado;
 extern pthread_mutex_t mutex_path;
 extern pthread_mutex_t mutex_instrucciones;
 extern pthread_mutex_t mutex_lista_instrucciones;

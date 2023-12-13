@@ -133,9 +133,16 @@ void manejo_conexiones(void* conexion)
 		int pid = sacar_entero_de_paquete(&stream);
 		log_info(memoria_logger,"Recibi pedido de eliminacion de estructuras en memoria\n");
 		finalizar_en_memoria(pid);
+
+		sem_wait(&swap_finalizado);
 	    int ok_finalizacion = 1;
         send(cliente, &ok_finalizacion, sizeof(int), 0);
 		log_info(memoria_logger,"Estructuras eliminadas en memoria exitosamente\n");
+		break;
+
+	case FILESYSTEM_LIBERA_BLOQUES:
+		int entero_fs = sacar_entero_de_paquete(&stream);
+		sem_post(&swap_finalizado);
 		break;
 
 	case TRADUCIR_PAGINA_A_MARCO:
@@ -222,4 +229,5 @@ void inicializar_semaforos()
 
 	sem_init(&(swap_creado), 0, 0);
     sem_init(&(solucionado_pf), 0, 0);
+	sem_init(&(swap_finalizado), 0, 0);
 }

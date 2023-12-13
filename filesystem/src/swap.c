@@ -5,7 +5,7 @@ t_bitarray* mapa_bits_swap;
 FILE* archivo_de_bloques;
 
 static t_proceso_en_filesystem* buscar_proceso_en_filesystem(int pid);
-
+static void avisar_a_memoria_bloques_liberados();
 //==============================================================================================================
 void inicializar_swap()
 {
@@ -200,14 +200,20 @@ void liberar_bloques(int pid)
     list_remove_element(procesos_en_filesystem, (void*)proceso_en_filesystem);
 	free(proceso_en_filesystem);
 
-    log_info(filesystem_logger, "Bloques de swap liberados exitosamente\n");
+    avisar_a_memoria_bloques_liberados();
 
-	int ok_finalizacion_swap = 1;
-    send(socket_memoria, &ok_finalizacion_swap, sizeof(int), 0);
+    log_info(filesystem_logger, "Bloques de swap liberados exitosamente\n");	
 }
 
 void liberar_bloque_individual(bloque_swap* bloque) {
     if (bloque != NULL) {
         free(bloque);
     }
+}
+
+static void avisar_a_memoria_bloques_liberados() {
+    t_paquete* paquete = crear_paquete(FILESYSTEM_LIBERA_BLOQUES);
+    agregar_entero_a_paquete(paquete, 1);
+    enviar_paquete(paquete, socket_memoria);
+    eliminar_paquete(paquete);
 }

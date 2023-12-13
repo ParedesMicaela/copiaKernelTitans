@@ -11,12 +11,13 @@ t_bitarray* status_tabla_paginas = NULL;
 int tiempo = 0;
 int tiempo_carga = 0;
 pthread_mutex_t mutex_tiempo;
+sem_t swap_finalizado;
 
 t_list* bloques_reservados;
 //================================================= Funciones Internas ================================================
 static void liberar_swap(int pid);
 static void liberar_paginas(t_proceso_en_memoria* proceso_en_memoria);
-
+static void liberar_tabla_de_paginas(t_proceso_en_memoria* proceso);
 //================================================= Creacion Estructuras ====================================================
 
 /// @brief Espacio Usuario ///
@@ -154,14 +155,22 @@ void finalizar_en_memoria(int pid) {
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid);
     liberar_paginas(proceso_en_memoria);
     liberar_swap(pid);
+
     list_remove_element(procesos_en_memoria,proceso_en_memoria);
     free(proceso_en_memoria); 
 }
 
 static void liberar_paginas(t_proceso_en_memoria* proceso_en_memoria) {
 
+    if (proceso_en_memoria->path_proceso != NULL) {
+    free(proceso_en_memoria->path_proceso);
+    }
+
     int cantidad_de_paginas_a_liberar = proceso_en_memoria->cantidad_entradas;
-    list_destroy(proceso_en_memoria->paginas_en_memoria);
+
+    liberar_tabla_de_paginas(proceso_en_memoria);
+    free_list(proceso_en_memoria->bloques_reservados);
+    list_destroy(proceso_en_memoria->bloques_reservados);
 
     log_info(memoria_logger, "PID: %d - Paginas a liberar: %d\n", proceso_en_memoria->pid, cantidad_de_paginas_a_liberar);
 
@@ -174,11 +183,21 @@ static void liberar_swap(int pid) {
     eliminar_paquete(paquete);
 
 	log_info(memoria_logger,"Enviando pedido de liberacion de bloques en swap\n");
-    int ok_finalizacion_swap;
-    recv(socket_fs, &ok_finalizacion_swap, sizeof(int), 0);
+}
 
-    if (ok_finalizacion_swap != 1)
-    {
-        log_error(memoria_logger, "No se pudieron liberar los bloques en FS\n");
+static void liberar_tabla_de_paginas(t_proceso_en_memoria* proceso) {
+   
+    int cantidad_de_paginas = list_size(proceso->cantidad_entradas);
+
+    for (int i = 0; i < cantidad_de_paginas; i++) {
+
+        t_pagina* pagina = list_get(proceso->cantidad_entradas, i);
+
+        if(pagina != NULL) {
+            free(pagina);
+        }
+        
     }
+
+    list_destroy(proceso->cantidad_entradas);
 }
