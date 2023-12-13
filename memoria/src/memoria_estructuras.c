@@ -58,8 +58,6 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_bytes_proceso, char* pat
 
 void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad_paginas_proceso) {
     
-    pthread_mutex_init(&mutex_tiempo, NULL);
-
     for (int i = 0; i < cantidad_paginas_proceso; i++) {
 
         //creo una pagina por cada iteracion

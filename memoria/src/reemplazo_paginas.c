@@ -21,7 +21,9 @@ void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid){
     if(memoria_llena()){
         reemplazar_pagina(pagina_recibida, proceso_en_memoria);
     }else{
-        //memcpy?
+        
+        list_remove_element(proceso_en_memoria->paginas_en_memoria, (void*)pagina_recibida);
+
         int marco = buscar_marco_libre();
         pagina_recibida->id = pid;
         pagina_recibida->bit_de_presencia = 1;
@@ -62,6 +64,8 @@ static bool memoria_llena() {
         // Liberamos la lista filtrada
         list_destroy(paginas_presentes);
     }
+
+    printf("\n paginas totales presentes en memoria: %d\n", list_size(paginas_presentes_en_memoria));
 
     if(list_size(paginas_presentes_en_memoria) >= cantidad_maxima_de_paginas_en_memoria)
     {

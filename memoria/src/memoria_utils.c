@@ -221,6 +221,8 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_path, NULL);
 	pthread_mutex_init(&mutex_path, NULL);
 	pthread_mutex_init(&mutex_procesos, NULL);
+	pthread_mutex_init(&mutex_tiempo, NULL);
+
 
 	sem_init(&(swap_creado), 0, 0);
     sem_init(&(solucionado_pf), 0, 0);
