@@ -47,9 +47,9 @@ extern pthread_mutex_t mutex_recursos;
 extern pthread_mutex_t mutex_colas;
 extern t_dictionary_int *diccionario_colas;
 extern pthread_mutex_t mutex_corriendo;
-extern pthread_mutex_t mutex_contexto;
+//extern pthread_mutex_t mutex_contexto;
 extern pthread_mutex_t cola_locks;
-extern pthread_mutex_t readline_mutex;
+//extern pthread_mutex_t readline_mutex;
 extern pthread_cond_t cond_corriendo;
 
 

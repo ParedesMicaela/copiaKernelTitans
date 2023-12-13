@@ -55,8 +55,15 @@ void manejo_conexiones(void* conexion)
 	int cliente = *(int*)conexion;
 	int posicion_pedida = 0;
 	int pid_proceso = 0;
+	int pid_crear = 0;
+	int pid_proceso_traduccion = 0;
+	int pid_proceso_escribir = 0;
+	int pid_proceso_pf = 0;
+	int pid_proceso_leer = 0;
+	int pid_proceso_fs_escribir = 0;
 	uint32_t valor_registro = 0;
 	uint32_t direccion_fisica = 0;
+	uint32_t direccion_logica = 0;
 	char* path_asignado = NULL;
 	uint32_t numero_pagina;
 	uint32_t tam_contenido;
@@ -85,9 +92,9 @@ void manejo_conexiones(void* conexion)
 		usleep(config_valores_memoria.retardo_respuesta * 1000);  
 
 		//aca vamos a buscar el proceso con el pid que recibimos y obtener el path_asignado
-        pthread_mutex_lock(&mutex_path);
+        //pthread_mutex_lock(&mutex_path);
 		path_asignado = buscar_path_proceso(pid_proceso); 
-        pthread_mutex_unlock(&mutex_path);
+        //pthread_mutex_unlock(&mutex_path);
 
 		//mandamos directamente el path del proceso porque ahi ya voy a tener las instrucciones leidas y cargadas
 		enviar_paquete_instrucciones(cliente, path_asignado, posicion_pedida);
@@ -100,7 +107,7 @@ void manejo_conexiones(void* conexion)
 			chantada--;
 		}
 
-		pid_proceso = sacar_entero_de_paquete(&stream);
+		pid_crear = sacar_entero_de_paquete(&stream);
 		cantidad_paginas_proceso = sacar_entero_de_paquete(&stream);
 		path_recibido = sacar_cadena_de_paquete(&stream);
 
@@ -108,8 +115,8 @@ void manejo_conexiones(void* conexion)
 		config_valores_memoria.path_instrucciones = path_recibido;
 		log_info(memoria_logger, "PATH recibido: %s", config_valores_memoria.path_instrucciones );
 
-		crear_tablas_paginas_proceso(pid_proceso, cantidad_paginas_proceso, path_recibido);
-		inicializar_swap_proceso(pid_proceso,cantidad_paginas_proceso);
+		crear_tablas_paginas_proceso(pid_crear, cantidad_paginas_proceso, path_recibido);
+		inicializar_swap_proceso(pid_crear,cantidad_paginas_proceso);
 		
 		sem_wait(&swap_creado);
 		int ok_creacion = 1;
@@ -143,8 +150,8 @@ void manejo_conexiones(void* conexion)
 
 	case TRADUCIR_PAGINA_A_MARCO:
 		numero_pagina = sacar_entero_sin_signo_de_paquete(&stream);
-		pid_proceso = sacar_entero_de_paquete(&stream);
-		enviar_respuesta_pedido_marco(cliente, numero_pagina, pid_proceso);
+		pid_proceso_traduccion = sacar_entero_de_paquete(&stream);
+		enviar_respuesta_pedido_marco(cliente, numero_pagina, pid_proceso_traduccion);
 		break;
 
 	case ESCRIBIR_EN_MEMORIA:
@@ -164,31 +171,34 @@ void manejo_conexiones(void* conexion)
 		break;
 
 	case WRITE:
-		//mov_out
-		pid_proceso = sacar_entero_de_paquete(&stream);
+		//mov_out almacena el valor del registro en la direccion fisica
+		pid_proceso_escribir = sacar_entero_de_paquete(&stream);
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+		direccion_logica = sacar_entero_sin_signo_de_paquete(&stream);
 		valor_registro = sacar_entero_sin_signo_de_paquete(&stream);
 
-		escribir(&valor_registro, direccion_fisica, cliente);
-		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso, "ESCRIBIR", direccion_fisica);
+		escribir(&valor_registro, direccion_fisica, direccion_logica, pid_proceso_escribir, cliente);
+		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso_escribir, "ESCRIBIR", direccion_fisica);
 		break;
 
 	case READ:
-		//mov_in
-		pid_proceso = sacar_entero_de_paquete(&stream);
+		//mov_in  almacena el valor de la direccion fisica en el registro
+		pid_proceso_leer = sacar_entero_de_paquete(&stream);
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-		uint32_t valor_a_enviar = leer(direccion_fisica);
+		direccion_logica = sacar_entero_sin_signo_de_paquete(&stream);
+
+		uint32_t valor_a_enviar = leer(direccion_fisica, direccion_logica, pid_proceso_leer);
 		enviar_valor_de_lectura(valor_a_enviar, cliente);
-		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso, "LEER\n", direccion_fisica);
+		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso_leer, "LEER\n", direccion_fisica);
 		break;
 
 	case SOLUCIONAR_PAGE_FAULT_MEMORIA:
-		pid_proceso = sacar_entero_de_paquete(&stream);
+		pid_proceso_pf = sacar_entero_de_paquete(&stream);
 		int nro_pag_pf = sacar_entero_de_paquete(&stream);
 
-		log_info(memoria_logger,"Recibi un pedido para solucionar page fault con PID %d - Pagina %d\n", pid_proceso, nro_pag_pf);
+		log_info(memoria_logger,"Recibi un pedido para solucionar page fault con PID %d - Pagina %d\n", pid_proceso_pf, nro_pag_pf);
 
-		enviar_pedido_pagina_para_escritura(pid_proceso, nro_pag_pf);
+		enviar_pedido_pagina_para_escritura(pid_proceso_pf, nro_pag_pf);
 
 		sem_wait(&solucionado_pf);
 
@@ -201,9 +211,9 @@ void manejo_conexiones(void* conexion)
 
 		int nro_pagina = sacar_entero_de_paquete(&stream);
    		int posicion_swap= sacar_entero_de_paquete(&stream);
-    	pid_proceso= sacar_entero_de_paquete(&stream);
+    	pid_proceso_fs_escribir= sacar_entero_de_paquete(&stream);
 
-		escribir_en_memoria_principal(nro_pagina, posicion_swap, pid_proceso);
+		escribir_en_memoria_principal(nro_pagina, posicion_swap, pid_proceso_fs_escribir);
 
 		sem_post(&solucionado_pf);
 
@@ -223,6 +233,7 @@ void inicializar_semaforos()
 	pthread_mutex_init(&mutex_tiempo, NULL);
 	pthread_mutex_init(&contador_paginas, NULL);
 	pthread_mutex_init(&mutex_procesos, NULL);
+	pthread_mutex_init(&presencia, NULL);
 
 	sem_init(&(swap_creado), 0, 0);
     sem_init(&(solucionado_pf), 0, 0);

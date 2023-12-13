@@ -40,7 +40,6 @@ t_paquete* recibir_paquete(int conexion)
     if(recv(conexion, &(paquete->codigo_operacion),sizeof(paquete->codigo_operacion),MSG_WAITALL)==-1)
 		{
 			paquete->codigo_operacion = -1;
-			printf("recibir paquete recibio un menos 1\n");
 			return paquete;
 		}
 	if(paquete->codigo_operacion==FINALIZACION){

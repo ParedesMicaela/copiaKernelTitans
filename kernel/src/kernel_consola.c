@@ -2,11 +2,11 @@
 
 void* consola_interactiva(void* arg) {
     while (1) {
-        pthread_mutex_lock(&readline_mutex);
+        //pthread_mutex_lock(&readline_mutex);
 
         char* leer_linea = readline(">"); //Consola
         
-        pthread_mutex_unlock(&readline_mutex);
+        //pthread_mutex_unlock(&readline_mutex);
 
         if (!leer_linea) {
             break; 

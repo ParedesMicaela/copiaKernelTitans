@@ -14,9 +14,10 @@ static int buscar_marco_libre();
 //================================================= Reemplazo de paginas ====================================================
 void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid){
     
+    pthread_mutex_lock(&presencia);
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid);
-
-    t_pagina* pagina_recibida = buscar_pagina(nro_pagina);
+    t_pagina* pagina_recibida = buscar_pagina(nro_pagina, pid);
+    pthread_mutex_unlock(&presencia);
 
     if(memoria_llena()){
         printf("\n entro a reemplazo\n");
@@ -25,7 +26,7 @@ void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid){
         
         //memcpy?
         int marco = buscar_marco_libre();
-        pagina_recibida->id = pid;
+        pagina_recibida->id = proceso_en_memoria->pid;
         pagina_recibida->bit_de_presencia = 1;
         pagina_recibida->bit_modificado = 0;
         pagina_recibida->marco = marco;
@@ -38,30 +39,23 @@ void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid){
         pthread_mutex_unlock(&mutex_tabla_de_paginas);
 
         list_add(proceso_en_memoria->paginas_asignadas, (void*)pagina_recibida);
+        log_info(memoria_logger, "SWAP IN -  PID: %d - Marco: %d - Page In: %d - %d\n",pid, pagina_recibida->marco, pid, nro_pagina);
     }
 
-    log_info(memoria_logger, "SWAP IN -  PID: %d - Marco: %d - Page In: %d - %d",pid, pagina_recibida->marco, pid, nro_pagina);
 }
 
 static bool memoria_llena() {
     bool estoy_full = false;
-    int tamanio_memoria = config_valores_memoria.tam_memoria;
-    int tam_pagina = config_valores_memoria.tam_pagina;
-    int cantidad_maxima_de_paginas_en_memoria = tamanio_memoria / tam_pagina;
-    int cantidad_paginas_procesos = 0;
-    int cantidad_paginas_en_memoria = 0;
 
     /*
-    pthread_mutex_lock(&mutex_tabla_de_paginas);
-    int tamanio_tabla_paginas = list_size(tabla_de_paginas);
-    pthread_mutex_unlock(&mutex_tabla_de_paginas);
-    */
+    int cantidad_paginas_procesos = 0;
+    int cantidad_paginas_en_memoria = 0;
 
     pthread_mutex_lock(&mutex_procesos);
     int cantidad_procesos_en_memoria = list_size(procesos_en_memoria);
     pthread_mutex_unlock(&mutex_procesos);
 
-    // De cada proceso en memoria obtenemos sus paginas en memoria
+     De cada proceso en memoria obtenemos sus paginas en memoria
     for (int i = 0; i < cantidad_procesos_en_memoria; i++) {
 
         pthread_mutex_lock(&mutex_procesos);
@@ -71,8 +65,10 @@ static bool memoria_llena() {
         // Cantidad total de paginas asignadas a procesos
         cantidad_paginas_en_memoria += list_size(proceso->paginas_asignadas);
     }
+    cantidad_paginas_en_memoria >= cantidad_maxima_de_paginas_en_memoria || 
+    */
     
-    if (cantidad_paginas_en_memoria >= cantidad_maxima_de_paginas_en_memoria || buscar_marco_libre() == -1) {
+    if (buscar_marco_libre() == -1) {
         estoy_full = true;
     }
 
@@ -124,6 +120,7 @@ static void reemplazar_con_LRU(t_list* paginas_totales, t_pagina* pagina_reempla
         //desocupar_frame(pagina_a_reemplazar->marco);
 	}*/
 	pagina_a_reemplazar->bit_de_presencia = 0;
+
     pagina_reemplazante->marco = pagina_a_reemplazar->marco;
     
     loggear_reemplazo(pagina_a_reemplazar, pagina_reemplazante);
@@ -163,6 +160,7 @@ static void reemplazar_con_FIFO(t_list* paginas_totales, t_pagina* pagina_reempl
 
 	pagina_a_reemplazar->bit_de_presencia = 0;
     pagina_reemplazante->marco = pagina_a_reemplazar->marco;
+    pagina_reemplazante->bit_de_presencia = 1;
 
     loggear_reemplazo(pagina_a_reemplazar, pagina_reemplazante);
 
@@ -181,7 +179,7 @@ int mas_vieja(t_pagina* una_pag, t_pagina* otra_pag)
 }
 
 static void loggear_reemplazo(t_pagina* pagina_a_reemplazar, t_pagina* pagina_reemplazante) {
-    log_info(memoria_logger, "REEMPLAZO - Marco: %d - Page Out: %d-%d - Page In: %d-%d", pagina_a_reemplazar->marco, pagina_a_reemplazar->id, pagina_a_reemplazar->numero_de_pagina, pagina_reemplazante->id, pagina_reemplazante->marco);
+    log_info(memoria_logger, "REEMPLAZO - Marco: %d - Page Out: %d - %d - Page In: %d - %d\n", pagina_a_reemplazar->marco, pagina_a_reemplazar->id, pagina_a_reemplazar->numero_de_pagina, pagina_reemplazante->id, pagina_reemplazante->marco);
 }
 
 //================================================ BUSCAR =======================================================

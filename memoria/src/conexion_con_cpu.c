@@ -118,7 +118,7 @@ void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid)
 }
 
 /// @brief Lectura y escritura del espacio de usuario ///
-void escribir(uint32_t* valor, uint32_t direccion_fisica, int socket_cpu){
+void escribir(uint32_t* valor, uint32_t direccion_fisica, uint32_t direccion_logica, int pid, int socket_cpu){
 
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
@@ -126,11 +126,17 @@ void escribir(uint32_t* valor, uint32_t direccion_fisica, int socket_cpu){
 
 	memcpy(puntero_a_direccion_fisica, valor, sizeof(uint32_t));
 
+    int nro_pagina =  floor(direccion_logica / config_valores_memoria.tam_pagina);
+    t_pagina* pagina = buscar_pagina(pid, nro_pagina);
+
+    pagina->bit_modificado = 1;
+    pagina->tiempo_uso = obtener_tiempo(); // Necesitas implementar la función obtener_tiempo_actual()
+
     int se_ha_escrito = 1;
     send(socket_cpu, &se_ha_escrito, sizeof(int), 0); 
 }
 
-uint32_t leer(uint32_t direccion_fisica) {
+uint32_t leer(uint32_t direccion_fisica, uint32_t direccion_logica, int pid) {
 
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
@@ -138,6 +144,14 @@ uint32_t leer(uint32_t direccion_fisica) {
 
     uint32_t valor;
 	memcpy(&valor, puntero_direccion_fisica, sizeof(uint32_t));
+    
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
+
+    int nro_pagina =  floor(direccion_logica / config_valores_memoria.tam_pagina);
+
+    t_pagina* pagina = buscar_pagina(pid,nro_pagina);
+
+    //pagina->tiempo_uso = obtener_tiempo_actual(); // Necesitas implementar la función obtener_tiempo_actual()
 
 	return valor; 
 }

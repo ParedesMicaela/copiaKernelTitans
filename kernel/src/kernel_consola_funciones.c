@@ -127,10 +127,9 @@ void consola_finalizar_proceso(int pid) {
 
         //Lo desalojo
         if(estado == EXEC) {
-        t_paquete *paquete_fin = crear_paquete(DESALOJO); //FINALIZAR_PROCESO
-        //int interrupcion_FINALIZAR = 2;
-        //agregar_entero_a_paquete(paquete_fin, interrupcion_FINALIZAR);
-        agregar_entero_a_paquete(paquete_fin, 1);
+        t_paquete *paquete_fin = crear_paquete(FINALIZAR_PROCESO);
+        int interrupcion_FINALIZAR = 2;
+        agregar_entero_a_paquete(paquete_fin, interrupcion_FINALIZAR);
         enviar_paquete(paquete_fin, socket_cpu_interrupt);
         eliminar_paquete(paquete_fin);
 

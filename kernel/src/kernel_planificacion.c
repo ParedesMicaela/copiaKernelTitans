@@ -15,7 +15,7 @@ pthread_mutex_t mutex_exec;
 pthread_mutex_t mutex_exit;
 pthread_mutex_t mutex_colas;
 pthread_mutex_t mutex_corriendo;
-pthread_mutex_t mutex_contexto;
+//pthread_mutex_t mutex_contexto;
 pthread_mutex_t mutex_cpu;
 pthread_mutex_t log_rr;
 pthread_mutex_t mutex_cpu_igualdad;
@@ -56,10 +56,10 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_recursos, NULL);
     pthread_mutex_init(&mutex_corriendo , NULL);
     pthread_mutex_init(&cond_corriendo , NULL);
-    pthread_mutex_init(&mutex_contexto , NULL);
+    //pthread_mutex_init(&mutex_contexto , NULL);
     pthread_mutex_init(&mutex_cpu , NULL);
     pthread_mutex_init(&mutex_cpu_igualdad , NULL);
-    pthread_mutex_init(&readline_mutex , NULL);
+    //pthread_mutex_init(&readline_mutex , NULL);
     pthread_mutex_init(&log_rr , NULL);
     pthread_mutex_init(&cola_locks , NULL);
 
@@ -146,9 +146,9 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     enviar_pcb_a_cpu(proceso_seleccionado);
 
     //La CPU nos dice pq finalizo
-    pthread_mutex_lock(&mutex_contexto);
+    //pthread_mutex_lock(&mutex_contexto);
     char *devuelto_por = recibir_contexto(proceso_seleccionado);
-    pthread_mutex_unlock(&mutex_contexto);
+    //pthread_mutex_unlock(&mutex_contexto);
 
     aumentar_evento_cpu();
 
@@ -438,18 +438,18 @@ void obtener_siguiente_blocked(t_pcb* proceso)
 
     //sacamos el primero de la cola de blocked
     pthread_mutex_lock(&mutex_blocked);
-    list_remove_element(dictionary_int_get(diccionario_colas, BLOCKED), proceso);
+    t_pcb* proceso_removido = (t_pcb*)list_remove(dictionary_int_get(diccionario_colas, BLOCKED), 0);
     pthread_mutex_unlock(&mutex_blocked);
 
     //aca ya de una lo mandamos a ready porque sabemos que en el diagrama va directo a ready
     pthread_mutex_lock(&mutex_ready);
-    meter_en_cola(proceso, READY, cola_READY);
+    meter_en_cola(proceso_removido, READY, cola_READY);
     mostrar_lista_pcb(cola_READY,"READY");
     pthread_mutex_unlock(&mutex_ready);
 
-    log_info(kernel_logger, "PID[%d] sale de BLOCKED para meterse en READY\n", proceso->pid);
+    log_info(kernel_logger, "PID[%d] sale de BLOCKED para meterse en READY\n", proceso_removido->pid);
 
-    proceso_en_ready(proceso);
+    proceso_en_ready();
 }
 
 

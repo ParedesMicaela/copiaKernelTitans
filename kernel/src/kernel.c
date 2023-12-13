@@ -12,7 +12,7 @@ arch_config_kernel config_valores_kernel;
 pthread_t consola;
 pthread_t largo_plazo;
 pthread_t corto_plazo;
-pthread_mutex_t readline_mutex;
+//pthread_mutex_t readline_mutex;
 
 //========================================================================================================================================
 int main(void)

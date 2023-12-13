@@ -14,6 +14,7 @@ pthread_mutex_t mutex_tiempo;
 int cantidad_de_paginas_totales = 0;
 pthread_mutex_t contador_paginas;
 pthread_mutex_t mutex_tabla_de_paginas;
+pthread_mutex_t presencia;
 
 
 t_list* bloques_reservados;
@@ -56,7 +57,7 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_bytes_proceso, char* pat
 
     free(instrucciones_leidas);
 
-    inicializar_la_tabla_de_paginas(cantidad_paginas_de_proceso, pid);
+    inicializar_la_tabla_de_paginas(proceso_en_memoria,cantidad_paginas_de_proceso);
     
     pthread_mutex_lock(&mutex_procesos);
     list_add(procesos_en_memoria, (void*)proceso_en_memoria); 
@@ -65,16 +66,17 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_bytes_proceso, char* pat
     log_info(memoria_logger, "PID: %d - Tamaño: %d", pid, cantidad_paginas_de_proceso);
 }
 
-void inicializar_la_tabla_de_paginas(int cantidad_paginas_de_proceso, int pid) {
+void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso,int cantidad_paginas_de_proceso) {
     
-    int cantidad_paginas_a_crear = cantidad_paginas_de_proceso - 1;
+    //int cantidad_paginas_a_crear = cantidad_paginas_de_proceso - 1;
 
-    for (int i = 0; i <= cantidad_paginas_a_crear; i++) {
+
+    for (int i = 0; i <= cantidad_paginas_de_proceso; i++) {
 
         //creo una pagina por cada iteracion
         t_pagina* tp = malloc(sizeof(t_pagina)); 
 
-        tp->id = pid;
+        tp->id = proceso->pid;
         tp->numero_de_pagina = i;
         tp->marco = i;
         tp->bit_de_presencia = 0;
@@ -86,7 +88,10 @@ void inicializar_la_tabla_de_paginas(int cantidad_paginas_de_proceso, int pid) {
         pthread_mutex_lock(&mutex_tabla_de_paginas);
         list_add(tabla_de_paginas, (t_pagina*)tp);
         pthread_mutex_unlock(&mutex_tabla_de_paginas);
+
+        list_add(proceso->paginas_asignadas, (t_pagina*)tp);
     }
+
 }
 
 int obtener_tiempo(){
@@ -127,43 +132,42 @@ t_proceso_en_memoria* buscar_proceso_en_memoria(int pid) {
     return proceso_en_memoria;
 }
 
-t_pagina* buscar_pagina(int num_pagina) {
-    pthread_mutex_lock(&mutex_tabla_de_paginas);
+t_pagina* buscar_pagina(int pid, int num_pagina) 
+{
+    t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid); 
 
-    int tamanio = list_size(tabla_de_paginas);
-    t_pagina* pagina_encontrada = NULL;
+    if (proceso_en_memoria == NULL) {
+        return NULL;
+    }
 
-    for (int i = 0; i < tamanio; i++) {
-        t_pagina* pagina_actual = list_get(tabla_de_paginas, i);
+    for (int i = 0; i < proceso_en_memoria->cantidad_paginas; i++) {
+        t_pagina* pagina_actual = list_get(proceso_en_memoria->paginas_asignadas, i);
 
         if (pagina_actual == NULL) {
-            break;  
+            return NULL;  
         }
 
         if (pagina_actual->numero_de_pagina == num_pagina) {
-            pagina_actual->tiempo_uso = obtener_tiempo();
-            pagina_encontrada = pagina_actual;
-            break;  
+            pagina_actual->tiempo_uso = obtener_tiempo(); 
+            return pagina_actual;
         }
     }
 
-    pthread_mutex_unlock(&mutex_tabla_de_paginas);
-
-    return pagina_encontrada;
+    return NULL;
 }
-
 
 
 int buscar_marco(int num_pagina, int pid){
 
-    t_pagina* pagina = buscar_pagina(num_pagina);
-    log_info(memoria_logger, "Se buscara marco en las tablas de paginas del proceso");
+    t_pagina* pagina = buscar_pagina(pid, num_pagina);
 
     if (pagina->bit_de_presencia == 0) {
+        log_info(memoria_logger, "La pagina solicitada no se encuentra en memoria\n");
+
         return -1; //Si el marco es -1, significa que hay page_fault 
     }   
     else {
-        log_info(memoria_logger, "Acceso a tabla de paginas: PID: %d - Página: %d - Marco: %d", pid, num_pagina, pagina->marco); 
+        log_info(memoria_logger, "Acceso a tabla de paginas: PID: %d - Página: %d - Marco: %d\n", pid, num_pagina, pagina->marco); 
         return pagina->marco;
     }
 }

@@ -15,7 +15,7 @@ char *instruccion;
 int tamanio_recursos;
 
 //lo usamos para ver si es desalojo o finalizacion
-//int tipo_interrupcion = -1;
+int tipo_interrupcion = -1;
 
 //======================= Funciones Internas ==============================================================================
 static void enviar_handshake();
@@ -184,7 +184,6 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
         char **datos = string_split(instruccion, " ");
      
         //=============================================== DECODE =================================================================
-
         if(string_starts_with(instruccion, "MOV_OUT"))
         {
 
@@ -202,8 +201,8 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
         direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, contexto_ejecucion);
         log_info(cpu_logger, "Se tradujo la direccion %d", direccion_fisica);      
 
-        }
-
+        }   
+        
         if (hay_page_fault) 
         {
             int numero_pagina = floor(direccion_logica_aux / tam_pagina);
@@ -213,6 +212,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             ejecuto_instruccion = false;
             hay_page_fault = false;
         }
+        
         
         //=============================================== EXECUTE =================================================================
 
@@ -308,7 +308,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             if(ejecuto_instruccion){
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro_MOV_IN = datos[1];;
-            mov_in(registro_MOV_IN, direccion_fisica, contexto_ejecucion);
+            mov_in(registro_MOV_IN, direccion_fisica, contexto_ejecucion ,direccion_logica_aux);
             contexto_ejecucion->program_counter += 1;
             }
             break;
@@ -317,7 +317,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             if(ejecuto_instruccion){
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro_MOV_OUT = datos[2];
-            mov_out(direccion_fisica, registro_MOV_OUT, contexto_ejecucion); 
+            mov_out(direccion_fisica, registro_MOV_OUT, contexto_ejecucion, direccion_logica_aux); 
             contexto_ejecucion->program_counter += 1;
             }
             break;
@@ -388,12 +388,18 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
         } 
 
         //CHECK INTERRUPT
-        if(hay_interrupcion()) 
+        if(hay_interrupcion() && tipo_interrupcion == 1) 
         {
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
             devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "desalojo", "basura", 0, -1, "basura", "basura",-1);
+            seguir_ejecutando = false;
+        } else if(hay_interrupcion() && tipo_interrupcion == 2) {
+            pthread_mutex_lock(&mutex_interrupcion);
+            interrupcion = 0;
+            pthread_mutex_unlock(&mutex_interrupcion);
+            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "finalizacion", "basura", 0, -1, "basura", "basura",-1);
             seguir_ejecutando = false;
         } 
 
@@ -418,8 +424,14 @@ void atender_interrupt(void *socket_servidor_interrupt)
 
         if (paquete->codigo_operacion == DESALOJO)
         {
-            int tipo_interrupcion = sacar_entero_de_paquete(&stream); 
+            tipo_interrupcion = sacar_entero_de_paquete(&stream); 
 
+            pthread_mutex_lock(&mutex_interrupcion);
+            interrupcion += 1;
+            pthread_mutex_unlock(&mutex_interrupcion);
+        }else if (paquete->codigo_operacion == FINALIZAR_PROCESO)
+        {
+            tipo_interrupcion = sacar_entero_de_paquete(&stream);
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion += 1;
             pthread_mutex_unlock(&mutex_interrupcion);
@@ -477,9 +489,7 @@ static int restar_registros(char *registro_destino, char *registro_origen)
 
     int resta = valor1 - valor2;
 
-    int absoluto = abs(resta);
-
-    return absoluto;
+    return resta;
 }
 
 int buscar_registro(char *registros)
