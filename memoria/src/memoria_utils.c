@@ -53,8 +53,11 @@ void manejo_conexiones(void* conexion)
 	int cliente = *(int*)conexion;
 	int posicion_pedida = 0;
 	int pid_proceso = 0;
+	int pid_proceso_escribir = 0;
+	int pid_proceso_leer = 0;
 	uint32_t valor_registro = 0;
 	uint32_t direccion_fisica = 0;
+	uint32_t direccion_logica = 0;
 	char* path_asignado = NULL;
 	uint32_t numero_pagina;
 	uint32_t tam_contenido;
@@ -158,22 +161,25 @@ void manejo_conexiones(void* conexion)
 		break;
 
 	case WRITE:
-		//mov_out
-		pid_proceso = sacar_entero_de_paquete(&stream);
+		//mov_out almacena el valor del registro en la direccion fisica
+		pid_proceso_escribir = sacar_entero_de_paquete(&stream);
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
+		direccion_logica = sacar_entero_sin_signo_de_paquete(&stream);
 		valor_registro = sacar_entero_sin_signo_de_paquete(&stream);
 
-		escribir(&valor_registro, direccion_fisica, cliente);
-		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso, "ESCRIBIR", direccion_fisica);
+		escribir(&valor_registro, direccion_fisica, direccion_logica, pid_proceso_escribir, cliente);
+		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso_escribir, "ESCRIBIR", direccion_fisica);
 		break;
 
 	case READ:
-		//mov_in
-		pid_proceso = sacar_entero_de_paquete(&stream);
+		//mov_in  almacena el valor de la direccion fisica en el registro
+		pid_proceso_leer = sacar_entero_de_paquete(&stream);
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-		uint32_t valor_a_enviar = leer(direccion_fisica);
+		direccion_logica = sacar_entero_sin_signo_de_paquete(&stream);
+
+		uint32_t valor_a_enviar = leer(direccion_fisica, direccion_logica, pid_proceso_leer);
 		enviar_valor_de_lectura(valor_a_enviar, cliente);
-		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso, "LEER\n", direccion_fisica);
+		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso_leer, "LEER\n", direccion_fisica);
 		break;
 
 	case SOLUCIONAR_PAGE_FAULT_MEMORIA:
@@ -213,4 +219,7 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_instrucciones, NULL);
     pthread_mutex_init(&mutex_lista_instrucciones, NULL);
     pthread_mutex_init(&mutex_path, NULL);
+
+	sem_init(&(swap_creado), 0, 0);
+    sem_init(&(solucionado_pf), 0, 0);
 }

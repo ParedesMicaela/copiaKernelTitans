@@ -68,8 +68,8 @@ void finalizar_cpu();
 //======================= MEMORIA + REGISTROS=======================
 int buscar_registro(char *registros);
 uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica, t_contexto_ejecucion* contexto_ejecucion);
-void mov_in(char* registro, uint32_t direccion_logica, t_contexto_ejecucion* contexto_ejecucion);
-void mov_out(uint32_t direccion_logica, char* registro, t_contexto_ejecucion* contexto_ejecucion);
+void mov_in(char* registro, uint32_t direccion_logica, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux);
+void mov_out(uint32_t direccion_logica, char* registro, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux);
 void setear_registro(char *registro, int valor);
 
 #endif

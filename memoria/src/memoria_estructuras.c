@@ -35,7 +35,9 @@ void liberar_espacio_usuario() {
 
 //======================================================= INICIALIZACIONES =========================================================================================================
 
-void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* path_recibido){
+void crear_tablas_paginas_proceso(int pid, int cantidad_bytes_proceso, char* path_recibido){
+
+    int cantidad_paginas_proceso = cantidad_bytes_proceso / config_valores_memoria.tam_pagina;
 
     t_proceso_en_memoria* proceso_en_memoria = malloc(sizeof(t_proceso_en_memoria));
     proceso_en_memoria->pid = pid;

@@ -1,6 +1,5 @@
 #include "memoria.h"
 
-static size_t tamanio_array(char **lista);
 //================================================= Handshake =====================================================================
 void enviar_paquete_handshake(int socket_cliente) {
 
@@ -22,8 +21,6 @@ void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones, int inst_
 	char** lista_instrucciones = string_split(instrucciones, "\n");
     pthread_mutex_unlock(&mutex_lista_instrucciones);
 
-    //if(inst_a_ejecutar <= tamanio_array(lista_instrucciones));
-
 	//a la cpu le mandamos SOLO la instruccion que me marca el prog_count
     pthread_mutex_lock(&mutex_instrucciones);
     char *instruccion = lista_instrucciones[inst_a_ejecutar];
@@ -34,19 +31,10 @@ void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones, int inst_
     agregar_cadena_a_paquete(paquete, instruccion); 
 
     enviar_paquete(paquete, socket_cpu);
-	//log_info(memoria_logger,"Instrucciones enviadas :)\n");
 
     free_array(lista_instrucciones);
     free(instrucciones);
 	eliminar_paquete(paquete);
-}
-
-static size_t tamanio_array(char **lista) {
-    size_t size = 0;
-    while (lista[size] != NULL) {
-        size++;
-    }
-    return size;
 }
 
 char* leer_archivo_instrucciones(char* path_instrucciones) {
@@ -114,7 +102,7 @@ void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid)
 }
 
 /// @brief Lectura y escritura del espacio de usuario ///
-void escribir(uint32_t* valor, uint32_t direccion_fisica, int socket_cpu){
+void escribir(uint32_t* valor, uint32_t direccion_fisica, uint32_t direccion_logica, int pid, int socket_cpu){
 
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
@@ -122,11 +110,18 @@ void escribir(uint32_t* valor, uint32_t direccion_fisica, int socket_cpu){
 
 	memcpy(puntero_a_direccion_fisica, valor, sizeof(uint32_t));
 
+    int nro_pagina =  floor(direccion_logica / config_valores_memoria.tam_pagina);
+
+    t_pagina* pagina = buscar_pagina(pid, nro_pagina);
+
+    pagina->bit_modificado = 1;
+    pagina->tiempo_uso = obtener_tiempo(); 
+
     int se_ha_escrito = 1;
     send(socket_cpu, &se_ha_escrito, sizeof(int), 0); 
 }
 
-uint32_t leer(uint32_t direccion_fisica) {
+uint32_t leer(uint32_t direccion_fisica, uint32_t direccion_logica, int pid) {
 
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
@@ -134,6 +129,12 @@ uint32_t leer(uint32_t direccion_fisica) {
 
     uint32_t valor;
 	memcpy(&valor, puntero_direccion_fisica, sizeof(uint32_t));
+    
+    int nro_pagina =  floor(direccion_logica / config_valores_memoria.tam_pagina);
+
+    t_pagina* pagina = buscar_pagina(pid,nro_pagina);
+
+    pagina->tiempo_uso = obtener_tiempo(); 
 
 	return valor; 
 }

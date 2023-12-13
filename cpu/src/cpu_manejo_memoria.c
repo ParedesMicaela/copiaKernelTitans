@@ -7,9 +7,9 @@ bool hay_page_fault = false;
 static int traducir_pagina_a_marco(uint32_t numero_pagina, t_contexto_ejecucion* contexto_ejecucion);
 static void pedir_numero_frame(uint32_t numero_pagina, t_contexto_ejecucion* contexto_ejecucion);
 static int numero_marco_pagina();
-static void enviar_paquete_READ(uint32_t direccion_fisica, t_contexto_ejecucion* contexto_ejecucion);
+static void enviar_paquete_READ(uint32_t direccion_fisica, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux);
 static uint32_t recibir_valor_a_insertar(int socket_cliente_memoria);
-static void enviar_paquete_WRITE(uint32_t direccion_fisica, uint32_t registro, t_contexto_ejecucion* contexto_ejecucion);
+static void enviar_paquete_WRITE(uint32_t direccion_fisica, uint32_t registro, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux);
 /// MMU ///
 
 uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica, t_contexto_ejecucion* contexto_ejecucion) {
@@ -75,10 +75,10 @@ static int numero_marco_pagina() {
 
 /// FUNCIONES DE CPU Y KERNEL ///
 
-void mov_in(char* registro, uint32_t direccion_fisica, t_contexto_ejecucion* contexto_ejecucion) {
+void mov_in(char* registro, uint32_t direccion_fisica, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux) {
 
     if(direccion_fisica!=UINT32_MAX){
-     enviar_paquete_READ(direccion_fisica, contexto_ejecucion);
+     enviar_paquete_READ(direccion_fisica, contexto_ejecucion, direccion_logica_aux);
 
     int valor = recibir_valor_a_insertar(socket_cliente_memoria);
 
@@ -88,10 +88,11 @@ void mov_in(char* registro, uint32_t direccion_fisica, t_contexto_ejecucion* con
     }
 }
 
-static void enviar_paquete_READ(uint32_t direccion_fisica, t_contexto_ejecucion* contexto_ejecucion) {
+static void enviar_paquete_READ(uint32_t direccion_fisica, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux) {
     t_paquete *paquete = crear_paquete(READ);
      agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
      agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica);
+     agregar_entero_sin_signo_a_paquete(paquete, direccion_logica_aux);
      enviar_paquete(paquete, socket_cliente_memoria);    
      eliminar_paquete (paquete);
 }
@@ -114,12 +115,12 @@ static uint32_t recibir_valor_a_insertar() {
     eliminar_paquete(paquete);
 }
 
-void mov_out(uint32_t direccion_fisica, char* registro, t_contexto_ejecucion* contexto_ejecucion) { 
+void mov_out(uint32_t direccion_fisica, char* registro, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux) { 
 
     int valor = buscar_registro(registro);
 
     if(direccion_fisica != UINT32_MAX){    
-     enviar_paquete_WRITE(direccion_fisica, valor, contexto_ejecucion);
+     enviar_paquete_WRITE(direccion_fisica, valor, contexto_ejecucion, direccion_logica_aux);
 
     int se_ha_escrito = 1;
     recv(socket_cliente_memoria, &se_ha_escrito, sizeof(int), 0);
@@ -128,10 +129,11 @@ void mov_out(uint32_t direccion_fisica, char* registro, t_contexto_ejecucion* co
     }
 }
 
-static void enviar_paquete_WRITE(uint32_t direccion_fisica, uint32_t registro, t_contexto_ejecucion* contexto_ejecucion) {
+static void enviar_paquete_WRITE(uint32_t direccion_fisica, uint32_t registro, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux) {
     t_paquete *paquete = crear_paquete(WRITE);
      agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
      agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica);
+     agregar_entero_sin_signo_a_paquete(paquete, direccion_logica_aux);
      agregar_entero_sin_signo_a_paquete(paquete, registro);
      enviar_paquete(paquete, socket_cliente_memoria);    
      eliminar_paquete (paquete);
