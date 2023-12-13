@@ -1,6 +1,6 @@
 #include "memoria.h"
 
-
+//static size_t string_array_length(char** array);
 //================================================= Handshake =====================================================================
 void enviar_paquete_handshake(int socket_cliente) {
 
@@ -17,28 +17,43 @@ void enviar_paquete_handshake(int socket_cliente) {
 //============================================ Instrucciones a CPU =====================================================================
 void enviar_paquete_instrucciones(int socket_cpu, char* instrucciones, int inst_a_ejecutar)
 {
-	//armamos una lista de instrucciones con la cadena de instrucciones que lei, pero ahora las separo
-    pthread_mutex_lock(&mutex_lista_instrucciones);
-	char** lista_instrucciones = string_split(instrucciones, "\n");
-    pthread_mutex_unlock(&mutex_lista_instrucciones);
+    //pthread_mutex_lock(&mutex_lista_instrucciones);
+    char** lista_instrucciones = string_split(instrucciones, "\n");
 
-	//a la cpu le mandamos SOLO la instruccion que me marca el prog_count
-    pthread_mutex_lock(&mutex_instrucciones);
-    char *instruccion = lista_instrucciones[inst_a_ejecutar];
-    pthread_mutex_unlock(&mutex_instrucciones);
-
-    t_paquete* paquete = crear_paquete(INSTRUCCIONES); 
-
-    agregar_cadena_a_paquete(paquete, instruccion); 
-
-    enviar_paquete(paquete, socket_cpu);
-	//log_info(memoria_logger,"Instrucciones enviadas :)\n");
-
-    free_array(lista_instrucciones);
     free(instrucciones);
-	eliminar_paquete(paquete);
+
+    // Acceder a la instrucción corregida
+    char *instruccion = lista_instrucciones[inst_a_ejecutar];
+
+    t_paquete* paquete = crear_paquete(INSTRUCCIONES);
+    agregar_cadena_a_paquete(paquete, instruccion);
+    enviar_paquete(paquete, socket_cpu);
+    free_array(lista_instrucciones);
+
+    //pthread_mutex_unlock(&mutex_lista_instrucciones);
+
+    eliminar_paquete(paquete);
 }
 
+/*
+static size_t string_array_length(char** array) {
+    if (array == NULL) {
+        return 0;
+    }
+
+    size_t count = 0;
+    while (array[count] != NULL) {
+        count++;
+    }
+
+    return count;
+}
+
+ int cantidad_instrucciones = string_array_length(lista_instrucciones);
+    if (inst_a_ejecutar > cantidad_instrucciones) {
+        inst_a_ejecutar = 0;  
+    }
+*/
 
 char* leer_archivo_instrucciones(char* path_instrucciones) {
     FILE* instr_f = fopen(path_instrucciones, "r");
