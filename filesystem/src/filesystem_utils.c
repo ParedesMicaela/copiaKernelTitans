@@ -118,7 +118,6 @@ void atender_clientes_filesystem(void* conexion) {
 			break;
 
 			case INICIALIZAR_SWAP:		
-				bloques_reservados_a_enviar = list_create();
 				pid = sacar_entero_de_paquete(&stream);
 				bloques_a_reservar = sacar_entero_de_paquete(&stream);
 				bloques_reservados_a_enviar = reservar_bloques(pid,bloques_a_reservar); 

@@ -86,9 +86,10 @@ void manejo_conexiones(void* conexion)
 		usleep(config_valores_memoria.retardo_respuesta * 1000);  
 
 		//aca vamos a buscar el proceso con el pid que recibimos y obtener el path_asignado
-        pthread_mutex_lock(&mutex_path);
+        
+		//pthread_mutex_lock(&mutex_path);
 		path_asignado = buscar_path_proceso(pid_proceso); 
-        pthread_mutex_unlock(&mutex_path);
+        //pthread_mutex_unlock(&mutex_path);
 
 		//mandamos directamente el path del proceso porque ahi ya voy a tener las instrucciones leidas y cargadas
 		enviar_paquete_instrucciones(cliente, path_asignado, posicion_pedida);

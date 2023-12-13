@@ -50,6 +50,8 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_bytes_proceso, char* pat
 	char* instrucciones_leidas = leer_archivo_instrucciones(path_recibido);
     proceso_en_memoria->path_proceso = strdup(instrucciones_leidas);
 
+    free(instrucciones_leidas);
+
     inicializar_la_tabla_de_paginas(proceso_en_memoria, cantidad_paginas_proceso);
 
     list_add(procesos_en_memoria, (void*)proceso_en_memoria);
@@ -61,7 +63,7 @@ void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad
     
     pthread_mutex_init(&mutex_tiempo, NULL);
 
-    for (int i = 0; i <= cantidad_paginas_proceso; i++) {
+    for (int i = 0; i < cantidad_paginas_proceso; i++) {
 
         //creo una pagina por cada iteracion
         t_pagina* tp = malloc(sizeof(t_pagina));
@@ -81,23 +83,23 @@ void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad
 
 int obtener_tiempo(){
 	pthread_mutex_lock(&mutex_tiempo);
-	int t = tiempo;
 	tiempo++;
 	pthread_mutex_unlock(&mutex_tiempo);
-	return t;
+	return tiempo;
 }
 
 int obtener_tiempo_carga(){
 	pthread_mutex_lock(&mutex_tiempo);
-	int t = tiempo_carga;
-	tiempo++;
+	tiempo_carga++;
 	pthread_mutex_unlock(&mutex_tiempo);
-	return t;
+	return tiempo_carga;
 }
 
 //======================================================= BUSCAR_PAGINA =========================================================================================================
 
 t_proceso_en_memoria* buscar_proceso_en_memoria(int pid) {
+
+    //pthread_mutex_lock(&mutex_procesos);
     int i;
     for (i = 0; i < list_size(procesos_en_memoria); i++) {
         if (((t_proceso_en_memoria*)list_get(procesos_en_memoria, i))->pid == pid) {
@@ -106,6 +108,8 @@ t_proceso_en_memoria* buscar_proceso_en_memoria(int pid) {
     }
 
     return NULL;
+    
+    //pthread_mutex_unlock(&mutex_procesos);
 }
 
 
@@ -133,11 +137,10 @@ t_pagina* buscar_pagina(int pid, int num_pagina)
     return NULL;
 }
 
-
+//Dentro de las paginas del proceso
 int buscar_marco(int pid, int num_pagina){
 
     t_pagina* pagina = buscar_pagina(pid, num_pagina);
-    log_info(memoria_logger, "Se buscara marco en las tablas de paginas");
 
     if (pagina->bit_de_presencia == 0) {
         return -1; //Si el marco es -1, significa que hay page_fault 
