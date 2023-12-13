@@ -80,9 +80,9 @@ bloque_swap* asignar_bloque_swap (int tam_bloque, int index, int pid)
     return bloque;
 }
 
-void enviar_bloques_reservados(t_list* bloques_reservados) {
+void enviar_bloques_reservados(t_list* bloques_reservados, int pid) {
 	t_paquete* paquete = crear_paquete (LISTA_BLOQUES_RESERVADOS);
-    //agregar_entero_a_paquete(paquete, 1);
+    agregar_entero_a_paquete(paquete, pid);
 	agregar_lista_de_cadenas_a_paquete(paquete, bloques_reservados);
 	enviar_paquete(paquete, socket_memoria); 
 	eliminar_paquete(paquete);

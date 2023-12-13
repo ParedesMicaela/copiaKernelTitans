@@ -70,35 +70,33 @@ char* leer_archivo_instrucciones(char* path_instrucciones) {
     return cadena_completa;
 }
 
-char* buscar_path_proceso(int pid)
-{
-    if (procesos_en_memoria == NULL) {
-        log_error(memoria_logger, "Error: lista_procesos esta vacia");
-        return NULL;
-    }
+char* buscar_path_proceso(int pid) {
+    pthread_mutex_lock(&mutex_procesos);
 
-    for (int i = 0; i < list_size(procesos_en_memoria); i++)
-    {
+    int cantidad_procesos_en_memoria = list_size(procesos_en_memoria);
+    char* path_encontrado = NULL;
+
+    for (int i = 0; i < cantidad_procesos_en_memoria; i++) {
         t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
 
-        if (proceso != NULL && proceso->pid == pid)
-        {
-            return strdup(proceso->path_proceso);
+        if (proceso != NULL && proceso->pid == pid) {
+            path_encontrado = strdup(proceso->path_proceso);
+            break;  
         }
     }
 
-    log_error(memoria_logger, "No se encontró un proceso con PID %d", pid);
-    return NULL;
+    pthread_mutex_unlock(&mutex_procesos);
+
+    return path_encontrado;
 }
 
 //============================================ Instrucciones de CPU =====================================================================
 /// Buscar Marco Pedido ///
 void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid) {
-    int marco;
 
-    marco = buscar_marco(pid, num_pagina);
+    // Si encuentra -1, CPU tira PF
+    int marco = buscar_marco(num_pagina, pid);
     t_paquete* paquete = crear_paquete(NUMERO_MARCO);
-    // El -1 lo vemos desde la cpu (Page Fault)
     agregar_entero_a_paquete(paquete, marco);
     enviar_paquete(paquete, socket_cpu);   
     eliminar_paquete(paquete);

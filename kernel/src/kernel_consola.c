@@ -1,20 +1,23 @@
 #include "kernel.h"
-#include "stdlib.h"
-#include "stdio.h"
-#include "unistd.h"
-#include "readline/readline.h"
-#include "operaciones.h"
 
-void inicializar_consola_interactiva() {
-  char* leer_linea;
-  while(1) {
-    leer_linea = readline(">");  // Inicia consola
-    if (leer_linea) {
-      add_history(leer_linea); // Asi podemos usar flechas
-      consola_parsear_instruccion(leer_linea);  // Llama a la función para parsear la instrucción
-      free(leer_linea);  // Libera la memoria asignada para la línea
-    } 
-  }
+void* consola_interactiva(void* arg) {
+    while (1) {
+        pthread_mutex_lock(&readline_mutex);
+
+        char* leer_linea = readline(">"); //Consola
+        
+        pthread_mutex_unlock(&readline_mutex);
+
+        if (!leer_linea) {
+            break; 
+        }
+
+        add_history(leer_linea); //Asi podemos usar flechas
+        consola_parsear_instruccion(leer_linea); //Leer las instrucciones
+        free(leer_linea);
+    }
+
+    return NULL;
 }
 
 void parse_iniciar_proceso(char *linea) {

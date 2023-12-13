@@ -32,7 +32,11 @@ extern pthread_mutex_t mutex_path;
 extern pthread_mutex_t mutex_instrucciones;
 extern pthread_mutex_t mutex_lista_instrucciones;
 extern sem_t swap_finalizado;
-
+extern pthread_mutex_t mutex_tabla_de_paginas;
+extern pthread_mutex_t contador_paginas;
+extern t_list* tabla_de_paginas;
+extern pthread_mutex_t mutex_tiempo;
+extern pthread_mutex_t mutex_procesos;
 
 //ESTRUCTURAS
 typedef struct  
@@ -64,10 +68,10 @@ typedef struct {
 typedef struct 
 {
 	int pid;
-	t_list* paginas_en_memoria;
 	char* path_proceso;
 	t_list* bloques_reservados;
-	int cantidad_entradas;                 
+	int cantidad_paginas; 
+	t_list* paginas_asignadas;                
 } t_proceso_en_memoria;
 
 
@@ -95,15 +99,15 @@ void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica);
 void enviar_valor_de_lectura(uint32_t valor, int socket_cpu);
 
 /// @brief  TABLAS DE PAGINAS ///
-int buscar_marco(int pid, int num_pagina);
-void inicializar_la_tabla_de_paginas();
+int buscar_marco(int num_pagina, int pid);
+void inicializar_la_tabla_de_paginas(int cantidad_paginas_proceso, int pid);
 void inicializar_swap_proceso(int pid_proceso, int cantidad_paginas_proceso);
 void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* path_recibido);
 void finalizar_en_memoria(int pid);
 void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid);
 void enviar_pedido_pagina_para_escritura(int pid, int pag_pf);
 t_proceso_en_memoria* buscar_proceso_en_memoria(int pid);
-t_pagina* buscar_pagina(int pid, int num_pagina);
+t_pagina* buscar_pagina(int num_pagina);
 int mas_vieja(t_pagina* una_pag, t_pagina* otra_pag);
 int obtener_tiempo();
 int obtener_tiempo_carga();

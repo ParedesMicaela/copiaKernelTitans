@@ -64,7 +64,7 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_contexto , NULL);
     pthread_mutex_init(&mutex_cpu , NULL);
     pthread_mutex_init(&mutex_cpu_igualdad , NULL);
-    //pthread_mutex_init(&readline_mutex , NULL);
+    pthread_mutex_init(&readline_mutex , NULL);
     pthread_mutex_init(&log_rr , NULL);
     pthread_mutex_init(&cola_locks , NULL);
 

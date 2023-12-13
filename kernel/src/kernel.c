@@ -12,7 +12,7 @@ arch_config_kernel config_valores_kernel;
 pthread_t consola;
 pthread_t largo_plazo;
 pthread_t corto_plazo;
-//pthread_mutex_t readline_mutex;
+pthread_mutex_t readline_mutex;
 
 //========================================================================================================================================
 int main(void)
@@ -41,11 +41,9 @@ int main(void)
     
     pthread_create(&largo_plazo, NULL, (void* ) planificador_largo_plazo, NULL);
     pthread_create(&corto_plazo, NULL, (void* ) planificador_corto_plazo, NULL);
-    pthread_create(&consola, NULL, (void* ) inicializar_consola_interactiva, NULL);
+    pthread_create(&consola, NULL, consola_interactiva, NULL);
    
-    //pthread_mutex_lock(&readline_mutex);
-    using_history(); // Inicializar la historia de comando
-    //pthread_mutex_unlock(&readline_mutex);
+    using_history(); 
 
     pthread_join(largo_plazo,NULL); 
     pthread_join(corto_plazo,NULL);

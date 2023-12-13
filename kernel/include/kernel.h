@@ -49,7 +49,7 @@ extern t_dictionary_int *diccionario_colas;
 extern pthread_mutex_t mutex_corriendo;
 extern pthread_mutex_t mutex_contexto;
 extern pthread_mutex_t cola_locks;
-//extern pthread_mutex_t readline_mutex;
+extern pthread_mutex_t readline_mutex;
 extern pthread_cond_t cond_corriendo;
 
 
@@ -159,7 +159,7 @@ void eliminar_archivos_abiertos(t_dictionary *);
 void eliminar_mutex(pthread_mutex_t *);
 
 //================================================ Consola ==================================================================================================================
-void inicializar_consola_interactiva();
+void* consola_interactiva(void* arg);
 void parse_iniciar_proceso(char *linea);
 void parse_finalizar_proceso(char *linea);
 void parse_detener_planificacion (char* linea);

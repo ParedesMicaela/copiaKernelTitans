@@ -9,6 +9,7 @@ int pid_fs;
 pthread_mutex_t mutex_path;
 pthread_mutex_t mutex_instrucciones;
 pthread_mutex_t mutex_lista_instrucciones;
+pthread_mutex_t mutex_procesos;
 sem_t swap_finalizado;
 
 
@@ -109,8 +110,6 @@ void manejo_conexiones(void* conexion)
 
 		crear_tablas_paginas_proceso(pid_proceso, cantidad_paginas_proceso, path_recibido);
 		inicializar_swap_proceso(pid_proceso,cantidad_paginas_proceso);
-
-		pid_fs = pid_proceso;
 		
 		sem_wait(&swap_creado);
 		int ok_creacion = 1;
@@ -119,6 +118,7 @@ void manejo_conexiones(void* conexion)
 		break;
 
 	case LISTA_BLOQUES_RESERVADOS:
+		pid_fs = sacar_entero_de_paquete(&stream);
 	    t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid_fs); 
 		proceso_en_memoria->bloques_reservados = sacar_lista_de_cadenas_de_paquete(&stream); //ERROR ACA
 		//int num_prueba = sacar_entero_de_paquete(&stream);
@@ -219,4 +219,12 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_instrucciones, NULL);
     pthread_mutex_init(&mutex_lista_instrucciones, NULL);
     pthread_mutex_init(&mutex_path, NULL);
+	pthread_mutex_init(&mutex_tabla_de_paginas, NULL);
+	pthread_mutex_init(&mutex_tiempo, NULL);
+	pthread_mutex_init(&contador_paginas, NULL);
+	pthread_mutex_init(&mutex_procesos, NULL);
+
+	sem_init(&(swap_creado), 0, 0);
+    sem_init(&(solucionado_pf), 0, 0);
+    sem_init(&(swap_finalizado), 0, 0);
 }

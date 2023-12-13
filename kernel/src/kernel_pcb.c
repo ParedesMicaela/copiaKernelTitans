@@ -50,12 +50,10 @@ t_pcb* crear_pcb(int prioridad, int cant_paginas_proceso, char* path)
     if (pcb->path_proceso == NULL) {
         log_error(kernel_logger, "No se pudo alocar memoria\n");
         free(pcb);
-        inicializar_consola_interactiva();
     }
     } else {
         log_error(kernel_logger, "No me enviaste un path correcto\n");
         free(pcb);
-        inicializar_consola_interactiva();
     }
 
     pcb->nombre_archivo = NULL;
