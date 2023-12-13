@@ -30,10 +30,9 @@ t_list* reservar_bloques(int pid, int cantidad_bloques)
     proceso_en_filesystem->bloques_reservados = list_create();
 
     int tam_bloque = config_valores_filesystem.tam_bloque;
-
-    // Por cada pagina le asigno un nuevo bloque
-    for (int index = 0; index < cantidad_bloques; index++) { 
-
+    int bloques_necesarios = (cantidad_bloques  / tam_bloque);
+    
+    for (int index = 0; index < bloques_necesarios; index++){
         //voy a crear swap segun las paginas que tiene el proceso
         bloque_swap* nuevo_bloque = asignar_bloque_swap(tam_bloque, index, pid);
         
