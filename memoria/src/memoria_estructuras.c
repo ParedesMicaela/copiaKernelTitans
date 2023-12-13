@@ -58,12 +58,9 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_bytes_proceso, char* pat
 
     inicializar_la_tabla_de_paginas(cantidad_paginas_de_proceso, pid);
     
-    log_info(memoria_logger, "Adding process to list");
-
     pthread_mutex_lock(&mutex_procesos);
     list_add(procesos_en_memoria, (void*)proceso_en_memoria); 
     pthread_mutex_unlock(&mutex_procesos);
-    log_info(memoria_logger, "Process added to list");
     
     log_info(memoria_logger, "PID: %d - Tamaño: %d", pid, cantidad_paginas_de_proceso);
 }

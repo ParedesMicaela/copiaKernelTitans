@@ -85,7 +85,6 @@ static void enviar_creacion_estructuras(t_pcb* pcb, int cant_paginas_proceso, ch
     agregar_entero_a_paquete(paquete,cant_paginas_proceso);
     agregar_cadena_a_paquete(paquete,path);
     enviar_paquete(paquete, socket_memoria);
-    log_info(kernel_logger, "Se manda mensaje a memoria para inicializar estructuras del proceso \n");
     eliminar_paquete(paquete);
 
     int respuesta = 0;
@@ -172,7 +171,7 @@ char* recibir_contexto(t_pcb* proceso)
         free(proceso->modo_apertura); 
         proceso->modo_apertura = NULL;
     }
-    log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
+    //log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
 
     eliminar_paquete(paquete);
     return motivo_de_devolucion;
