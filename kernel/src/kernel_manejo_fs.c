@@ -350,11 +350,7 @@ static int tipo_motivo(char *motivo)
     {
         numero = TRUNCAR_ARCHIVO;
 
-    }/*else
-    {
-        log_info(kernel_logger, "no encontre el motivo %d\n", numero);
-        abort();
-    }*/
+    }
     return numero;
 }
 

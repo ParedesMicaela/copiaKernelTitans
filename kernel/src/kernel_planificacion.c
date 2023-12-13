@@ -104,13 +104,9 @@ void planificador_corto_plazo()
 
 //======================================================== Estados ==================================================================
 
-// aca agarramos el proceso que nos devuelve obtener_siguiente_ready_segun_algoritmo y lo mandamos a ejecutar
 void proceso_en_ready()
 {
-    // creamos un proceso, que va a ser el elegido por obtener_siguiente_ready_segun_algoritmo
     t_pcb *siguiente_proceso = obtener_siguiente_ready();
-
-    //log_info(kernel_logger, "PID[%d] ingresando a EXEC\n", siguiente_proceso->pid);
 
     // metemos el proceso en la cola de execute
     pthread_mutex_lock(&mutex_exec);
@@ -149,8 +145,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     // Observamos los motivos de devolucion
     if (string_equals_ignore_case(devuelto_por, "exit"))
     {
-       detener_planificacion();
-        log_info(kernel_logger, "Finaliza el proceso %d - Motivo: SUCCESS\n", proceso_seleccionado->pid);
+        detener_planificacion();
         proceso_en_exit(proceso_seleccionado);
     }
 
@@ -205,17 +200,14 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     {
         a_mimir(proceso_seleccionado);
     }
-    /*aca lo usamos cuando matamos al proceso. Estaba ejecutando y lo sacamos de la cola y le disparamos
-    tiene sentido usarlo aca tambien, porque lo estamos sacando de la cola de exec*/
+    
     if (string_equals_ignore_case(devuelto_por, "finalizacion"))
     {
-        log_info(kernel_logger, "Finaliza el proceso %d - Motivo: SUCCESS\n", proceso_seleccionado->pid);
         proceso_en_exit(proceso_seleccionado);
     }
 
     if (string_equals_ignore_case(devuelto_por, "page_fault"))
     {
-        //si tenemos page_fault, hay que bloquear el proceso
         detener_planificacion ();
         a_mimir(proceso_seleccionado);
     }
@@ -312,7 +304,6 @@ void proceso_en_exit(t_pcb *proceso)
 
     // le mandamos esto a memoria para que destruya las estructuras
     enviar_pcb_a_memoria(proceso, socket_memoria, FINALIZAR_EN_MEMORIA);
-    log_info(kernel_logger, "Enviando a memoria liberar estructuras del proceso \n");
 
     int fin_ok = 0;
     recv(socket_memoria, &fin_ok, sizeof(int), 0);
@@ -322,8 +313,7 @@ void proceso_en_exit(t_pcb *proceso)
         log_error(kernel_logger, "No se pudieron eliminar estructuras en memoria del proceso PID[%d]\n", proceso->pid);
     }else
     {
-        // si la respuesta que conseguimos de memoria es que se finalice la memoria, le avisamos a la consola que ya finaliza el proceso
-        log_info(kernel_logger, "Respuesta memoria de estructuras liberadas del proceso recibida \n");
+        log_info(kernel_logger, "Finaliza el proceso %d - Motivo: SUCCESS\n", proceso->pid);
     }
     
     eliminar_pcb(proceso);
@@ -338,7 +328,7 @@ void proceso_en_sleep(t_pcb *proceso)
 
 void proceso_en_page_fault(t_pcb* proceso){
 
-    log_info(kernel_logger, "Page Fault PID: %d - Pagina: %d", proceso->pid, proceso->pagina_pedida); // FALTA PAGINA
+    log_info(kernel_logger, "Page Fault PID: %d - Pagina: %d", proceso->pid, proceso->pagina_pedida); 
 
     atender_page_fault(proceso);
 
@@ -354,17 +344,12 @@ t_pcb *obtener_siguiente_new()
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, NEW), 0);
     pthread_mutex_unlock(&mutex_new);
 
-    //log_info(kernel_logger, "PID[%d] sale de NEW para planificacion \n", proceso_seleccionado->pid);
-
     return proceso_seleccionado;
 }
 
-/*esta funcion la voy a poner para que me haga todo el calculo de que proceso deberia ir primero dependiendo
-del algoritmo que estoy usando. Y la pongo aca porque es mas facil solamente poner una linea en la parte de
-obtener_siguiente_ready, que hacer todo este calculo alla arriba.*/
+
 t_pcb *obtener_siguiente_ready()
 {
-    // creamos un proceso para seleccionar
     t_pcb *proceso_seleccionado;
 
     int tamanio_cola_ready;
@@ -419,19 +404,16 @@ algoritmo obtener_algoritmo()
     if (strcmp(algoritmo_actual, "FIFO") == 0)
     {
         switcher = FIFO;
-        //log_info(kernel_logger, "El algoritmo de planificacion elegido es FIFO \n");
     }
     // PRIORIDADES
     if (strcmp(algoritmo_actual, "PRIORIDADES") == 0)
     {
         switcher = PRIORIDADES;
-        //log_info(kernel_logger, "El algoritmo de planificacion elegido es PRIORIDADES \n");
     }
     // RR
     if (strcmp(algoritmo_actual, "RR") == 0)
     {
         switcher = RR;
-        //log_info(kernel_logger, "El algoritmo de planificacion elegido es RR \n");
     }
     return switcher;
 }
@@ -452,8 +434,6 @@ void obtener_siguiente_blocked(t_pcb* proceso)
     mostrar_lista_pcb(cola_READY,"READY");
     pthread_mutex_unlock(&mutex_ready);
 
-    log_info(kernel_logger, "PID[%d] sale de BLOCKED para meterse en READY\n", proceso->pid);
-
     proceso_en_ready(proceso);
 }
 
@@ -461,15 +441,12 @@ void obtener_siguiente_blocked(t_pcb* proceso)
 //ACA CAPAZ HAY CARRERA
 t_pcb *obtener_siguiente_FIFO()
 {
-    //log_info(kernel_logger, "Inicio la planificacion FIFO \n");
-
-    /*voy a seleccionar el primer proceso que esta en ready usando esta funcion porque me retorna el proceso
-    que le pido y tambien me lo borra. Como FIFO va a ejecutar todo hasta terminar, me biene barbaro*/
+    //FIRST IN
     pthread_mutex_lock(&mutex_ready);
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
     pthread_mutex_unlock(&mutex_ready);
 
-    //log_info(kernel_logger, "PID[%d] sale de READY por planificacion FIFO \n", proceso_seleccionado->pid);
+    //FIRST OUT
     return proceso_seleccionado;
 }
 
@@ -491,7 +468,6 @@ static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2)
 
 t_pcb *obtener_siguiente_PRIORIDADES()
 {
-    //log_info(kernel_logger, "Inicio la planificacion PRIORIDADES \n");
 
     // Nos fijamos si hay procesos
     pthread_mutex_lock(&mutex_exec);
@@ -555,13 +531,11 @@ t_pcb *obtener_siguiente_PRIORIDADES()
 
 t_pcb *obtener_siguiente_RR()
 {
-    //log_info(kernel_logger, "Inicio la planificacion RR \n");
-
+    //Como FIFO
     pthread_mutex_lock(&mutex_ready);
     t_pcb *proceso_seleccionado = list_remove(dictionary_int_get(diccionario_colas, READY), 0);
     pthread_mutex_unlock(&mutex_ready);
 
-    //log_info(kernel_logger, "PID[%d] sale de READY por planificacion RR \n", proceso_seleccionado->pid);
     return proceso_seleccionado;
 }
 
@@ -595,12 +569,8 @@ void inicializar_colas()
     cola_EXIT = list_create();
 }
 
-// vamos a usar esta funcion cada vez que el proceso cambie de estado
 void meter_en_cola(t_pcb *pcb, estado ESTADO, t_list *cola)
 {
-    /*creamos una cola con el estado en el que esta el proceso usando la funcion int_get
-    pasandole el estado del proceso (key) nos va a devolver la cola en la que esta*/
-
     // recorremos la cola y buscamos el pid del pcb
     for (int i = 0; i < list_size(cola); i++)
     {
@@ -620,9 +590,8 @@ void meter_en_cola(t_pcb *pcb, estado ESTADO, t_list *cola)
     // nuestro nuevo estado va a ser el estado al cual queremos cambiarlo
     pcb->estado_pcb = ESTADO;
 
-    // finalmente lo agregamos a la cola de nuestro nuevo estado
+    // Marcamos cambio
     pthread_mutex_lock(&mutex_colas);
-    // list_add(dictionary_int_get(diccionario_colas, ESTADO), pcb);
     list_add(cola, pcb);
     log_info(kernel_logger, "PID: %d - Estado Anterior: %s - Estado Actual %s\n", pcb->pid, (char*)dictionary_int_get(diccionario_estados, estado_viejo), (char*)dictionary_int_get(diccionario_estados, ESTADO));
     pthread_mutex_unlock(&mutex_colas);
@@ -661,9 +630,8 @@ void mostrar_lista_pcb(t_list *cola, char *nombre_cola)
             if (i < tam_cola - 1)
                 string_append(&pids, ", ");
         }
-         // mostramos la lista con los pids en la cola dada
+         // mostramos la lista con los pids en la cola 
         log_info(kernel_logger, "Cola %s %s : [%s]\n", nombre_cola, config_valores_kernel.algoritmo_planificacion, pids);
-        //free(pids);
     }
     if (pids != NULL) {
         free(pids);  // Free pids if it was allocated
