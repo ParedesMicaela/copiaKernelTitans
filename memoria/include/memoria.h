@@ -31,6 +31,8 @@ extern sem_t swap_creado;
 extern pthread_mutex_t mutex_path;
 extern pthread_mutex_t mutex_instrucciones;
 extern pthread_mutex_t mutex_lista_instrucciones;
+extern pthread_mutex_t mutex_procesos;
+
 
 //ESTRUCTURAS
 typedef struct  

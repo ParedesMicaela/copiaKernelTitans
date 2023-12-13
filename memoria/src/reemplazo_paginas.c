@@ -19,7 +19,6 @@ void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid){
     t_pagina* pagina_recibida = buscar_pagina(pid, nro_pagina);
 
     if(memoria_llena()){
-        printf("\n estoy en reemplazar pagina\n");
         reemplazar_pagina(pagina_recibida, proceso_en_memoria);
     }else{
         //memcpy?
@@ -47,6 +46,7 @@ static bool memoria_llena() {
     int cantidad_maxima_de_paginas_en_memoria =  tamanio_memoria/tam_pagina;
 
     t_list* paginas_presentes_en_memoria = list_create();
+    t_list* paginas_presentes = list_create();
 
     for (int i = 0; i < list_size(procesos_en_memoria); i++) {
 
@@ -54,7 +54,7 @@ static bool memoria_llena() {
         t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
 
         //busco dentro de las paginas de cada proceso, las que no estan presentes
-        t_list* paginas_presentes = list_filter(proceso->paginas_en_memoria, (void*)presente);
+        paginas_presentes = list_filter(proceso->paginas_en_memoria, (void*)presente); //suma de a 3?
 
         //pongo en la lista todas las paginas que no estan presentes
         list_add_all(paginas_presentes_en_memoria, paginas_presentes);
@@ -63,7 +63,7 @@ static bool memoria_llena() {
         list_destroy(paginas_presentes);
     }
 
-    if(list_size(paginas_presentes_en_memoria) == cantidad_maxima_de_paginas_en_memoria)
+    if(list_size(paginas_presentes_en_memoria) >= cantidad_maxima_de_paginas_en_memoria)
     {
         estoy_full = true;
     }
@@ -143,9 +143,11 @@ static void reemplazar_con_FIFO(t_list* paginas_totales, t_pagina* pagina_reempl
     loggear_reemplazo(pagina_a_reemplazar, pagina_reemplazante);
 
     list_remove_element(proceso_en_memoria->paginas_en_memoria, (void*)pagina_a_reemplazar);
+
+    //lo agrego a las paginas del proceso
     list_add(proceso_en_memoria->paginas_en_memoria, (void*)pagina_reemplazante);
 
-    free(pagina_a_reemplazar);
+    //free(pagina_a_reemplazar);
 }
 
 int mas_vieja(t_pagina* una_pag, t_pagina* otra_pag)
@@ -186,6 +188,7 @@ static bool no_presente(t_pagina* pagina)
 		return (pagina->bit_de_presencia == 0);
 	}
 
+//busca de todos las paginas en memoria
 static int buscar_marco_libre() {
 
     t_list* paginas_en_MV = list_create();

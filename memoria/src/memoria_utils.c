@@ -9,6 +9,8 @@ int pid_fs;
 pthread_mutex_t mutex_path;
 pthread_mutex_t mutex_instrucciones;
 pthread_mutex_t mutex_lista_instrucciones;
+pthread_mutex_t mutex_procesos;
+
 
 
 // CONFIGURACION //
@@ -99,8 +101,6 @@ void manejo_conexiones(void* conexion)
 		if(chantada == 1){
 			socket_fs = crear_conexion(config_valores_memoria.ip_filesystem, config_valores_memoria.puerto_filesystem);
 			chantada--;
-		}else{
-			printf("chantada no iguala 1\n");
 		}
 
 		pid_proceso = sacar_entero_de_paquete(&stream);
@@ -219,6 +219,8 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_instrucciones, NULL);
     pthread_mutex_init(&mutex_lista_instrucciones, NULL);
     pthread_mutex_init(&mutex_path, NULL);
+	pthread_mutex_init(&mutex_path, NULL);
+	pthread_mutex_init(&mutex_procesos, NULL);
 
 	sem_init(&(swap_creado), 0, 0);
     sem_init(&(solucionado_pf), 0, 0);

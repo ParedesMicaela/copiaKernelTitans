@@ -92,7 +92,8 @@ char* buscar_path_proceso(int pid)
 /// Buscar Marco Pedido ///
 void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid) {
     int marco;
-
+    
+    //log_info(memoria_logger, "Se buscara marco en las tablas de paginas");
     marco = buscar_marco(pid, num_pagina);
     t_paquete* paquete = crear_paquete(NUMERO_MARCO);
     // El -1 lo vemos desde la cpu (Page Fault)

@@ -80,23 +80,23 @@ void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad
 
 int obtener_tiempo(){
 	pthread_mutex_lock(&mutex_tiempo);
-	int t = tiempo;
 	tiempo++;
 	pthread_mutex_unlock(&mutex_tiempo);
-	return t;
+	return tiempo;
 }
 
 int obtener_tiempo_carga(){
 	pthread_mutex_lock(&mutex_tiempo);
-	int t = tiempo_carga;
-	tiempo++;
+	tiempo_carga++;
 	pthread_mutex_unlock(&mutex_tiempo);
-	return t;
+	return tiempo_carga;
 }
 
 //======================================================= BUSCAR_PAGINA =========================================================================================================
 
 t_proceso_en_memoria* buscar_proceso_en_memoria(int pid) {
+
+    //pthread_mutex_lock(&mutex_procesos);
     int i;
     for (i = 0; i < list_size(procesos_en_memoria); i++) {
         if (((t_proceso_en_memoria*)list_get(procesos_en_memoria, i))->pid == pid) {
@@ -105,6 +105,8 @@ t_proceso_en_memoria* buscar_proceso_en_memoria(int pid) {
     }
 
     return NULL;
+    
+    //pthread_mutex_unlock(&mutex_procesos);
 }
 
 
@@ -132,11 +134,10 @@ t_pagina* buscar_pagina(int pid, int num_pagina)
     return NULL;
 }
 
-
+//busco el marco dentro de las paginas del proceso
 int buscar_marco(int pid, int num_pagina){
 
     t_pagina* pagina = buscar_pagina(pid, num_pagina);
-    log_info(memoria_logger, "Se buscara marco en las tablas de paginas");
 
     if (pagina->bit_de_presencia == 0) {
         return -1; //Si el marco es -1, significa que hay page_fault 
