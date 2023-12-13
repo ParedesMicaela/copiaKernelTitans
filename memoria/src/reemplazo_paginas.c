@@ -51,9 +51,11 @@ static bool memoria_llena() {
     int cantidad_paginas_procesos = 0;
     int cantidad_paginas_en_memoria = 0;
 
+    /*
     pthread_mutex_lock(&mutex_tabla_de_paginas);
     int tamanio_tabla_paginas = list_size(tabla_de_paginas);
     pthread_mutex_unlock(&mutex_tabla_de_paginas);
+    */
 
     pthread_mutex_lock(&mutex_procesos);
     int cantidad_procesos_en_memoria = list_size(procesos_en_memoria);
@@ -67,12 +69,10 @@ static bool memoria_llena() {
         pthread_mutex_unlock(&mutex_procesos);
 
         // Cantidad total de paginas asignadas a procesos
-        pthread_mutex_lock(&mutex_tabla_de_paginas);
         cantidad_paginas_en_memoria += list_size(proceso->paginas_asignadas);
-        pthread_mutex_unlock(&mutex_tabla_de_paginas);
     }
     
-    if (cantidad_paginas_en_memoria >= tamanio_tabla_paginas || buscar_marco_libre() == -1) {
+    if (cantidad_paginas_en_memoria >= cantidad_maxima_de_paginas_en_memoria || buscar_marco_libre() == -1) {
         estoy_full = true;
     }
 
@@ -219,34 +219,20 @@ static bool no_presente(t_pagina* pagina)
 	}
 
 static int buscar_marco_libre() {
-    t_list* paginas_en_MV = list_create();
-
     pthread_mutex_lock(&mutex_tabla_de_paginas);
-    int tamanio_tabla = list_size(tabla_de_paginas);
+
+    t_list* paginas_en_MV = list_filter(tabla_de_paginas, (void*)no_presente);
+    int marco_libre = -1;
+
+    if (list_size(paginas_en_MV) > 0) {
+
+        t_pagina* pag_en_mv = list_get(paginas_en_MV, 0);
+        marco_libre = pag_en_mv->marco;
+    }
+
     pthread_mutex_unlock(&mutex_tabla_de_paginas);
 
-    for (int i = 0; i < tamanio_tabla; i++) {
-
-        // Filtramos por las páginas que tengan P=0
-        t_list* paginas_sin_presencia = list_filter(tabla_de_paginas, (void*)no_presente);
-
-        // Concatenamos la lista filtrada a la lista principal
-        list_add_all(paginas_en_MV, paginas_sin_presencia);
-
-        // Liberamos la lista filtrada
-        list_destroy(paginas_sin_presencia);
-    }
-
-    //si todos los marcos estan llenos
-    if(list_size(paginas_en_MV) == 0)
-    {
-        return -1;
-    }
-
-    // Obtenemos la primer página de esa lista
-    t_pagina* pag_en_mv = list_get(paginas_en_MV, 0);
-
-    // Borramos la lista y obtenemos el primer marco
     list_destroy(paginas_en_MV);
-    return pag_en_mv->marco;
+
+    return marco_libre;
 }
