@@ -286,60 +286,13 @@ void free_array (char ** array){
 	free(array);
 }
 
-
-/*/================================================== BUFFER =====================================================================
-void* recibir_buffer(int* size, int socket_cliente) {
-     void * buffer;
-
-     recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
-     buffer = malloc(*size);
-     recv(socket_cliente, buffer, *size, MSG_WAITALL);
-
-     return buffer;
- }
-
-void agregar_a_buffer(t_buffer *buffer, void *src, int size) {
-	buffer->stream = realloc(buffer->stream, buffer->stream_size + size);
-	memcpy(buffer->stream + buffer->stream_size, src, size);
-	buffer->stream_size+=size;
-}
-
-t_buffer *inicializar_buffer_con_parametros(uint32_t size, void *stream) {
-	t_buffer *buffer = (t_buffer *)malloc(sizeof(t_buffer));
-	buffer->stream_size = size;
-	buffer->stream = stream;
-	return buffer;
+void free_list(t_list* lista) {
+	int tamanio = list_size(lista);
+    for (int i = 0; i < tamanio; i++) {
+        free(list_get(lista, i));  
+    }
 }
 
 
-//================================================== MENSAJES =====================================================================
-
-void enviar_mensaje(char *mensaje, int socket_cliente) //TP0
-{
-    t_paquete *paquete = malloc(sizeof(t_paquete));
-
-    //paquete->codigo_operacion = MENSAJE;
-    paquete->buffer = malloc(sizeof(t_buffer));
-    paquete->buffer->stream_size = strlen(mensaje) + 1;
-    paquete->buffer->stream = malloc(paquete->buffer->stream_size);
-    memcpy(paquete->buffer->stream, mensaje, paquete->buffer->stream_size);
-
-    int bytes = paquete->buffer->stream_size + 2 * sizeof(int);
-
-    void *a_enviar = serializar_paquete(paquete,bytes);
-
-    send(socket_cliente, a_enviar, bytes, 0);
-
-    free(a_enviar);
-    eliminar_paquete(paquete);
-}
-
-void recibir_mensaje(int socket_cliente,t_log* logger) { //TP0
-    int size;
-    char* buffer = recibir_buffer(&size, socket_cliente);
-    log_info(logger, "Me llego el mensaje %s", buffer);
-    free(buffer);
-}
-*/
 
 

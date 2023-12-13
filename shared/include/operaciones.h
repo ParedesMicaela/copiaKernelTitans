@@ -193,7 +193,7 @@ int recibir_datos(int , void *, uint32_t );
 t_paquete *crear_paquete_con_codigo_de_operacion(uint8_t codigo);
 void crear_buffer(t_paquete *paquete);
 void *recibir_stream(int *size, int socket_cliente);
-
+void free_list(t_list* lista);
 
 //======================================================= Paquetes =========================================================================================================
 t_paquete* crear_paquete(op_code );

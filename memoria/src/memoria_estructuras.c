@@ -187,11 +187,11 @@ static void liberar_swap(int pid) {
 
 static void liberar_tabla_de_paginas(t_proceso_en_memoria* proceso) {
    
-    int cantidad_de_paginas = list_size(proceso->cantidad_entradas);
+    int cantidad_de_paginas = list_size(proceso->paginas_en_memoria);
 
     for (int i = 0; i < cantidad_de_paginas; i++) {
 
-        t_pagina* pagina = list_get(proceso->cantidad_entradas, i);
+        t_pagina* pagina = list_get(proceso->paginas_en_memoria, i);
 
         if(pagina != NULL) {
             free(pagina);
@@ -199,5 +199,5 @@ static void liberar_tabla_de_paginas(t_proceso_en_memoria* proceso) {
         
     }
 
-    list_destroy(proceso->cantidad_entradas);
+    list_destroy(proceso->paginas_en_memoria);
 }
