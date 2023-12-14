@@ -275,8 +275,11 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
             registro_JNZ = datos[1];
             num_instruccion = atoi(datos[2]);
-            if (registro_JNZ != 0) {
+            int valor_registro_JNZ = buscar_registro(registro_JNZ);
+            if (valor_registro_JNZ != 0) {
                  contexto_ejecucion->program_counter = num_instruccion;
+            }else if(valor_registro_JNZ == 0){
+                contexto_ejecucion->program_counter += 1;
             }
             break;
 

@@ -57,7 +57,7 @@ void manejo_conexiones(void* conexion)
 	int pid_proceso = 0;
 	int pid_proceso_escribir = 0;
 	int pid_proceso_leer = 0;
-	uint32_t valor_registro = 0;
+	int* valor_registro = 0;
 	uint32_t direccion_fisica = 0;
 	uint32_t direccion_logica = 0;
 	char* path_asignado = NULL;
@@ -165,7 +165,7 @@ void manejo_conexiones(void* conexion)
 		pid_proceso_escribir = sacar_entero_de_paquete(&stream);
 		direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
 		direccion_logica = sacar_entero_sin_signo_de_paquete(&stream);
-		valor_registro = sacar_entero_sin_signo_de_paquete(&stream);
+		valor_registro = sacar_entero_de_paquete(&stream);
 
 		escribir(&valor_registro, direccion_fisica, direccion_logica, pid_proceso_escribir, cliente);
 		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso_escribir, "ESCRIBIR", direccion_fisica);

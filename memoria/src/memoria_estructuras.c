@@ -144,6 +144,15 @@ int buscar_marco(int pid, int num_pagina){
     }
 }
 
+void desocupar_marco(int nro_marco)
+{
+    for (int i = 0; i < memoria.cantidad_marcos; i++) {
+        if (i == nro_marco) {
+            memoria.marcos[i].ocupado = false;
+        }
+    }
+}
+
 
 //======================================================= FINALIZAR_PROCESO =========================================================================================================
 
