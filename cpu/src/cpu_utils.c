@@ -125,9 +125,6 @@ void atender_dispatch()
 
         if (paquete->codigo_operacion == PCB)
         {
-            sem_wait(&checkeo_completado);
-            sem_wait(&inicia_ciclo);
-
             contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
             contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
             printf("Kernel me dice manda  PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
@@ -393,15 +390,6 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             break;
         }
 
-        sem_post(&revision_interrupt);
-
-        if(hay_interrupcion()) {
-             sem_wait(&check_interrupt);
-        }
-        sem_post(&inicia_ciclo);
-        sem_post(&checkeo_completado); 
-       
-
         //CHECK INTERRUPT
         if(hay_interrupcion() && tipo_interrupcion == 1) //POSIBLE CONDICION
         {
@@ -418,8 +406,6 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             devolver_contexto_ejecucion(contexto_ejecucion, "finalizacion", "basura", 0, -1, "basura", "basura",-1);
             seguir_ejecutando = false;
         } 
-        sem_post(&check_finalizado);
-
         string_array_destroy(datos);
     }
 
@@ -429,38 +415,34 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
     
 //================================================== Interrupt =====================================================================
 
-void atender_interrupt() 
+void atender_interrupt(void *socket_servidor_interrupt) 
 {
+    int conexion = *(int *)socket_servidor_interrupt;
+
     while (1)
     {
-        t_paquete *paquete = recibir_paquete(socket_servidor_interrupt);
+        t_paquete *paquete = recibir_paquete(conexion);
         void *stream = paquete->buffer->stream;
-        
+
         if (paquete->codigo_operacion == DESALOJO)
         {
-            tipo_interrupcion = sacar_entero_de_paquete(&stream); //POSIBLE CONDICION
+            tipo_interrupcion = sacar_entero_de_paquete(&stream); 
 
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion += 1;
             pthread_mutex_unlock(&mutex_interrupcion);
         }else if (paquete->codigo_operacion == FINALIZAR_PROCESO)
         {
-
             tipo_interrupcion = sacar_entero_de_paquete(&stream);
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion += 1;
             pthread_mutex_unlock(&mutex_interrupcion);
         } else {
-                            printf("ACA NO LLLLAEGAS MRD");
+            printf("No recibi una interrupcion\n");
+            abort();
         }
         eliminar_paquete(paquete);
-
-    sem_post(&check_interrupt);
-    sem_wait(&check_finalizado);
-    sem_post(&inicia_ciclo);
-    sem_post(&checkeo_completado);
     }
-
 }
 
 static bool hay_interrupcion()

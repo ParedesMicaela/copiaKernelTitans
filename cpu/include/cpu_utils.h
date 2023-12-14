@@ -26,11 +26,6 @@ extern int socket_cliente_dispatch;
 extern int socket_cliente_interrupt;
 extern int tam_pagina;
 extern bool hay_page_fault;
-extern sem_t revision_interrupt;
-extern sem_t checkeo_completado;
-extern sem_t check_finalizado;
-extern sem_t check_interrupt;
-extern sem_t inicia_ciclo;
 
 //======================= Estructuras =======================
 typedef struct  
@@ -67,7 +62,7 @@ void realizar_handshake();
 void ciclo_de_instruccion(t_contexto_ejecucion*);
 void*conexion_inicial_memoria();
 void atender_dispatch();
-void atender_interrupt(); 
+void atender_interrupt(void *socket_servidor_interrupt); 
 void finalizar_cpu();
 
 //======================= MEMORIA + REGISTROS=======================
