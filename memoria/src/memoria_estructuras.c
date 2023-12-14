@@ -154,6 +154,11 @@ int buscar_marco(int pid, int num_pagina){
 
 void finalizar_en_memoria(int pid) {
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid);
+
+     if (proceso_en_memoria->path_proceso != NULL) {
+    free(proceso_en_memoria->path_proceso);
+    }
+    
     liberar_swap(proceso_en_memoria);
     liberar_paginas(proceso_en_memoria);
 
@@ -162,10 +167,6 @@ void finalizar_en_memoria(int pid) {
 }
 
 static void liberar_paginas(t_proceso_en_memoria* proceso_en_memoria) {
-
-    if (proceso_en_memoria->path_proceso != NULL) {
-    free(proceso_en_memoria->path_proceso);
-    }
 
     int cantidad_de_paginas_a_liberar = proceso_en_memoria->cantidad_entradas;
 

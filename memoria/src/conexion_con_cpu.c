@@ -7,8 +7,6 @@ void enviar_paquete_handshake(int socket_cliente) {
 	agregar_entero_a_paquete(handshake,config_valores_memoria.tam_pagina);
 
 	enviar_paquete(handshake,socket_cliente);
-	log_info(memoria_logger,"Handshake enviado :)\n");
-	log_info(memoria_logger,"Se envio el tamaño de pagina %d bytes al CPU \n",config_valores_memoria.tam_pagina);
 
 	eliminar_paquete(handshake);
 }
@@ -93,7 +91,6 @@ char* buscar_path_proceso(int pid)
 void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid) {
     int marco;
     
-    //log_info(memoria_logger, "Se buscara marco en las tablas de paginas");
     marco = buscar_marco(pid, num_pagina);
     t_paquete* paquete = crear_paquete(NUMERO_MARCO);
     // El -1 lo vemos desde la cpu (Page Fault)

@@ -59,10 +59,10 @@ typedef struct
 //======================= Funciones AUXILIARES =======================
 void cargar_configuracion(char*);
 void realizar_handshake();
-void ciclo_de_instruccion(int, t_contexto_ejecucion*);
+void ciclo_de_instruccion(t_contexto_ejecucion*);
 void*conexion_inicial_memoria();
-void atender_dispatch(int);
-void atender_interrupt(void* );
+void atender_dispatch();
+void atender_interrupt(void *socket_servidor_interrupt); 
 void finalizar_cpu();
 
 //======================= MEMORIA + REGISTROS=======================
