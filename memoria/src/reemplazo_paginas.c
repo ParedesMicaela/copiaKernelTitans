@@ -24,8 +24,7 @@ void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid){
         
         //capaz va mutex
         int marco = buscar_marco_libre();
-
-        list_remove_element(proceso_en_memoria->paginas_en_memoria, (void*)pagina_recibida);
+        t_pagina* pagina_recibida = malloc(sizeof(t_pagina));
 
         pagina_recibida->id = pid;
         pagina_recibida->bit_de_presencia = 1;
@@ -34,9 +33,10 @@ void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid){
         pagina_recibida->ocupado = true;
         pagina_recibida->posicion_swap = posicion_swap;
         pagina_recibida->tiempo_uso = obtener_tiempo();
-        printf("\n tiempo uso: %d \n", pagina_recibida->tiempo_uso);
+        //printf("\n tiempo uso: %d \n", pagina_recibida->tiempo_uso);
         pagina_recibida->tiempo_de_carga = obtener_tiempo_carga();
 
+        //guardo las paginas presentes en memoria
         list_add(proceso_en_memoria->paginas_en_memoria, (void*)pagina_recibida);
 
         log_info(memoria_logger, "SWAP IN -  PID: %d - Marco: %d - Page In: %d - %d",pid, pagina_recibida->marco, pid, nro_pagina);
@@ -52,29 +52,21 @@ static bool memoria_llena() {
     int cantidad_maxima_de_paginas_en_memoria =  tamanio_memoria/tam_pagina;
 
     t_list* paginas_presentes_en_memoria = list_create();
-    t_list* paginas_presentes = list_create();
 
     for (int i = 0; i < list_size(procesos_en_memoria); i++) {
 
         //agarro cada proceso en memoria
         t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
 
-        //busco dentro de las paginas de cada proceso, las que no estan presentes
-        paginas_presentes = list_filter(proceso->paginas_en_memoria, (void*)presente); 
-
-        //pongo en la lista todas las paginas que no estan presentes
-        list_add_all(paginas_presentes_en_memoria, paginas_presentes);
-
-        // Liberamos la lista filtrada
-        list_destroy(paginas_presentes);
+        //cuando cuantas paginas tiene presente en memoria
+        paginas_presentes_en_memoria += list_size(proceso->paginas_en_memoria);
     }
 
-    if(list_size(paginas_presentes_en_memoria) >= cantidad_maxima_de_paginas_en_memoria)
+    if(paginas_presentes_en_memoria == cantidad_maxima_de_paginas_en_memoria)
     {
         estoy_full = true;
     }
 
-    list_destroy(paginas_presentes_en_memoria);
     return estoy_full;
 }
 
@@ -145,13 +137,14 @@ static void reemplazar_con_FIFO(t_list* paginas_totales, t_pagina* pagina_reempl
 		escribir_en_swap(pagina_a_reemplazar, proceso_en_memoria->pid);
 	}
 
-    list_remove_element(proceso_en_memoria->paginas_en_memoria, (void*)pagina_reemplazante);
-
     pagina_reemplazante->bit_de_presencia = 1;
     pagina_reemplazante->ocupado = true;
     pagina_reemplazante->marco = pagina_a_reemplazar->marco;
     pagina_reemplazante->tiempo_uso = obtener_tiempo();
     pagina_reemplazante->tiempo_de_carga = obtener_tiempo_carga();
+
+    t_proceso_en_memoria* proceso_robado = buscar_proceso_en_memoria(pagina_a_reemplazar->id);
+    list_remove_element(proceso_robado->paginas_en_memoria, (void*)pagina_reemplazante);
 
     loggear_reemplazo(pagina_a_reemplazar, pagina_reemplazante);
 
@@ -200,38 +193,14 @@ static bool no_presente(t_pagina* pagina)
 		return (pagina->bit_de_presencia == 0);
 	}
 
-//busca de todos las paginas en memoria
-static int buscar_marco_libre() {
-
-    t_list* paginas_en_MV = list_create();
-
-    for (int i = 0; i < list_size(procesos_en_memoria); i++) {
-
-        //agarro cada proceso en memoria
-        t_proceso_en_memoria* proceso = list_get(procesos_en_memoria, i);
-
-        //busco dentro de las paginas de cada proceso, las que no estan presentes
-        t_list* paginas_sin_presencia = list_filter(proceso->paginas_en_memoria, (void*)no_presente);
-
-        //pongo en la lista todas las paginas que no estan presentes
-        list_add_all(paginas_en_MV, paginas_sin_presencia);
-
-        // Liberamos la lista filtrada
-        list_destroy(paginas_sin_presencia);
-    }
-
-    //obtenemos el marco de la primer pagina que no este en memoria y que tenga el marco disponible
-    for(int j = 0 ; j < list_size(paginas_en_MV) ; j++)
-    {
-        t_pagina* pag_en_mv = list_get(paginas_en_MV, j);
-
-        if(pag_en_mv->ocupado == false)
-        {
-            pag_en_mv->ocupado = true;
-            return pag_en_mv->marco;
+static int buscar_marco_libre()
+{
+    for (int i = 0; i < memoria.cantidad_marcos; i++) {
+        if (memoria.marcos[i].ocupado == false) {
+            memoria.marcos[i].ocupado = true;
+            return i; 
         }
     }
 
-    // Borramos la lista y obtenemos el primer marco
-    list_destroy(paginas_en_MV);
+    return -1; // Devuelve -1 si no hay marcos libres
 }

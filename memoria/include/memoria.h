@@ -63,6 +63,18 @@ typedef struct {
 	int tiempo_de_carga;
 } t_pagina;
 
+typedef struct {
+    bool ocupado;
+} t_marco;
+
+typedef struct {
+    t_marco* marcos;
+	int cantidad_marcos;
+} t_memoria_principal;
+
+extern t_memoria_principal memoria;
+
+
 typedef struct 
 {
 	int pid;

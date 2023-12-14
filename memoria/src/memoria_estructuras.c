@@ -11,6 +11,7 @@ t_bitarray* status_tabla_paginas = NULL;
 int tiempo = 0;
 int tiempo_carga = 0;
 pthread_mutex_t mutex_tiempo;
+t_memoria_principal memoria;
 
 t_list* bloques_reservados;
 //================================================= Funciones Internas ================================================
@@ -26,6 +27,8 @@ void creacion_espacio_usuario() {
         perror ("No se pudo alocar memoria al espacio de usuario.");
         abort();
     }
+
+    inicializar_la_tabla_de_paginas(config_valores_memoria.tam_memoria, config_valores_memoria.tam_pagina);
 	//liberar_espacio_usuario(); atexit? 
 }
 
@@ -49,31 +52,21 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_bytes_proceso, char* pat
 	char* instrucciones_leidas = leer_archivo_instrucciones(path_recibido);
     proceso_en_memoria->path_proceso = strdup(instrucciones_leidas);
 
-    inicializar_la_tabla_de_paginas(proceso_en_memoria, cantidad_paginas_proceso);
-
     list_add(procesos_en_memoria, (void*)proceso_en_memoria);
     
     log_info(memoria_logger, "PID: %d - Tamaño: %d", pid, cantidad_paginas_proceso);
 }
 
-void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad_paginas_proceso) {
+void inicializar_la_tabla_de_paginas(int tamanio_memoria, int tamanio_pagina) {
     
-    for (int i = 0; i < cantidad_paginas_proceso; i++) {
+    int cantidad_maxima_de_paginas_en_memoria =  tamanio_memoria/tamanio_pagina;
 
-        //creo una pagina por cada iteracion
-        t_pagina* tp = malloc(sizeof(t_pagina));
+    //voy a crear cantidad de marcos dependiendo del tamanio de mi memoria
+    memoria.marcos = malloc(cantidad_maxima_de_paginas_en_memoria * sizeof(t_marco));
+    memoria.cantidad_marcos = cantidad_maxima_de_paginas_en_memoria;
 
-        tp->id = proceso->pid;
-        tp->numero_de_pagina = i;
-        tp->marco = i;
-        tp->ocupado = false;
-        tp->bit_de_presencia = 0;
-        tp->bit_modificado = 0;
-        tp->posicion_swap = 0; // No en memoria
-        tp->tiempo_uso = 0;
-        tp->tiempo_de_carga = 0;
-
-        list_add(proceso->paginas_en_memoria, (t_pagina*)tp);
+    for (int i = 0; i < cantidad_maxima_de_paginas_en_memoria; i++) {
+        memoria.marcos[i].ocupado = false;
     }
 }
 
@@ -117,19 +110,25 @@ t_pagina* buscar_pagina(int pid, int num_pagina)
         return NULL;
     }
 
-    for (int i = 0; i < proceso_en_memoria->cantidad_entradas; i++) {
-        t_pagina* pagina_actual = list_get(proceso_en_memoria->paginas_en_memoria, i);
+    if(list_size(proceso_en_memoria->paginas_en_memoria) == NULL || list_size(proceso_en_memoria->paginas_en_memoria) == 0)
+    {
+        return -1;  
+    }else{
 
-        if (pagina_actual == NULL) {
-            return NULL;  
-        }
+        for (int i = 0; i < proceso_en_memoria->cantidad_entradas; i++) {        
+            t_pagina* pagina_actual = list_get(proceso_en_memoria->paginas_en_memoria, i);
 
-        if (pagina_actual->numero_de_pagina == num_pagina) {
-            return pagina_actual;
+            if (pagina_actual == NULL) {
+                return -1;  
+            }
+
+            if (pagina_actual->numero_de_pagina == num_pagina) {
+                return pagina_actual;
+            }
         }
     }
 
-    return NULL;
+    return -1;
 }
 
 //busco el marco dentro de las paginas del proceso
@@ -137,8 +136,11 @@ int buscar_marco(int pid, int num_pagina){
 
     t_pagina* pagina = buscar_pagina(pid, num_pagina);
 
-    if (pagina->bit_de_presencia == 0) {
+    if (pagina == NULL || pagina == -1) {
         return -1; //Si el marco es -1, significa que hay page_fault 
+    }else if(pagina->bit_de_presencia == 0)
+    {
+        return -1; //Si la pagina es -1, significa que hay page_fault 
     }   
     else {
         log_info(memoria_logger, "Acceso a tabla de paginas: PID: %d - Página: %d - Marco: %d", pid, num_pagina, pagina->marco); 
