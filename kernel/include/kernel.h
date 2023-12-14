@@ -72,6 +72,9 @@ extern char **nombres_recursos;
 extern int corriendo;
 extern bool hay_deadlock;
 extern bool existe_en_tabla;
+
+extern char* motivo_bloqueo;
+
 //==============================================================================================================================
 
 typedef struct

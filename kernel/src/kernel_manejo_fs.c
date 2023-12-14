@@ -8,6 +8,8 @@ bool existe_en_tabla = true;
 t_list *cola_locks_lectura; //tiene a todos los archivos que se estan leyendo
 op_code devuelto_por=-1;
 
+char* motivo_bloqueo;
+
 static int tipo_motivo(char *motivo);
 //=============================================================================================================
 
@@ -19,12 +21,25 @@ void iniciar_tabla_archivos_abiertos()
 
 void atender_peticiones_al_fs(t_pcb* proceso)
 {
+    log_info(kernel_logger, "Atendemos la peticion del fs");
+    
+    if(motivo_bloqueo!=NULL)
+    {
+        strcpy(proceso->motivo_bloqueo,motivo_bloqueo);
+        log_info(kernel_logger, "Guardamos %s en motivo de bloqueo de proceso", motivo_bloqueo);
+        free(motivo_bloqueo);
+        motivo_bloqueo = NULL;
+        log_info(kernel_logger, "Liberamos");
+    }
+   
     char* nombre_archivo = NULL;
     char* modo_apertura = NULL;
     int tamanio = 0 ;
     int puntero = 0;
     uint32_t direccion_fisica = 0;
     existe_en_tabla = false;
+   
+    int numero = tipo_motivo(proceso->motivo_bloqueo);
 
     switch(tipo_motivo(proceso->motivo_bloqueo)){  
 

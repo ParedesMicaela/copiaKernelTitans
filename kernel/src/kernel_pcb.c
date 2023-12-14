@@ -189,7 +189,7 @@ void eliminar_pcb(t_pcb* proceso)
         free(proceso->recurso_pedido);
     }
 
-    list_destroy(pcb->archivos_abiertos);
+    list_destroy(proceso->archivos_abiertos);
     free(proceso);
 }
 
