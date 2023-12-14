@@ -124,6 +124,7 @@ void escribir(uint32_t* valor, uint32_t direccion_fisica, uint32_t direccion_log
     }else{
         pagina->bit_modificado = 1;
         pagina->tiempo_uso = obtener_tiempo(); 
+        printf("\n tiempo uso: %d \n", pagina->tiempo_uso);
     }
 
     int se_ha_escrito = 1;
@@ -143,7 +144,7 @@ uint32_t leer(uint32_t direccion_fisica, uint32_t direccion_logica, int pid) {
 
     t_pagina* pagina = buscar_pagina(pid,nro_pagina);
 
-    pagina->tiempo_uso = obtener_tiempo(); 
+    pagina->tiempo_uso = obtener_tiempo();
 
 	return valor; 
 }

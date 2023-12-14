@@ -34,6 +34,7 @@ void escribir_en_memoria_principal(int nro_pagina, int posicion_swap, int pid){
         pagina_recibida->ocupado = true;
         pagina_recibida->posicion_swap = posicion_swap;
         pagina_recibida->tiempo_uso = obtener_tiempo();
+        printf("\n tiempo uso: %d \n", pagina_recibida->tiempo_uso);
         pagina_recibida->tiempo_de_carga = obtener_tiempo_carga();
 
         list_add(proceso_en_memoria->paginas_en_memoria, (void*)pagina_recibida);
@@ -98,6 +99,7 @@ static void reemplazar_pagina(t_pagina* pagina_reemplazante, t_proceso_en_memori
 
 int menos_usada(t_pagina* una_pag, t_pagina* otra_pag)
 {
+    //las paginas con numero mas grande van primero (u=1 se uso hace mas tiempo que u=8)
     return (otra_pag->tiempo_uso > una_pag->tiempo_uso); 
 }
 
@@ -119,6 +121,7 @@ static void reemplazar_con_LRU(t_list* paginas_totales, t_pagina* pagina_reempla
     pagina_reemplazante->bit_de_presencia = 1;
     pagina_reemplazante->ocupado = true;
     pagina_reemplazante->marco = pagina_a_reemplazar->marco;
+    pagina_reemplazante->tiempo_uso = obtener_tiempo();
     pagina_reemplazante->tiempo_de_carga = obtener_tiempo_carga();
 
     loggear_reemplazo(pagina_a_reemplazar, pagina_reemplazante);
@@ -142,12 +145,12 @@ static void reemplazar_con_FIFO(t_list* paginas_totales, t_pagina* pagina_reempl
 		escribir_en_swap(pagina_a_reemplazar, proceso_en_memoria->pid);
 	}
 
-
     list_remove_element(proceso_en_memoria->paginas_en_memoria, (void*)pagina_reemplazante);
 
     pagina_reemplazante->bit_de_presencia = 1;
     pagina_reemplazante->ocupado = true;
     pagina_reemplazante->marco = pagina_a_reemplazar->marco;
+    pagina_reemplazante->tiempo_uso = obtener_tiempo();
     pagina_reemplazante->tiempo_de_carga = obtener_tiempo_carga();
 
     loggear_reemplazo(pagina_a_reemplazar, pagina_reemplazante);
@@ -160,6 +163,7 @@ static void reemplazar_con_FIFO(t_list* paginas_totales, t_pagina* pagina_reempl
 
 int mas_vieja(t_pagina* una_pag, t_pagina* otra_pag)
 {
+    //las paginas con numero mas chico van primero (t=1 se cargo antes que t=8)
     return (otra_pag->tiempo_de_carga > una_pag->tiempo_de_carga); 
 }
 
