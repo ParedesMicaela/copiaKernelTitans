@@ -365,7 +365,7 @@ void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel)
 
 void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, int tamanio_actual_archivo, int bloque_inicial)
 {
-	int bloques_a_agregar = nuevo_tamanio_archivo - tamanio_actual_archivo;
+	int bloques_a_agregar = ((nuevo_tamanio_archivo - tamanio_actual_archivo)/tam_bloque);
 	
 	int posicion_ultimo_bloque = bloque_inicial + bloques_a_agregar;
 

@@ -32,7 +32,7 @@ extern int tamanio_archivo_bloques;
 extern int espacio_de_FAT;
 extern t_bitarray* mapa_bits_swap;
 extern t_dictionary* diccionario_archivos_abiertos;
-
+extern int proximo_bloque_inicial;
 
 //STRUCTS//
 typedef struct  

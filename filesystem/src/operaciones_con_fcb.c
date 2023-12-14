@@ -71,10 +71,11 @@ void cargamos_cambios_a_fcb(int tamanio_nuevo, char* nombre) {
 	log_info(filesystem_logger,"Terminamos y mandamos el fcb a actualizarse\n");
 }
 
+int proximo_bloque_inicial = 1;
+
 int calcular_bloque_inicial_archivo(int tamanio)
 {
-    int proximo_bloque_inicial = 1;
 	int devolver = proximo_bloque_inicial;
-	proximo_bloque_inicial+=tamanio;
+	proximo_bloque_inicial += (tamanio /tam_bloque);
 	return devolver;
 }
