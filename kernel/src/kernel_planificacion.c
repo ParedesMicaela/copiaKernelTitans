@@ -15,9 +15,12 @@ pthread_mutex_t mutex_exec;
 pthread_mutex_t mutex_exit;
 pthread_mutex_t mutex_colas;
 pthread_mutex_t mutex_corriendo;
+pthread_mutex_t mutex_corriendo_pf;
 pthread_mutex_t mutex_contexto;
 pthread_mutex_t mutex_cpu;
-pthread_cond_t cond_corriendo;
+pthread_cond_t cond_corriendo = PTHREAD_COND_INITIALIZER;
+pthread_cond_t cond_corriendo_pf = PTHREAD_COND_INITIALIZER;
+
 
 sem_t hay_proceso_nuevo;
 sem_t grado_multiprogramacion;
@@ -26,6 +29,8 @@ sem_t mutex_pid;
 
 char* motivo_de_devolucion;
 
+int pf_listo;
+int corriendo_pf = 1;
 int corriendo = 1;
 int id_evento_cpu;
 static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2);
@@ -54,9 +59,13 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_colas, NULL);
     pthread_mutex_init(&mutex_recursos, NULL);
     pthread_mutex_init(&mutex_corriendo , NULL);
-    pthread_mutex_init(&cond_corriendo , NULL);
+    //pthread_mutex_init(&cond_corriendo , NULL);
     pthread_mutex_init(&mutex_contexto , NULL);
     pthread_mutex_init(&mutex_cpu , NULL);
+    pthread_mutex_init(&mutex_corriendo_pf , NULL);
+    //pthread_mutex_init(&cond_corriendo_pf , NULL);
+
+
 
     sem_init(&grado_multiprogramacion, 0, config_valores_kernel.grado_multiprogramacion_ini);
     sem_init(&(hay_proceso_nuevo), 0, 0);
@@ -119,6 +128,8 @@ void proceso_en_ready()
 
 void proceso_en_execute(t_pcb *proceso_seleccionado)
 {
+    pf_listo = 1;
+
     if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR") == 0)
     {
         aumentar_evento_cpu();
@@ -234,7 +245,7 @@ static void a_mimir(t_pcb* proceso){
 
     log_info(kernel_logger, "PID[%d] bloqueado por %s\n", proceso->pid, proceso->motivo_bloqueo);
 
-    motivo_de_devolucion = string_duplicate(proceso->motivo_bloqueo);
+    //motivo_de_devolucion = string_duplicate(proceso->motivo_bloqueo);
 
     //Desalojamos el proceso
     pthread_mutex_lock(&mutex_exec);
@@ -246,23 +257,12 @@ static void a_mimir(t_pcb* proceso){
     meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
     pthread_mutex_unlock(&mutex_blocked);
 
-    detener_planificacion();
+    detener_pf();
 
-    if (string_equals_ignore_case(motivo_de_devolucion, "page_fault")){
-        
-        detener_planificacion();
+    if(pf_listo == 1)
+    {
 
-        pthread_t pcb_page_fault;
-        if (!pthread_create(&pcb_page_fault, NULL, (void *)proceso_en_page_fault, (void *)proceso)){
-            pthread_detach(pcb_page_fault);
-        } else {
-            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", motivo_de_devolucion);
-            abort();
-        }
-
-    free(motivo_de_devolucion);
-
-    } else if (string_equals_ignore_case(motivo_de_devolucion, "sleep")){
+     if (string_equals_ignore_case(proceso->motivo_bloqueo, "sleep")){
 
         pthread_t pcb_en_sleep;
         if (!pthread_create(&pcb_en_sleep, NULL, (void *)proceso_en_sleep, (void *)proceso)){
@@ -271,9 +271,8 @@ static void a_mimir(t_pcb* proceso){
             log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", motivo_de_devolucion);
             abort();
         }  
-            free(motivo_de_devolucion);
-
-    }  else if (es_una_operacion_con_archivos(motivo_de_devolucion)) {
+            //free(motivo_de_devolucion);
+        }  else if (es_una_operacion_con_archivos(proceso->motivo_bloqueo)) {
         pthread_t peticiones_fs;
         if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
             pthread_detach(peticiones_fs);
@@ -281,10 +280,21 @@ static void a_mimir(t_pcb* proceso){
             log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", motivo_de_devolucion);
             abort();
         }  
-            free(motivo_de_devolucion);
+            //free(motivo_de_devolucion);
+        } else if (string_equals_ignore_case(proceso->motivo_bloqueo, "page_fault")){
+        
+        pthread_t pcb_page_fault;
+        if (!pthread_create(&pcb_page_fault, NULL, (void *)proceso_en_page_fault, (void *)proceso)){
+            pthread_detach(pcb_page_fault);
+        } else {
+            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", motivo_de_devolucion);
+            abort();
+        }
+
+    //free(motivo_de_devolucion);
+        }
     }
 }
-
 void proceso_en_exit(t_pcb *proceso)
 {
     algoritmo algoritmo_elegido = obtener_algoritmo();
@@ -341,12 +351,16 @@ void proceso_en_sleep(t_pcb *proceso)
 
 void proceso_en_page_fault(t_pcb* proceso){
 
+    if(pf_listo == 1) {
+
     log_info(kernel_logger, "Page Fault PID: %d - Pagina: %d", proceso->pid, proceso->pagina_pedida); 
 
     atender_page_fault(proceso);
 
     //una vez se atienda, el proceso vuelve a ready
     obtener_siguiente_blocked(proceso);
+    }    
+   
 }
 
 //======================================================== Algoritmos ==================================================================
@@ -656,6 +670,15 @@ void detener_planificacion () {
             pthread_cond_wait(&cond_corriendo, &mutex_corriendo);
         }
         pthread_mutex_unlock(&mutex_corriendo);
+}
+
+void detener_pf() {
+    pthread_mutex_lock(&mutex_corriendo_pf);
+    while (corriendo_pf == 0) { // Mientras no se detenga
+           
+        pthread_cond_wait(&cond_corriendo_pf, &mutex_corriendo_pf);
+    }
+    pthread_mutex_unlock(&mutex_corriendo_pf);
 }
 
 static void aumentar_evento_cpu() {

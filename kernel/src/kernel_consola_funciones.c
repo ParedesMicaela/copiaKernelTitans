@@ -12,16 +12,30 @@ void iniciar_proceso(char *path, int tam_proceso_swap, int prioridad)
 void consola_detener_planificacion() {
     printf("PAUSA DE PLANIFICACIÓN \n");
 
+    if(corriendo_pf){
+    pthread_mutex_lock(&mutex_corriendo_pf);
+    corriendo_pf = 0;  //Bandera en Pausa
+    pthread_mutex_unlock(&mutex_corriendo_pf);
+    pf_listo = 0;
+    }
+
     if(corriendo){
     pthread_mutex_lock(&mutex_corriendo);
     corriendo = 0;  //Bandera en Pausa
     pthread_mutex_unlock(&mutex_corriendo);
+    pf_listo = 0;
     }
     else printf("Ya esta detenida flaco");
 }
 
 void consola_iniciar_planificacion() {
 
+    if(!corriendo_pf){
+        pthread_mutex_lock(&mutex_corriendo_pf);
+        pthread_cond_broadcast(&cond_corriendo_pf);  
+        corriendo_pf = 1;  // Bandera sigue
+        pthread_mutex_unlock(&mutex_corriendo_pf);
+    }
   if(!corriendo) {
        printf("INICIO DE PLANIFICACIÓN \n");
         pthread_mutex_lock(&mutex_corriendo);

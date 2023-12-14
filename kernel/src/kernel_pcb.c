@@ -167,7 +167,7 @@ char* recibir_contexto(t_pcb* proceso)
         free(proceso->modo_apertura); 
         proceso->modo_apertura = NULL;
     }
-    log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
+    log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, proceso->motivo_bloqueo);
 
     eliminar_paquete(paquete);
     return proceso->motivo_bloqueo;
@@ -185,6 +185,7 @@ void eliminar_pcb(t_pcb* proceso)
 
     list_destroy(proceso->archivos_abiertos);
     free(proceso);
+    proceso = NULL;
 }
 
 void eliminar_recursos_asignados(t_pcb* proceso) {

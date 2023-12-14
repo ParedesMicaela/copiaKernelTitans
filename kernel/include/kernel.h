@@ -48,6 +48,8 @@ extern pthread_mutex_t mutex_colas;
 extern t_dictionary_int *diccionario_colas;
 extern pthread_mutex_t mutex_corriendo;
 extern pthread_cond_t cond_corriendo;
+extern pthread_mutex_t mutex_corriendo_pf;
+extern pthread_cond_t cond_corriendo_pf;
 
 
 extern t_list *cola_NEW;
@@ -56,10 +58,8 @@ extern t_list *cola_BLOCKED;
 extern t_list *cola_EXEC;
 extern t_list *cola_EXIT;
 
-//cola de locks (peticiones)
 extern t_list *cola_locks_escritura; 
 extern t_list *cola_locks_lectura;
-//extern t_list *cola_locks_bloqueados;
 extern t_list* tabla_global_archivos_abiertos;
 
 extern t_list *lista_recursos;
@@ -68,12 +68,13 @@ extern int *instancias_maximas_del_recurso;
 extern char **recursos;
 extern char **nombres_recursos;
 
-
+extern int corriendo_pf;
 extern int corriendo;
 extern bool hay_deadlock;
 extern bool existe_en_tabla;
 
 extern char* motivo_de_devolucion;
+extern int pf_listo;
 
 //==============================================================================================================================
 
@@ -174,6 +175,7 @@ void consola_iniciar_planificacion();
 void consola_modificar_multiprogramacion(int);
 void consola_proceso_estado();
 void detener_planificacion ();
+void detener_pf ();
 
 ////======================================== File System ===========================================================================================================
 void atender_peticiones_al_fs(t_pcb* proceso);
