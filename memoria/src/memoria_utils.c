@@ -125,8 +125,12 @@ void manejo_conexiones(void* conexion)
 
 	case LISTA_BLOQUES_RESERVADOS:
 	    t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid_fs); 
-		proceso_en_memoria->bloques_reservados = sacar_lista_de_cadenas_de_paquete(&stream);
+		t_list* lista_aux;
+		lista_aux = sacar_lista_de_cadenas_de_paquete(&stream);
 
+		list_add_all(proceso_en_memoria->bloques_reservados, lista_aux);
+		list_destroy(lista_aux);
+		
 		sem_post(&swap_creado);
 		break;
 
@@ -227,6 +231,7 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_instrucciones, NULL);
     pthread_mutex_init(&mutex_lista_instrucciones, NULL);
     pthread_mutex_init(&mutex_path, NULL);
+	pthread_mutex_init(&mutex_tiempo, NULL);
 
 	sem_init(&(swap_creado), 0, 0);
     sem_init(&(solucionado_pf), 0, 0);

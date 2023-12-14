@@ -15,7 +15,7 @@ sem_t swap_finalizado;
 
 t_list* bloques_reservados;
 //================================================= Funciones Internas ================================================
-static void liberar_swap(int pid);
+static void liberar_swap(t_proceso_en_memoria* proceso);
 static void liberar_paginas(t_proceso_en_memoria* proceso_en_memoria);
 static void liberar_tabla_de_paginas(t_proceso_en_memoria* proceso);
 //================================================= Creacion Estructuras ====================================================
@@ -50,7 +50,7 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_bytes_proceso, char* pat
 	char* instrucciones_leidas = leer_archivo_instrucciones(path_recibido);
     proceso_en_memoria->path_proceso = strdup(instrucciones_leidas);
 
-    free(instrucciones_leidas);
+    free(instrucciones_leidas); //ESTE
 
     inicializar_la_tabla_de_paginas(proceso_en_memoria, cantidad_paginas_proceso);
 
@@ -61,8 +61,6 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_bytes_proceso, char* pat
 
 void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad_paginas_proceso) {
     
-    pthread_mutex_init(&mutex_tiempo, NULL);
-
     for (int i = 0; i < cantidad_paginas_proceso; i++) {
 
         //creo una pagina por cada iteracion
@@ -73,7 +71,7 @@ void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad
         tp->marco = i;
         tp->bit_de_presencia = 0;
         tp->bit_modificado = 0;
-        tp->posicion_swap = 0; // No en memoria
+        tp->posicion_swap = 0; 
         tp->tiempo_uso = 0;
         tp->tiempo_de_carga = 0;
 
@@ -156,8 +154,8 @@ int buscar_marco(int pid, int num_pagina){
 
 void finalizar_en_memoria(int pid) {
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid);
+    liberar_swap(proceso_en_memoria);
     liberar_paginas(proceso_en_memoria);
-    liberar_swap(pid);
 
     list_remove_element(procesos_en_memoria,proceso_en_memoria);
     free(proceso_en_memoria); 
@@ -179,9 +177,11 @@ static void liberar_paginas(t_proceso_en_memoria* proceso_en_memoria) {
 
 }
 
-static void liberar_swap(int pid) {
+static void liberar_swap(t_proceso_en_memoria* proceso) {
+
     t_paquete* paquete = crear_paquete(LIBERAR_SWAP);
-    agregar_entero_a_paquete(paquete, pid);
+    agregar_entero_a_paquete(paquete, proceso->pid);
+    agregar_lista_de_cadenas_a_paquete(paquete, proceso->bloques_reservados);
     enviar_paquete(paquete, socket_fs);
     eliminar_paquete(paquete);
 

@@ -136,9 +136,14 @@ void atender_clientes_filesystem(void* conexion) {
 				break;
 
 			case LIBERAR_SWAP:
-				//bloques_a_liberar = sacar_lista_de_cadenas_de_paquete(&stream); 
 				pid = sacar_entero_de_paquete(&stream);
-				liberar_bloques(pid);
+    			t_proceso_en_filesystem* proceso = buscar_proceso_en_filesystem(pid);
+				t_list* lista_aux;
+				lista_aux = sacar_lista_de_cadenas_de_paquete(&stream);
+				list_add_all(proceso->bloques_reservados, lista_aux);
+				list_destroy(lista_aux);
+
+				liberar_bloques(proceso->bloques_reservados, proceso);
 			break;
 
 			case PAGINA_SWAP_OUT:

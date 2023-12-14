@@ -104,7 +104,6 @@ void crear_fat();
 fcb* levantar_fcb (char * path);
 void crear_archivo (char *nombre_archivo, int socket_kernel);
 void abrir_archivo (char *nombre_archivo, int socket_kernel);
-void liberar_bloque_individual(bloque_swap* bloque);
 char* devolver_direccion_archivo(char* nombre);
 void cargamos_cambios_a_fcb(int tamanio_nuevo, char* nombre);
 
@@ -155,7 +154,7 @@ void mapear_archivo_de_bloques();
 
 //..................................FUNCIONES SWAP.....................................................................
 t_list* reservar_bloques(int pid, int cantidad_bloques);
-void liberar_bloques(int pid);
+void liberar_bloques(t_list* lista_bloques_swap, t_proceso_en_filesystem* proceso);
 void enviar_bloques_reservados(t_list* bloques_reservados);
 bloque_swap* buscar_bloque_swap(int nro_pagina, int pid);
 void bloque_libre_swap (int i);
@@ -165,5 +164,6 @@ void ocupar_bloque(int i);
 void swap_out(int pid, int nro_pagina);
 void swap_in(int pid, int nro_pag_pf, int posicion_swap);
 void inicializar_swap();
+t_proceso_en_filesystem* buscar_proceso_en_filesystem(int pid);
 
 #endif

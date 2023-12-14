@@ -188,6 +188,9 @@ void eliminar_pcb(t_pcb* proceso)
      if (proceso->recurso_pedido != NULL) {
         free(proceso->recurso_pedido);
     }
+
+    list_destroy(pcb->archivos_abiertos);
+    free(proceso);
 }
 
 void eliminar_recursos_asignados(t_pcb* proceso) {

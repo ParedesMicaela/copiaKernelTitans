@@ -4,7 +4,6 @@ t_list* procesos_en_filesystem;
 t_bitarray* mapa_bits_swap;
 FILE* archivo_de_bloques;
 
-static t_proceso_en_filesystem* buscar_proceso_en_filesystem(int pid);
 static void avisar_a_memoria_bloques_liberados();
 //==============================================================================================================
 void inicializar_swap()
@@ -44,8 +43,7 @@ t_list* reservar_bloques(int pid, int cantidad_bloques)
             list_add(proceso_en_filesystem->bloques_reservados, (void*)nuevo_bloque);
         } else {
             // Si no se pudo reservar un bloque, liberamos los bloques previamente reservados
-            liberar_bloques(proceso_en_filesystem->bloques_reservados);
-            free(proceso_en_filesystem); 
+            liberar_bloques(proceso_en_filesystem->bloques_reservados, proceso_en_filesystem);
             return NULL;
         }
     }
@@ -92,7 +90,8 @@ void enviar_bloques_reservados(t_list* bloques_reservados) {
 //===================================================== BUSCAR ================================================
 
 //tengo una lista de procesos en fs 
-static t_proceso_en_filesystem* buscar_proceso_en_filesystem(int pid) {
+t_proceso_en_filesystem* buscar_proceso_en_filesystem(int pid) 
+{
     int i;
     for (i=0; i < list_size(procesos_en_filesystem); i++){
         if ( ((t_proceso_en_filesystem*) list_get(procesos_en_filesystem, i)) -> pid == pid){
@@ -177,39 +176,30 @@ void swap_in(int pid, int nro_pag, int posicion_swap)
 
 //=================================================== FINALIZACION =========================================
 
-void liberar_bloques(int pid)
+void liberar_bloques(t_list* lista_bloques_swap, t_proceso_en_filesystem* proceso)
 {
 	//Busco el proceso y cuantos bloques tiene
-	t_proceso_en_filesystem* proceso_en_filesystem = buscar_proceso_en_filesystem(pid);
-	int cantidad_bloques_a_liberar = list_size(proceso_en_filesystem->bloques_reservados);
-    log_info(filesystem_logger, "Liberando bloques de swap del PID: %d - Cantidad bloques a liberar: %d\n", pid, cantidad_bloques_a_liberar);
+	int cantidad_bloques_a_liberar = list_size(lista_bloques_swap);
+    log_info(filesystem_logger, "Liberando bloques de swap del PID: %d - Cantidad bloques a liberar: %d\n",proceso->pid, cantidad_bloques_a_liberar);
 
 	//Liberamos los bloques del proceso (Ponemos en 0)
 	for(int i = 0; i < cantidad_bloques_a_liberar; i++){
 
-		bloque_swap* bloque_a_liberar = list_get(proceso_en_filesystem->bloques_reservados, i);
-        bloque_a_liberar->nro_pagina = 0;
-        bloque_a_liberar->bit_presencia_swap = 10;
-        bloque_a_liberar->posicion_swap = 0; //tiene que ser el bloque dentro de todoe l swap
-        bloque_a_liberar->pid = 0;
-		list_replace(proceso_en_filesystem->bloques_reservados, i, bloque_a_liberar);
-        //bitarray_clean_bit(bitmap_archivo_bloques, i); no se si lo usamos al final
-        liberar_bloque_individual(bloque_a_liberar);
+		bloque_swap* bloque_a_liberar = list_get(lista_bloques_swap, i);
+		
+        if (bloque_a_liberar != NULL) 
+        free(bloque_a_liberar);
 	}
 
-    list_remove_element(procesos_en_filesystem, (void*)proceso_en_filesystem);
-	free(proceso_en_filesystem);
+    list_destroy(proceso->bloques_reservados);
+    list_remove_element(procesos_en_filesystem, (void*)proceso);
+	free(proceso);
 
     avisar_a_memoria_bloques_liberados();
 
     log_info(filesystem_logger, "Bloques de swap liberados exitosamente\n");	
 }
 
-void liberar_bloque_individual(bloque_swap* bloque) {
-    if (bloque != NULL) {
-        free(bloque);
-    }
-}
 
 static void avisar_a_memoria_bloques_liberados() {
     t_paquete* paquete = crear_paquete(FILESYSTEM_LIBERA_BLOQUES);

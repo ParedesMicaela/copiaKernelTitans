@@ -65,7 +65,7 @@ int escribirArchivo(char *nombreArchivo, uint32_t *puntero_archivo, size_t bytes
 	//vamos a ese numero de bloque	
 	
 	//escbirir el bloque con lo que nos mandaron
-    /*
+    
 	uint32_t end_of_file = UINT32_MAX; 
     fseek(archivo_fat, block_number * bytesAEscribir, SEEK_SET);
     fwrite(&memoriaAEscribir, bytesAEscribir, 1, archivo_fat);
