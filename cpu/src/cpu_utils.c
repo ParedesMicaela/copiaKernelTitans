@@ -23,12 +23,11 @@ static void recibir_handshake();
 static int sumar_registros(char *registro_destino, char *registro_origen);
 static int restar_registros(char *registro_destino, char *registro_origen);
 static int tipo_inst(char *instruccion);
-static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char* recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int tamanio_archivo);
-static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int tamanio_archivo);
+static void devolver_contexto_ejecucion(t_contexto_ejecucion *contexto_ejecucion, char *motivo, char* recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int tamanio_archivo);
+static void enviar_contexto(t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int tamanio_archivo);
 static void pedir_instruccion(int posicion, int pid);
 static void recibir_instruccion();
 static bool hay_interrupcion();
-//static void mostrar_valores (t_contexto_ejecucion* contexto);
 
 
 //================================================== Configuracion =====================================================================
@@ -114,52 +113,57 @@ static void pedir_instruccion(int posicion, int pid)
 
 //================================================== Dispatch =====================================================================
 
-// por aca el kernel nos va a mandar el pcb y es el canal importante donde recibimos y mandamos el contexto ejecucion
-void atender_dispatch(int socket_cliente_dispatch)
+void atender_dispatch()
 {
-    t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
-    void *stream = paquete->buffer->stream;
-    
-    t_contexto_ejecucion* contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
-    contexto_ejecucion->recursos_asignados = malloc(3 *sizeof(t_recursos_asignados));
-
-    if (paquete->codigo_operacion == PCB)
+    while(1) 
     {
-        contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
-        contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
-        contexto_ejecucion->puntero = sacar_entero_sin_signo_de_paquete(&stream);
-        contexto_ejecucion->registros_cpu.AX = sacar_entero_sin_signo_de_paquete(&stream);
-        contexto_ejecucion->registros_cpu.BX = sacar_entero_sin_signo_de_paquete(&stream);
-        contexto_ejecucion->registros_cpu.CX = sacar_entero_sin_signo_de_paquete(&stream);
-        contexto_ejecucion->registros_cpu.DX = sacar_entero_sin_signo_de_paquete(&stream);
-        contexto_ejecucion->direccion_fisica_proceso = sacar_entero_sin_signo_de_paquete(&stream);
+        t_paquete *paquete = recibir_paquete(socket_cliente_dispatch);
+        void *stream = paquete->buffer->stream;
+        
+        t_contexto_ejecucion* contexto_ejecucion = malloc(sizeof(t_contexto_ejecucion));
+        contexto_ejecucion->recursos_asignados = malloc(3 *sizeof(t_recursos_asignados));
 
-        // Iterar sobre cada recurso y recibir la información del paquete
-        for (int i = 0; i < tamanio_recursos; ++i) {
+        if (paquete->codigo_operacion == PCB)
+        {
+            sem_wait(&checkeo_completado);
+            sem_wait(&inicia_ciclo);
 
-            char* nombre = sacar_cadena_de_paquete(&stream);
-            strcpy(contexto_ejecucion->recursos_asignados[i].nombre_recurso,nombre); 
-            contexto_ejecucion->recursos_asignados[i].instancias_recurso = sacar_entero_de_paquete(&stream);
-            free(nombre);
+            contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
+            contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
+            printf("Kernel me dice manda  PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
+            contexto_ejecucion->puntero = sacar_entero_sin_signo_de_paquete(&stream);
+            contexto_ejecucion->registros_cpu.AX = sacar_entero_sin_signo_de_paquete(&stream);
+            contexto_ejecucion->registros_cpu.BX = sacar_entero_sin_signo_de_paquete(&stream);
+            contexto_ejecucion->registros_cpu.CX = sacar_entero_sin_signo_de_paquete(&stream);
+            contexto_ejecucion->registros_cpu.DX = sacar_entero_sin_signo_de_paquete(&stream);
+            contexto_ejecucion->direccion_fisica_proceso = sacar_entero_sin_signo_de_paquete(&stream);
+
+            // Iterar sobre cada recurso y recibir la información del paquete
+            for (int i = 0; i < tamanio_recursos; ++i) {
+
+                char* nombre = sacar_cadena_de_paquete(&stream);
+                strcpy(contexto_ejecucion->recursos_asignados[i].nombre_recurso,nombre); 
+                contexto_ejecucion->recursos_asignados[i].instancias_recurso = sacar_entero_de_paquete(&stream);
+                free(nombre);
+            }
+
+            // iniciamos el procedimiento para procesar cualquier instruccion
+            ciclo_de_instruccion(contexto_ejecucion);
+        }
+        if(paquete->codigo_operacion != PCB)
+        {
+        perror("No se recibio correctamente el PCB");  
+        abort();
         }
 
-        // iniciamos el procedimiento para procesar cualquier instruccion
-        ciclo_de_instruccion(socket_cliente_dispatch, contexto_ejecucion);
+        free(contexto_ejecucion);
+        eliminar_paquete(paquete);
     }
-    if(paquete->codigo_operacion != PCB)
-    {
-       perror("No se recibio correctamente el PCB");  
-       abort();
-    }
-
-    free(contexto_ejecucion);
-    eliminar_paquete(paquete);
 }
 
 //================================================== Ciclo de Instruccion =====================================================================
 
-// le pasamos el socket del kernel y el socket de la memoria, porque son los modulos con los que voy a tener que relacionarme
-void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *contexto_ejecucion)
+void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
 {
     bool seguir_ejecutando = true;
     bool ejecuto_instruccion = true;
@@ -173,7 +177,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
         //=============================================== FETCH =================================================================
         log_info(cpu_logger, "PID: %d - FETCH - Program Counter: %d", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
 
-        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d\n", AX, BX, CX, DX);
+        //log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d\n", AX, BX, CX, DX);
 
         //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
         pedir_instruccion(contexto_ejecucion->program_counter, contexto_ejecucion->pid);
@@ -207,7 +211,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
         {
             int numero_pagina = floor(direccion_logica_aux / tam_pagina);
             log_info(cpu_logger, "Page Fault: PID %d - Pagina %d", contexto_ejecucion->pid, numero_pagina);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "page_fault", "", 0, numero_pagina, "", "", -1);
+            devolver_contexto_ejecucion(contexto_ejecucion, "page_fault", "", 0, numero_pagina, "", "", -1);
             seguir_ejecutando = false;
             ejecuto_instruccion = false;
             hay_page_fault = false;
@@ -277,6 +281,8 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             num_instruccion = atoi(datos[2]);
             if (registro_JNZ != 0) {
                  contexto_ejecucion->program_counter = num_instruccion;
+                printf("JNZ me coloca  PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
+
             }
             break;
 
@@ -284,7 +290,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             tiempo = atoi(datos[1]);
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "sleep", "basura", tiempo, -1, "basura", "basura",-1); 
+            devolver_contexto_ejecucion(contexto_ejecucion, "sleep", "basura", tiempo, -1, "basura", "basura",-1); 
             seguir_ejecutando = false;
             break;
 
@@ -292,7 +298,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso_wait = datos[1];
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "wait",recurso_wait, 0, -1, "basura", "basura", -1);
+            devolver_contexto_ejecucion(contexto_ejecucion, "wait",recurso_wait, 0, -1, "basura", "basura", -1);
             seguir_ejecutando = false;
             break;
 
@@ -300,7 +306,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso_signal = datos[1];
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "signal", recurso_signal, 0, -1, "basura", "basura",-1);
+            devolver_contexto_ejecucion(contexto_ejecucion, "signal", recurso_signal, 0, -1, "basura", "basura",-1);
             seguir_ejecutando = false;
             break;
 
@@ -327,7 +333,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             nombre_archivo_f_open = datos[1];
             modo_apertura_f_open = datos[2];
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_open", "basura", 0, -1, nombre_archivo_f_open, modo_apertura_f_open,-1);
+            devolver_contexto_ejecucion(contexto_ejecucion, "f_open", "basura", 0, -1, nombre_archivo_f_open, modo_apertura_f_open,-1);
             seguir_ejecutando = false;
             break;
 
@@ -335,7 +341,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             nombre_archivo_f_close = datos[1];
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_close", "basura", 0, -1, nombre_archivo_f_close, "basura",-1);
+            devolver_contexto_ejecucion(contexto_ejecucion, "f_close", "basura", 0, -1, nombre_archivo_f_close, "basura",-1);
             seguir_ejecutando = false;
             break;
 
@@ -344,7 +350,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             nombre_archivo_f_truncate = datos[1];
             tamanio = atoi(datos[2]); 
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_truncate", "basura", 0, -1, nombre_archivo_f_truncate, "basura", tamanio);
+            devolver_contexto_ejecucion(contexto_ejecucion, "f_truncate", "basura", 0, -1, nombre_archivo_f_truncate, "basura", tamanio);
             seguir_ejecutando = false;
             break;
         
@@ -354,7 +360,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             posicion = atoi(datos[2]);
             contexto_ejecucion->puntero = posicion;
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_seek", "basura", 0, -1, nombre_archivo_f_seek, "basura", -1);
+            devolver_contexto_ejecucion(contexto_ejecucion, "f_seek", "basura", 0, -1, nombre_archivo_f_seek, "basura", -1);
             seguir_ejecutando = false;
             break;
 
@@ -364,7 +370,7 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             nombre_archivo_f_read = datos[1];
             contexto_ejecucion->direccion_fisica_proceso = direccion_fisica;
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_read", "basura", 0, -1, nombre_archivo_f_read, "basura", -1);
+            devolver_contexto_ejecucion(contexto_ejecucion, "f_read", "basura", 0, -1, nombre_archivo_f_read, "basura", -1);
             seguir_ejecutando = false;
             }
             break;
@@ -375,33 +381,44 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
             nombre_archivo_f_write = datos[1];
             contexto_ejecucion->direccion_fisica_proceso = direccion_fisica;
             contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "f_write", "basura", 0, -1, nombre_archivo_f_write, "basura", -1);
+            devolver_contexto_ejecucion(contexto_ejecucion, "f_write", "basura", 0, -1, nombre_archivo_f_write, "basura", -1);
             seguir_ejecutando = false;
             }
             break;
 
         case (INSTRUCCION_EXIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "exit","basura", 0, -1, "basura", "basura", -1);
+            devolver_contexto_ejecucion(contexto_ejecucion, "exit","basura", 0, -1, "basura", "basura", -1);
             seguir_ejecutando = false;
             break;
-        } 
+        }
+
+        sem_post(&revision_interrupt);
+
+        if(hay_interrupcion()) {
+             sem_wait(&check_interrupt);
+        }
+        sem_post(&inicia_ciclo);
+        sem_post(&checkeo_completado); 
+       
 
         //CHECK INTERRUPT
-        if(hay_interrupcion() && tipo_interrupcion == 1) 
+        if(hay_interrupcion() && tipo_interrupcion == 1) //POSIBLE CONDICION
         {
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "desalojo", "basura", 0, -1, "basura", "basura",-1);
+            devolver_contexto_ejecucion(contexto_ejecucion, "desalojo", "basura", 0, -1, "basura", "basura",-1);
+            printf("Desalojo me dice manda  PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
             seguir_ejecutando = false;
         } else if(hay_interrupcion() && tipo_interrupcion == 2) {
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
-            devolver_contexto_ejecucion(socket_cliente_dispatch, contexto_ejecucion, "finalizacion", "basura", 0, -1, "basura", "basura",-1);
+            devolver_contexto_ejecucion(contexto_ejecucion, "finalizacion", "basura", 0, -1, "basura", "basura",-1);
             seguir_ejecutando = false;
         } 
+        sem_post(&check_finalizado);
 
         string_array_destroy(datos);
     }
@@ -412,35 +429,38 @@ void ciclo_de_instruccion(int socket_cliente_dispatch, t_contexto_ejecucion *con
     
 //================================================== Interrupt =====================================================================
 
-// este canal se va a usar para mensajes de interrupcion
-void atender_interrupt(void *socket_servidor_interrupt) 
+void atender_interrupt() 
 {
-    int conexion = *(int *)socket_servidor_interrupt;
-
     while (1)
     {
-        t_paquete *paquete = recibir_paquete(conexion);
+        t_paquete *paquete = recibir_paquete(socket_servidor_interrupt);
         void *stream = paquete->buffer->stream;
-
+        
         if (paquete->codigo_operacion == DESALOJO)
         {
-            tipo_interrupcion = sacar_entero_de_paquete(&stream); 
+            tipo_interrupcion = sacar_entero_de_paquete(&stream); //POSIBLE CONDICION
 
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion += 1;
             pthread_mutex_unlock(&mutex_interrupcion);
         }else if (paquete->codigo_operacion == FINALIZAR_PROCESO)
         {
+
             tipo_interrupcion = sacar_entero_de_paquete(&stream);
             pthread_mutex_lock(&mutex_interrupcion);
             interrupcion += 1;
             pthread_mutex_unlock(&mutex_interrupcion);
         } else {
-            printf("No recibi una interrupcion\n");
-            abort();
+                            printf("ACA NO LLLLAEGAS MRD");
         }
         eliminar_paquete(paquete);
+
+    sem_post(&check_interrupt);
+    sem_wait(&check_finalizado);
+    sem_post(&inicia_ciclo);
+    sem_post(&checkeo_completado);
     }
+
 }
 
 static bool hay_interrupcion()
@@ -584,22 +604,22 @@ static int tipo_inst(char *instruccion)
 
 //================================================== CONTEXTO =====================================================================
 
-static void devolver_contexto_ejecucion(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo, char *recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int tamanio_archivo)
+static void devolver_contexto_ejecucion(t_contexto_ejecucion *contexto_ejecucion, char *motivo, char *recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int tamanio_archivo)
 {
     // aca nosotros agregamos las modificaciones de los registros
     (contexto_ejecucion->registros_cpu.AX) = AX;
     (contexto_ejecucion->registros_cpu.BX) = BX;
     (contexto_ejecucion->registros_cpu.CX) = CX;
     (contexto_ejecucion->registros_cpu.DX) = DX;
-    enviar_contexto(socket_cliente, contexto_ejecucion, motivo, recurso, tiempo, numero_pagina, nombre_archivo, modo_apertura, tamanio_archivo);
+    enviar_contexto(contexto_ejecucion, motivo, recurso, tiempo, numero_pagina, nombre_archivo, modo_apertura, tamanio_archivo);
 }
 
-static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int tamanio_archivo )
+static void enviar_contexto(t_contexto_ejecucion *contexto_ejecucion, char *motivo,char *recurso, int tiempo, int numero_pagina, char* nombre_archivo, char* modo_apertura, int tamanio_archivo )
 {
     t_paquete *paquete = crear_paquete(PCB);
 
-    // le mandamos esto porque creo que es lo unico que se cambia pero vemos
     agregar_entero_a_paquete(paquete, contexto_ejecucion->program_counter);
+    printf("CPU devuelve PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.AX);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.BX);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.CX);
@@ -614,19 +634,6 @@ static void enviar_contexto(int socket_cliente, t_contexto_ejecucion *contexto_e
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->direccion_fisica_proceso);
     agregar_entero_a_paquete(paquete, tamanio_archivo);
 
-    enviar_paquete(paquete, socket_cliente);
+    enviar_paquete(paquete, socket_cliente_dispatch);
     eliminar_paquete(paquete);
 }
-
-//================================================== FUNCIONES_AUXILIARES =====================================================================
-/*
-static void mostrar_valores (t_contexto_ejecucion* contexto)
-{
-    // estos son los registros de la cpu que ya inicializamos arriba y almacenan valores enteros no signados de 4 bytes
-    log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d", AX, BX, CX, DX);
-
-    for (int i = 0; i < tamanio_recursos; ++i) {
-        log_info(cpu_logger, "Recursos Asignados: %s - Cantidad: %d",contexto->recursos_asignados[i].nombre_recurso, contexto->recursos_asignados[i].instancias_recurso);
-    }
-}
-*/

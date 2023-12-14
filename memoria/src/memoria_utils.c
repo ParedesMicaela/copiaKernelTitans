@@ -37,7 +37,6 @@ int atender_clientes_memoria(int socket_servidor){
         *cliente_fd = esperar_cliente(socket_servidor);
 
 	if(cliente_fd != -1){
-		log_info(memoria_logger, "Se conecto un cliente \n");
 		pthread_t hilo_cliente;
 		pthread_create(&hilo_cliente, NULL, (void*) manejo_conexiones, cliente_fd);
 		pthread_detach(hilo_cliente);
@@ -72,7 +71,6 @@ void manejo_conexiones(void* conexion)
 	switch(paquete->codigo_operacion){		
 	case HANDSHAKE:
 		//Mandamos por Handshake el tam_pagina
-		log_info(memoria_logger,"Me llego el handshake :)\n");
 		int entero = sacar_entero_de_paquete(&stream);
 		enviar_paquete_handshake(cliente);
 		break;
@@ -110,12 +108,9 @@ void manejo_conexiones(void* conexion)
 
 		//De esta manera la memoria le pasa el path a la CPU
 		config_valores_memoria.path_instrucciones = path_recibido;
-		log_info(memoria_logger, "PATH recibido: %s", config_valores_memoria.path_instrucciones );
 
 		crear_tablas_paginas_proceso(pid_proceso, cantidad_paginas_proceso, path_recibido);
 		inicializar_swap_proceso(pid_proceso,cantidad_paginas_proceso);
-
-		pid_fs = pid_proceso;
 		
 		sem_wait(&swap_creado);
 		int ok_creacion = 1;
@@ -124,6 +119,7 @@ void manejo_conexiones(void* conexion)
 		break;
 
 	case LISTA_BLOQUES_RESERVADOS:
+		pid_fs = sacar_entero_de_paquete(&stream);
 	    t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid_fs); 
 		t_list* lista_aux;
 		lista_aux = sacar_lista_de_cadenas_de_paquete(&stream);

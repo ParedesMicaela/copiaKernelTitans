@@ -122,7 +122,7 @@ void atender_clientes_filesystem(void* conexion) {
 				bloques_a_reservar = sacar_entero_de_paquete(&stream);
 				bloques_reservados_a_enviar = reservar_bloques(pid,bloques_a_reservar); 
 				if(bloques_reservados_a_enviar != NULL) {
-					enviar_bloques_reservados(bloques_reservados_a_enviar);
+					enviar_bloques_reservados(bloques_reservados_a_enviar, pid);
 				}
 				else{
 					log_info(filesystem_logger,"No se pudieron reservar los bloques");
