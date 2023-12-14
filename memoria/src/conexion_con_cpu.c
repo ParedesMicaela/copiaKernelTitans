@@ -126,8 +126,6 @@ void escribir(uint32_t* valor, uint32_t direccion_fisica, uint32_t direccion_log
         pagina->tiempo_uso = obtener_tiempo(); 
     }
 
-    printf("\n cantidad de paginas que tioene el proceso %d  en mem: %d \n",pid ,list_size(proceso->paginas_en_memoria));
-
     int se_ha_escrito = 1;
     send(socket_cpu, &se_ha_escrito, sizeof(int), 0); 
 }

@@ -66,6 +66,7 @@ void inicializar_la_tabla_de_paginas(t_proceso_en_memoria* proceso, int cantidad
         tp->id = proceso->pid;
         tp->numero_de_pagina = i;
         tp->marco = i;
+        tp->ocupado = false;
         tp->bit_de_presencia = 0;
         tp->bit_modificado = 0;
         tp->posicion_swap = 0; // No en memoria

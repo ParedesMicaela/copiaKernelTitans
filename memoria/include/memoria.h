@@ -55,6 +55,7 @@ typedef struct {
 	int id;
     int numero_de_pagina;
     int marco; 
+	bool ocupado;
     int bit_de_presencia; 
     int bit_modificado; 
     int posicion_swap; 
