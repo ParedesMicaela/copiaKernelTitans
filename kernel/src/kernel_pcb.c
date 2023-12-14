@@ -103,7 +103,7 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 
     agregar_entero_a_paquete(paquete, pcb_a_enviar->pid);
     agregar_entero_a_paquete(paquete, pcb_a_enviar->program_counter);
-    log_info(kernel_logger, "Envio a cpu PID: %d PC:%d", pcb_a_enviar->pid, pcb_a_enviar->program_counter);
+    //log_info(kernel_logger, "Envio a cpu PID: %d PC:%d", pcb_a_enviar->pid, pcb_a_enviar->program_counter);
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->puntero);
 
     agregar_entero_sin_signo_a_paquete(paquete, pcb_a_enviar->registros_cpu.AX); 
@@ -135,7 +135,7 @@ char* recibir_contexto(t_pcb* proceso)
 	if(paquete->codigo_operacion == PCB)
 	{
         proceso->program_counter = sacar_entero_de_paquete(&stream);
-        log_info(kernel_logger, "Recibo de cpu PID: %d PC:%d", proceso->pid, proceso->program_counter);
+        //log_info(kernel_logger, "Recibo de cpu PID: %d PC:%d", proceso->pid, proceso->program_counter);
         AX = sacar_entero_sin_signo_de_paquete(&stream);
         BX = sacar_entero_sin_signo_de_paquete(&stream);
         CX = sacar_entero_sin_signo_de_paquete(&stream);
@@ -172,7 +172,7 @@ char* recibir_contexto(t_pcb* proceso)
         free(proceso->modo_apertura); 
         proceso->modo_apertura = NULL;
     }
-    //log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
+    log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
 
     eliminar_paquete(paquete);
     return motivo_de_devolucion;

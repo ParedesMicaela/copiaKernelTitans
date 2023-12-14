@@ -127,7 +127,7 @@ void atender_dispatch()
         {
             contexto_ejecucion->pid = sacar_entero_de_paquete(&stream);
             contexto_ejecucion->program_counter = sacar_entero_de_paquete(&stream);
-            printf("Kernel me dice manda  PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
+            //printf("Kernel me dice manda  PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
             contexto_ejecucion->puntero = sacar_entero_sin_signo_de_paquete(&stream);
             contexto_ejecucion->registros_cpu.AX = sacar_entero_sin_signo_de_paquete(&stream);
             contexto_ejecucion->registros_cpu.BX = sacar_entero_sin_signo_de_paquete(&stream);
@@ -278,7 +278,7 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             num_instruccion = atoi(datos[2]);
             if (registro_JNZ != 0) {
                  contexto_ejecucion->program_counter = num_instruccion;
-                printf("JNZ me coloca  PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
+                //printf("JNZ me coloca  PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
 
             }
             break;
@@ -397,7 +397,7 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             interrupcion = 0;
             pthread_mutex_unlock(&mutex_interrupcion);
             devolver_contexto_ejecucion(contexto_ejecucion, "desalojo", "basura", 0, -1, "basura", "basura",-1);
-            printf("Desalojo me dice manda  PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
+            //printf("Desalojo me manda  PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
             seguir_ejecutando = false;
         } else if(hay_interrupcion() && tipo_interrupcion == 2) {
             pthread_mutex_lock(&mutex_interrupcion);
@@ -601,7 +601,7 @@ static void enviar_contexto(t_contexto_ejecucion *contexto_ejecucion, char *moti
     t_paquete *paquete = crear_paquete(PCB);
 
     agregar_entero_a_paquete(paquete, contexto_ejecucion->program_counter);
-    printf("CPU devuelve PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
+    //printf("CPU devuelve PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.AX);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.BX);
     agregar_entero_sin_signo_a_paquete(paquete, contexto_ejecucion->registros_cpu.CX);
