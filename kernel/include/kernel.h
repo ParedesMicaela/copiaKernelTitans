@@ -73,7 +73,7 @@ extern int corriendo;
 extern bool hay_deadlock;
 extern bool existe_en_tabla;
 
-extern char* motivo_bloqueo;
+extern char* motivo_de_devolucion;
 
 //==============================================================================================================================
 

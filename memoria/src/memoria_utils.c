@@ -98,8 +98,6 @@ void manejo_conexiones(void* conexion)
 		if(chantada == 1){
 			socket_fs = crear_conexion(config_valores_memoria.ip_filesystem, config_valores_memoria.puerto_filesystem);
 			chantada--;
-		}else{
-			printf("chantada no iguala 1\n");
 		}
 
 		pid_proceso = sacar_entero_de_paquete(&stream);

@@ -53,6 +53,7 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_bytes_proceso, char* pat
     proceso_en_memoria->path_proceso = strdup(instrucciones_leidas);
 
     free(instrucciones_leidas);
+    //free(proceso_en_memoria->path_proceso);
 
     list_add(procesos_en_memoria, (void*)proceso_en_memoria);
     
@@ -170,7 +171,7 @@ void finalizar_en_memoria(int pid) {
 
 static void liberar_paginas(t_proceso_en_memoria* proceso_en_memoria) {
 
-    int cantidad_de_paginas_a_liberar = proceso_en_memoria->cantidad_entradas;
+    int cantidad_de_paginas_a_liberar = list_size(proceso_en_memoria->paginas_en_memoria);
 
     liberar_tabla_de_paginas(proceso_en_memoria);
     free_list(proceso_en_memoria->bloques_reservados);

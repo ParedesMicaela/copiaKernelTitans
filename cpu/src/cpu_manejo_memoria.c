@@ -63,6 +63,8 @@ static int numero_marco_pagina() {
     {
         numero_marco = sacar_entero_de_paquete(&stream);
 
+        eliminar_paquete(paquete);
+        
         return numero_marco;
     }
     else

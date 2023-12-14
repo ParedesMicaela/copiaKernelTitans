@@ -127,11 +127,9 @@ void enviar_pcb_a_cpu(t_pcb* pcb_a_enviar)
 
 char* recibir_contexto(t_pcb* proceso)
  {
-    char* motivo_de_devolucion = NULL;
     t_paquete* paquete = recibir_paquete(socket_cpu_dispatch);
     void* stream = paquete->buffer->stream;
 
-    
 	if(paquete->codigo_operacion == PCB)
 	{
         proceso->program_counter = sacar_entero_de_paquete(&stream);
@@ -140,7 +138,7 @@ char* recibir_contexto(t_pcb* proceso)
         BX = sacar_entero_sin_signo_de_paquete(&stream);
         CX = sacar_entero_sin_signo_de_paquete(&stream);
         DX = sacar_entero_sin_signo_de_paquete(&stream);
-        motivo_de_devolucion = sacar_cadena_de_paquete(&stream);
+        proceso->motivo_bloqueo= sacar_cadena_de_paquete(&stream);
         proceso->recurso_pedido = sacar_cadena_de_paquete(&stream); 
         proceso->sleep = sacar_entero_de_paquete(&stream);
         proceso->pagina_pedida = sacar_entero_de_paquete(&stream);
@@ -153,10 +151,7 @@ char* recibir_contexto(t_pcb* proceso)
     else{
         log_error(kernel_logger, "Falla al recibir PCB, se cierra el Kernel \n");
         abort();
-    }
-
-    proceso->motivo_bloqueo = motivo_de_devolucion;
-    
+    }    
 
     if(string_equals_ignore_case(proceso->recurso_pedido, "basura")) {
         free(proceso->recurso_pedido);
@@ -175,7 +170,7 @@ char* recibir_contexto(t_pcb* proceso)
     log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
 
     eliminar_paquete(paquete);
-    return motivo_de_devolucion;
+    return proceso->motivo_bloqueo;
 }
 
 void eliminar_pcb(t_pcb* proceso)

@@ -150,8 +150,6 @@ void consola_finalizar_proceso(int pid) {
         list_remove_element(dictionary_int_get(diccionario_colas, EXIT), pcb_asociado);
         pthread_mutex_unlock(&mutex_exit);
 
-        printf("Finaliza el  PCB de ID: %d\n", pcb_asociado->pid);
-
         // le mandamos esto a memoria para que destruya las estructuras
         enviar_pcb_a_memoria(pcb_asociado, socket_memoria, FINALIZAR_EN_MEMORIA);
         printf("Enviando a memoria liberar estructuras del proceso \n");
@@ -164,8 +162,7 @@ void consola_finalizar_proceso(int pid) {
         printf("No se pudieron eliminar estructuras en memoria del proceso PID[%d]\n", pcb_asociado->pid);
         }
     
-        // si la respuesta que conseguimos de memoria es que se finalice la memoria, le avisamos a la consola que ya finaliza el proceso
-        printf("Respuesta memoria de estructuras liberadas del proceso recibida \n");
+        log_info(kernel_logger, "Finaliza el proceso %d - Motivo: SUCCESS\n", pcb_asociado->pid);
 
         eliminar_pcb(pcb_asociado);
         sem_post(&grado_multiprogramacion);

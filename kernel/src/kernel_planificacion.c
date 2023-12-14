@@ -24,6 +24,7 @@ sem_t grado_multiprogramacion;
 sem_t hay_procesos_ready;
 sem_t mutex_pid;
 
+char* motivo_de_devolucion;
 
 int corriendo = 1;
 int id_evento_cpu;
@@ -164,6 +165,11 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         a_mimir(proceso_seleccionado);
     }
 
+     if (string_equals_ignore_case(devuelto_por, "page_fault"))
+    {
+        a_mimir(proceso_seleccionado);
+    }
+
      if (string_equals_ignore_case(devuelto_por, "desalojo"))
     {   
         // Lo agregamos nuevamente a la cola de Ready
@@ -205,10 +211,6 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         proceso_en_exit(proceso_seleccionado);
     }
 
-    if (string_equals_ignore_case(devuelto_por, "page_fault"))
-    {
-        a_mimir(proceso_seleccionado);
-    }
     free(devuelto_por);
 }
 
@@ -230,6 +232,10 @@ static void atender_round_robin(int* evento_para_interrupt) {
 
 static void a_mimir(t_pcb* proceso){
 
+    log_info(kernel_logger, "PID[%d] bloqueado por %s\n", proceso->pid, proceso->motivo_bloqueo);
+
+    motivo_de_devolucion = string_duplicate(proceso->motivo_bloqueo);
+
     //Desalojamos el proceso
     pthread_mutex_lock(&mutex_exec);
     list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
@@ -242,48 +248,42 @@ static void a_mimir(t_pcb* proceso){
 
     detener_planificacion();
 
-    log_info(kernel_logger, "PID[%d] bloqueado por %s\n", proceso->pid, proceso->motivo_bloqueo);
-
-    if (string_equals_ignore_case(proceso->motivo_bloqueo, "page_fault")){
+    if (string_equals_ignore_case(motivo_de_devolucion, "page_fault")){
+        
+        detener_planificacion();
 
         pthread_t pcb_page_fault;
         if (!pthread_create(&pcb_page_fault, NULL, (void *)proceso_en_page_fault, (void *)proceso)){
             pthread_detach(pcb_page_fault);
         } else {
-            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", proceso->motivo_bloqueo);
+            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", motivo_de_devolucion);
             abort();
-        }   
-    } else if (string_equals_ignore_case(proceso->motivo_bloqueo, "sleep")){
+        }
+
+    free(motivo_de_devolucion);
+
+    } else if (string_equals_ignore_case(motivo_de_devolucion, "sleep")){
 
         pthread_t pcb_en_sleep;
         if (!pthread_create(&pcb_en_sleep, NULL, (void *)proceso_en_sleep, (void *)proceso)){
             pthread_detach(pcb_en_sleep);
         } else {
-            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", proceso->motivo_bloqueo);
+            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", motivo_de_devolucion);
             abort();
         }  
-    } else if (es_una_operacion_con_archivos(proceso->motivo_bloqueo)) {
-        pthread_t peticiones_fs;
-        
-        motivo_bloqueo = NULL;
-        motivo_bloqueo = malloc(sizeof(char));
-        strcpy(motivo_bloqueo,proceso->motivo_bloqueo);
-        log_info(kernel_logger,"Guardamos en la variable %s\n",motivo_bloqueo);
-        
-        pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs,(t_pcb*)proceso);
-        pthread_detach(peticiones_fs);
+            free(motivo_de_devolucion);
 
-        /*
+    }  else if (es_una_operacion_con_archivos(motivo_de_devolucion)) {
+        pthread_t peticiones_fs;
         if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
             pthread_detach(peticiones_fs);
         } else {
-            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", proceso->motivo_bloqueo);
+            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", motivo_de_devolucion);
             abort();
-        } 
-        */ 
+        }  
+            free(motivo_de_devolucion);
     }
 }
-
 
 void proceso_en_exit(t_pcb *proceso)
 {
@@ -308,7 +308,7 @@ void proceso_en_exit(t_pcb *proceso)
     meter_en_cola(proceso, EXIT, cola_EXIT);
     pthread_mutex_unlock(&mutex_exit);
 
-    detener_planificacion();
+    //detener_planificacion();
 
     // sacamos el proceso de la lista de exit
     pthread_mutex_lock(&mutex_exit);
@@ -450,8 +450,6 @@ void obtener_siguiente_blocked(t_pcb* proceso)
     proceso_en_ready(proceso);
 }
 
-
-//ACA CAPAZ HAY CARRERA
 t_pcb *obtener_siguiente_FIFO()
 {
     //FIRST IN
