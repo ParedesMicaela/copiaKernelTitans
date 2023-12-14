@@ -139,13 +139,12 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     pthread_mutex_lock(&mutex_contexto);
     char *devuelto_por = recibir_contexto(proceso_seleccionado);
     pthread_mutex_unlock(&mutex_contexto);
-
+    
     aumentar_evento_cpu();
 
     // Observamos los motivos de devolucion
     if (string_equals_ignore_case(devuelto_por, "exit"))
     {
-        detener_planificacion();
         proceso_en_exit(proceso_seleccionado);
     }
 
@@ -208,7 +207,6 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 
     if (string_equals_ignore_case(devuelto_por, "page_fault"))
     {
-        detener_planificacion ();
         a_mimir(proceso_seleccionado);
     }
     free(devuelto_por);
@@ -232,7 +230,7 @@ static void atender_round_robin(int* evento_para_interrupt) {
 
 static void a_mimir(t_pcb* proceso){
 
-    // Desalojamos el proceso
+    //Desalojamos el proceso
     pthread_mutex_lock(&mutex_exec);
     list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
     pthread_mutex_unlock(&mutex_exec);
@@ -241,6 +239,8 @@ static void a_mimir(t_pcb* proceso){
     pthread_mutex_lock(&mutex_blocked);
     meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
     pthread_mutex_unlock(&mutex_blocked);
+
+    detener_planificacion();
 
     log_info(kernel_logger, "PID[%d] bloqueado por %s\n", proceso->pid, proceso->motivo_bloqueo);
 
@@ -307,6 +307,8 @@ void proceso_en_exit(t_pcb *proceso)
     pthread_mutex_lock(&mutex_exit);
     meter_en_cola(proceso, EXIT, cola_EXIT);
     pthread_mutex_unlock(&mutex_exit);
+
+    detener_planificacion();
 
     // sacamos el proceso de la lista de exit
     pthread_mutex_lock(&mutex_exit);

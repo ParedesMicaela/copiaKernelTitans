@@ -54,7 +54,7 @@ void manejo_conexiones(void* conexion)
 	int pid_proceso = 0;
 	int pid_proceso_escribir = 0;
 	int pid_proceso_leer = 0;
-	int valor_registro = 0;
+	int* valor_registro = 0;
 	uint32_t direccion_fisica = 0;
 	uint32_t direccion_logica = 0;
 	char* path_asignado = NULL;

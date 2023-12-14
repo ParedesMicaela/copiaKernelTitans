@@ -23,6 +23,9 @@ int main(void) {
 
     inicializar_semaforos();
 
+    inicializar_la_tabla_de_paginas(config_valores_memoria.tam_memoria, config_valores_memoria.tam_pagina); 
+
+
     int server_memoria = iniciar_servidor(config_valores_memoria.ip_memoria,config_valores_memoria.puerto_escucha);
 
     while(1) 

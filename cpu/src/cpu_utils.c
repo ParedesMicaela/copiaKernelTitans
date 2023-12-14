@@ -174,7 +174,7 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
         //=============================================== FETCH =================================================================
         log_info(cpu_logger, "PID: %d - FETCH - Program Counter: %d", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
 
-        //log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d\n", AX, BX, CX, DX);
+        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d\n", AX, BX, CX, DX);
 
         //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
         pedir_instruccion(contexto_ejecucion->program_counter, contexto_ejecucion->pid);
