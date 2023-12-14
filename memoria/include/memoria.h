@@ -54,6 +54,7 @@ typedef struct {
 	int id;
     int numero_de_pagina;
     int marco; 
+	bool ocupado;
     int bit_de_presencia; 
     int bit_modificado; 
     int posicion_swap; 
@@ -61,6 +62,16 @@ typedef struct {
 	int tiempo_de_carga;
 } t_pagina;
 
+typedef struct {
+    bool ocupado;
+} t_marco;
+
+typedef struct {
+    t_marco* marcos;
+	int cantidad_marcos;
+} t_memoria_principal;
+
+extern t_memoria_principal memoria;
 typedef struct 
 {
 	int pid;
@@ -83,12 +94,13 @@ void enviar_paquete_handshake(int );
 void enviar_paquete_instrucciones(int , char* , int );
 char* leer_archivo_instrucciones(char* );
 char* buscar_path_proceso(int );
+void desocupar_marco(int nro_marco);
 void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid);
 
 /// @brief ESPACIO USUARIO ///
 void creacion_espacio_usuario();
 void liberar_espacio_usuario() ;
-void escribir(uint32_t* valor, uint32_t direccion_fisica, uint32_t direccion_logica, int pid, int socket_cpu);
+void escribir(int* valor, uint32_t direccion_fisica, uint32_t direccion_logica, int pid, int socket_cpu);
 uint32_t leer(uint32_t direccion_fisica, uint32_t direccion_logica, int pid);
 void escribir_en_memoria(void* contenido, size_t tamanio_contenido, uint32_t direccion_fisica);
 void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica);
@@ -107,6 +119,7 @@ t_pagina* buscar_pagina(int pid, int num_pagina);
 int mas_vieja(t_pagina* una_pag, t_pagina* otra_pag);
 int obtener_tiempo();
 int obtener_tiempo_carga();
+void crear_nueva_pagina(t_proceso_en_memoria* proceso_en_memoria, int nro_pagina, int posicion_swap, int marco);
 
 /// @brief SWAP ///
 void escribir_en_swap(t_pagina* pagina, int pid);

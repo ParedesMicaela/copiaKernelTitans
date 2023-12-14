@@ -38,6 +38,15 @@ MULTIPROGRAMACION 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/MEMORIA_2.txt" 64 1
 INICIAR_PLANIFICACION
 
+-- 4 --
+DETENER_PLANIFICACION
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_A.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_B.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_C.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_D.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_E.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ERROR_3.txt" 64 1
+INICIAR_PLANIFICACION
 -- 5 --
 DETENER_PLANIFICACION
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ESTRES_1.txt" 64 1

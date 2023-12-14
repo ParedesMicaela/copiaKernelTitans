@@ -9,7 +9,7 @@ static void pedir_numero_frame(uint32_t numero_pagina, t_contexto_ejecucion* con
 static int numero_marco_pagina();
 static void enviar_paquete_READ(uint32_t direccion_fisica, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux);
 static uint32_t recibir_valor_a_insertar(int socket_cliente_memoria);
-static void enviar_paquete_WRITE(uint32_t direccion_fisica, uint32_t registro, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux);
+static void enviar_paquete_WRITE(uint32_t direccion_fisica, int registro, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux);
 /// MMU ///
 
 uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica, t_contexto_ejecucion* contexto_ejecucion) {
@@ -129,12 +129,12 @@ void mov_out(uint32_t direccion_fisica, char* registro, t_contexto_ejecucion* co
     }
 }
 
-static void enviar_paquete_WRITE(uint32_t direccion_fisica, uint32_t registro, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux) {
+static void enviar_paquete_WRITE(uint32_t direccion_fisica, int registro, t_contexto_ejecucion* contexto_ejecucion, uint32_t direccion_logica_aux) {
     t_paquete *paquete = crear_paquete(WRITE);
      agregar_entero_a_paquete(paquete, contexto_ejecucion->pid);
      agregar_entero_sin_signo_a_paquete(paquete,direccion_fisica);
      agregar_entero_sin_signo_a_paquete(paquete, direccion_logica_aux);
-     agregar_entero_sin_signo_a_paquete(paquete, registro);
+     agregar_entero_a_paquete(paquete, registro);
      enviar_paquete(paquete, socket_cliente_memoria);    
      eliminar_paquete (paquete);
 }

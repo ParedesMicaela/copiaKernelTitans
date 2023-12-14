@@ -91,6 +91,7 @@ char* buscar_path_proceso(int pid)
 void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid) {
     int marco;
     
+    //log_info(memoria_logger, "Se buscara marco en las tablas de paginas");
     marco = buscar_marco(pid, num_pagina);
     t_paquete* paquete = crear_paquete(NUMERO_MARCO);
     // El -1 lo vemos desde la cpu (Page Fault)
@@ -100,7 +101,14 @@ void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid)
 }
 
 /// @brief Lectura y escritura del espacio de usuario ///
-void escribir(uint32_t* valor, uint32_t direccion_fisica, uint32_t direccion_logica, int pid, int socket_cpu){
+void escribir(int* valor, uint32_t direccion_fisica, uint32_t direccion_logica, int pid, int socket_cpu){
+
+    int id_temp = 0;
+    int numero_de_pagina_temp = 0;
+    int marco_temp = 0;
+    int posicion_swap_temp = 0;
+    bool ocupado_temp = false;
+    int tiempo_temp = 0;
 
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
@@ -112,20 +120,48 @@ void escribir(uint32_t* valor, uint32_t direccion_fisica, uint32_t direccion_log
 
     t_pagina* pagina = buscar_pagina(pid, nro_pagina);
 
+    //guardo los datos de la pagina en variables temporales
+    id_temp = pagina->id;
+    numero_de_pagina_temp = pagina->numero_de_pagina;
+    marco_temp = pagina->marco;
+    posicion_swap_temp = pagina->posicion_swap;
+    ocupado_temp = pagina->ocupado;
+    tiempo_temp = pagina->tiempo_de_carga;    
+
     t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
 
-    if(valor == -1)
-    {
-        //si me dan para escribir -1 es que la pagina no esta en memoria
-        pagina->bit_de_presencia = 0;
-    }else{
-        pagina->bit_modificado = 1;
-        pagina->tiempo_uso = obtener_tiempo(); 
-    }
+    //la borro de la lista porque la voy a modificar
+    list_remove_element(proceso->paginas_en_memoria, (void*)pagina);
+    
+    //creo una nueva pagina para modificar
+    t_pagina* pagina_modificada = malloc(sizeof(t_pagina));
 
-    list_add(proceso->paginas_en_memoria, (void*)pagina);
+    /*si el valor al que apunta es -1, la pagina no esta en memoria. Necesito pf
+    if(*valor != 0) 
+    {
+        //si no es -1, modifico la pagina. SI es -1 la saco de la lista para que tire pf    
+    }else{
+        //si es -1, no cargo la pagina en la lista de paginas del proceso y desocupo el marco, porque no esta presente
+        desocupar_marco(marco_temp);
+    }*/
+
+    pagina_modificada->bit_modificado = 1;
+    pagina_modificada->tiempo_uso = obtener_tiempo(); 
+
+    pagina_modificada->bit_de_presencia = 1;
+    pagina_modificada->id = id_temp;
+    pagina_modificada->numero_de_pagina = numero_de_pagina_temp;
+    pagina_modificada->marco = marco_temp;
+    pagina_modificada->posicion_swap = posicion_swap_temp;
+    pagina_modificada->ocupado = ocupado_temp;
+    pagina_modificada->tiempo_de_carga = tiempo_temp; 
+
+    //agrego la pagina modificada
+    list_add(proceso->paginas_en_memoria, (void*)pagina_modificada);   
+
     int se_ha_escrito = 1;
-    send(socket_cpu, &se_ha_escrito, sizeof(int), 0); 
+    send(socket_cpu, &se_ha_escrito, sizeof(int), 0);      
+    
 }
 
 uint32_t leer(uint32_t direccion_fisica, uint32_t direccion_logica, int pid) {
@@ -138,10 +174,16 @@ uint32_t leer(uint32_t direccion_fisica, uint32_t direccion_logica, int pid) {
 	memcpy(&valor, puntero_direccion_fisica, sizeof(uint32_t));
     
     int nro_pagina =  floor(direccion_logica / config_valores_memoria.tam_pagina);
+    
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
 
     t_pagina* pagina = buscar_pagina(pid,nro_pagina);
+    
+    //list_remove_element(proceso->paginas_en_memoria, (void*)pagina);
 
-    pagina->tiempo_uso = obtener_tiempo(); 
+    pagina->tiempo_uso = obtener_tiempo();
+    
+    //list_add(proceso->paginas_en_memoria, (void*)pagina);
 
 	return valor; 
 }
