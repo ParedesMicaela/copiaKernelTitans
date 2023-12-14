@@ -121,6 +121,7 @@ t_pagina* buscar_pagina(int pid, int num_pagina);
 int mas_vieja(t_pagina* una_pag, t_pagina* otra_pag);
 int obtener_tiempo();
 int obtener_tiempo_carga();
+void crear_nueva_pagina(t_proceso_en_memoria* proceso_en_memoria, int nro_pagina, int posicion_swap, int marco);
 
 /// @brief SWAP ///
 void escribir_en_swap(t_pagina* pagina, int pid);

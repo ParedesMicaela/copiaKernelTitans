@@ -117,6 +117,8 @@ void escribir(uint32_t* valor, uint32_t direccion_fisica, uint32_t direccion_log
 
     t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
 
+    //list_remove_element(proceso->paginas_en_memoria, (void*)pagina);
+
     if(valor == -1)
     {
         //si me dan para escribir -1 es que la pagina no esta en memoria
@@ -126,6 +128,8 @@ void escribir(uint32_t* valor, uint32_t direccion_fisica, uint32_t direccion_log
         pagina->tiempo_uso = obtener_tiempo(); 
         printf("\n tiempo uso: %d \n", pagina->tiempo_uso);
     }
+
+    //list_add(proceso->paginas_en_memoria, (void*)pagina);
 
     int se_ha_escrito = 1;
     send(socket_cpu, &se_ha_escrito, sizeof(int), 0); 
@@ -141,10 +145,16 @@ uint32_t leer(uint32_t direccion_fisica, uint32_t direccion_logica, int pid) {
 	memcpy(&valor, puntero_direccion_fisica, sizeof(uint32_t));
     
     int nro_pagina =  floor(direccion_logica / config_valores_memoria.tam_pagina);
+    
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
 
     t_pagina* pagina = buscar_pagina(pid,nro_pagina);
+    
+    //list_remove_element(proceso->paginas_en_memoria, (void*)pagina);
 
     pagina->tiempo_uso = obtener_tiempo();
+    
+    //list_add(proceso->paginas_en_memoria, (void*)pagina);
 
 	return valor; 
 }

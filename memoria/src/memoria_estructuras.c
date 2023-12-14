@@ -115,12 +115,8 @@ t_pagina* buscar_pagina(int pid, int num_pagina)
         return -1;  
     }else{
 
-        for (int i = 0; i < proceso_en_memoria->cantidad_entradas; i++) {        
+        for (int i = 0; i < list_size(proceso_en_memoria->paginas_en_memoria); i++) {        
             t_pagina* pagina_actual = list_get(proceso_en_memoria->paginas_en_memoria, i);
-
-            if (pagina_actual == NULL) {
-                return -1;  
-            }
 
             if (pagina_actual->numero_de_pagina == num_pagina) {
                 return pagina_actual;
