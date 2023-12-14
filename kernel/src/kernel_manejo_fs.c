@@ -21,8 +21,7 @@ void iniciar_tabla_archivos_abiertos()
 
 void atender_peticiones_al_fs(t_pcb* proceso)
 {
-    log_info(kernel_logger, "Atendemos la peticion del fs");
-    
+    /*
     if(motivo_bloqueo!=NULL)
     {
         strcpy(proceso->motivo_bloqueo,motivo_bloqueo);
@@ -31,7 +30,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         motivo_bloqueo = NULL;
         log_info(kernel_logger, "Liberamos");
     }
-   
+    */
     char* nombre_archivo = NULL;
     char* modo_apertura = NULL;
     int tamanio = 0 ;

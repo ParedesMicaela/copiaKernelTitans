@@ -108,7 +108,7 @@ void enviar_valor_de_lectura(uint32_t valor, int socket_cpu);
 
 /// @brief  TABLAS DE PAGINAS ///
 int buscar_marco(int pid, int num_pagina);
-void inicializar_la_tabla_de_paginas();
+void inicializar_la_tabla_de_paginas(int tamanio_memoria, int tamanio_pagina);
 void inicializar_swap_proceso(int pid_proceso, int cantidad_paginas_proceso);
 void crear_tablas_paginas_proceso(int pid, int cantidad_paginas_proceso, char* path_recibido);
 void finalizar_en_memoria(int pid);

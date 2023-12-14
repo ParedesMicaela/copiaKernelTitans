@@ -5,7 +5,6 @@ static t_list* buscar_paginas_MP();
 static void reemplazar_con_FIFO(t_list* paginas_totales, int nro_pagina_reemplazante, int posicion_swap, t_proceso_en_memoria* proceso_en_memoria);
 static void reemplazar_pagina(int nro_pagina_reemplazante, int posicion_swap, t_proceso_en_memoria* proceso_en_memoria);
 static bool presente(t_pagina* pagina);
-static bool no_presente(t_pagina* pagina);
 static void loggear_reemplazo(t_pagina* pagina_a_reemplazar, t_pagina* pagina_reemplazante);
 static void reemplazar_con_LRU(t_list* paginas_totales, int nro_pagina_reemplazante, int posicion_swap, t_proceso_en_memoria* proceso_en_memoria);
 static bool memoria_llena();

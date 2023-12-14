@@ -14,7 +14,6 @@ uint32_t DX;
 char *instruccion;
 int tamanio_recursos;
 
-//lo usamos para ver si es desalojo o finalizacion
 int tipo_interrupcion = -1;
 
 //======================= Funciones Internas ==============================================================================

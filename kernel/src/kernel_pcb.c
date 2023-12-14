@@ -140,7 +140,7 @@ char* recibir_contexto(t_pcb* proceso)
         BX = sacar_entero_sin_signo_de_paquete(&stream);
         CX = sacar_entero_sin_signo_de_paquete(&stream);
         DX = sacar_entero_sin_signo_de_paquete(&stream);
-        motivo_de_devolucion = sacar_cadena_de_paquete(&stream);
+        proceso->motivo_bloqueo = sacar_cadena_de_paquete(&stream);
         proceso->recurso_pedido = sacar_cadena_de_paquete(&stream); 
         proceso->sleep = sacar_entero_de_paquete(&stream);
         proceso->pagina_pedida = sacar_entero_de_paquete(&stream);
@@ -155,7 +155,7 @@ char* recibir_contexto(t_pcb* proceso)
         abort();
     }
 
-    proceso->motivo_bloqueo = motivo_de_devolucion;
+    motivo_de_devolucion = string_duplicate(proceso->motivo_bloqueo);
     
 
     if(string_equals_ignore_case(proceso->recurso_pedido, "basura")) {
@@ -172,10 +172,10 @@ char* recibir_contexto(t_pcb* proceso)
         free(proceso->modo_apertura); 
         proceso->modo_apertura = NULL;
     }
-    log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, motivo_de_devolucion);
+    log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, proceso->motivo_bloqueo);
 
     eliminar_paquete(paquete);
-    return motivo_de_devolucion;
+    return proceso->motivo_bloqueo;
 }
 
 void eliminar_pcb(t_pcb* proceso)

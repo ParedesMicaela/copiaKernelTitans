@@ -51,7 +51,6 @@ int main(void)
     
     //mapear_archivo_de_bloques();
 
-    //atender peticiones de kernel
     while(1) 
     {
         int* cliente_fd = malloc(sizeof(int));

@@ -264,23 +264,23 @@ static void a_mimir(t_pcb* proceso){
         }  
     } else if (es_una_operacion_con_archivos(proceso->motivo_bloqueo)) {
         pthread_t peticiones_fs;
-        
-        motivo_bloqueo = NULL;
-        motivo_bloqueo = malloc(sizeof(char));
-        strcpy(motivo_bloqueo,proceso->motivo_bloqueo);
-        log_info(kernel_logger,"Guardamos en la variable %s\n",motivo_bloqueo);
-        
-        pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs,(t_pcb*)proceso);
-        pthread_detach(peticiones_fs);
 
-        /*
-        if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
+       if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
             pthread_detach(peticiones_fs);
         } else {
             log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", proceso->motivo_bloqueo);
             abort();
-        } 
-        */ 
+        }  
+
+        /*
+        motivo_bloqueo = NULL;
+        motivo_bloqueo = malloc(sizeof(char));
+        strcpy(motivo_bloqueo,proceso->motivo_bloqueo);
+        
+        pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs,(t_pcb*)proceso);
+        pthread_detach(peticiones_fs);
+        */
+        
     }
 }
 
