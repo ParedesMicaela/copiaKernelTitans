@@ -277,12 +277,11 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             registro_JNZ = datos[1];
             num_instruccion = atoi(datos[2]);
             int valor_registro_JNZ = buscar_registro(registro_JNZ);
-            if (valor_registro_JNZ != 0) {
+            if (valor_registro_JNZ != 0 && valor_registro_JNZ > 0) {
                  contexto_ejecucion->program_counter = num_instruccion;
             } else {
                 contexto_ejecucion->program_counter += 1;
             }
-            //printf("JNZ me coloca  PID:%d y PC: %d\n", contexto_ejecucion->pid, contexto_ejecucion->program_counter);            
             break;
 
         case(SLEEP):

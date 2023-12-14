@@ -1,4 +1,4 @@
--- 1 --
+-- 1 -- BASE
 DETENER_PLANIFICACION
 
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/PLANI_1.txt" 64 1
@@ -7,7 +7,7 @@ INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/PLANI_3.txt" 64 2
 
 INICIAR_PLANIFICACION
 
--- 2 --
+-- 2 -- DEADLOCK
 DETENER_PLANIFICACION
 
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/DEADLOCK_A.txt" 64 1
@@ -20,7 +20,7 @@ INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ERROR_2.txt" 64 3
 INICIAR_PLANIFICACION
 FINALIZAR_PROCESO 1
 
--- 3 -- 
+-- 3 -- MEMORIA
 DETENER_PLANIFICACION
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/MEMORIA_1.txt" 128 1
 INICIAR_PLANIFICACION
@@ -38,7 +38,7 @@ MULTIPROGRAMACION 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/MEMORIA_2.txt" 64 1
 INICIAR_PLANIFICACION
 
--- 4 --
+-- 4 -- FILESYSTEM
 DETENER_PLANIFICACION
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_A.txt" 64 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_B.txt" 64 1
@@ -47,7 +47,15 @@ INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_D.txt" 64 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_E.txt" 64 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ERROR_3.txt" 64 1
 INICIAR_PLANIFICACION
--- 5 --
+
+-- 5 -- INTEGRAL
+DETENER_PLANIFICACION
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/INTEGRAL_A.txt" 128 10
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/INTEGRAL_B.txt" 128 5
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/INTEGRAL_C.txt" 64 1
+FINALIZAR_PROCESO 1
+
+-- 6 -- ESTRÉS
 DETENER_PLANIFICACION
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ESTRES_1.txt" 64 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ESTRES_2.txt" 64 1
