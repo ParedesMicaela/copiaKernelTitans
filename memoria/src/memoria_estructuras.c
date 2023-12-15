@@ -166,6 +166,7 @@ void finalizar_en_memoria(int pid) {
     liberar_paginas(proceso_en_memoria);
 
     list_remove_element(procesos_en_memoria,proceso_en_memoria);
+
     free(proceso_en_memoria); 
 }
 
@@ -201,6 +202,8 @@ static void liberar_tabla_de_paginas(t_proceso_en_memoria* proceso) {
         t_pagina* pagina = list_get(proceso->paginas_en_memoria, i);
 
         if(pagina != NULL) {
+            desocupar_marco(pagina->marco); 
+            //free(pagina->marco);       
             free(pagina);
         }
         

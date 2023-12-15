@@ -24,6 +24,8 @@ void escribir_en_swap(t_pagina* pagina_a_escribir, int pid){
     pagina_a_escribir->bit_de_presencia = 0;
     pagina_a_escribir->bit_modificado = 0;
 
+    desocupar_marco(pagina_a_escribir->marco);
+
     log_info(memoria_logger, "SWAP OUT -  PID: %d - Marco: %d - Page In: %d - %d\n",pid,pagina_a_escribir->marco, pid, pagina_a_escribir->numero_de_pagina);
 
     t_paquete* paquete = crear_paquete(PAGINA_SWAP_IN);
