@@ -177,21 +177,20 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
             //modo_apertura = archivo_para_leer->modo_apertura;
 
-            if(string_equals_ignore_case(archivo_para_leer->modo_apertura, "r") || string_equals_ignore_case(archivo_para_leer->modo_apertura, "w") )
+            if(string_equals_ignore_case(archivo_para_leer->modo_apertura, "R") || string_equals_ignore_case(archivo_para_leer->modo_apertura, "W") )
             {
                 log_info(kernel_logger, "PID: %d - Leer Archivo: %s", proceso->pid, nombre_archivo);
                         
                 //si hay un lock de escritura, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
                 if(archivo_para_leer->fcb->lock_escritura)
-                {                                     
+                {                                
                     //meto al proceso en la cola de bloqueados del archivo
                     list_add(archivo_para_leer_tgaa->cola_solicitudes,(void*)proceso);
 
                     //lo meto en la lista de los que van a leer
                     bloquear_proceso_por_archivo(nombre_archivo, proceso, "LEER");
 
-                    obtener_siguiente_ready();
-
+                    proceso_en_ready();
                 }else{
                     
                     list_add(cola_locks_lectura, (void*)proceso);
@@ -225,7 +224,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         t_archivo_proceso* archivo_para_escribir = buscar_en_tabla_de_archivos_proceso(proceso, nombre_archivo);
         modo_apertura = archivo_para_escribir->modo_apertura;
 
-        if(string_equals_ignore_case(archivo_para_escribir->modo_apertura, "w"))
+        if(string_equals_ignore_case(archivo_para_escribir->modo_apertura, "W"))
         {
             log_info(kernel_logger, "PID: %d - Escribir Archivo: %s", proceso->pid, nombre_archivo);
                     
@@ -233,12 +232,14 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
             //si hay un lock de escritura, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
             if(archivo_para_escribir->fcb->lock_escritura)
-            {                                     
+            {              
+                log_info(kernel_logger, "TENGO_LOCk_ESCRITURA");  
+
                 //meto al proceso en la cola de bloqueados del archivo
                 list_add(archivo_para_escribir->cola_solicitudes,(void*)proceso);
                 bloquear_proceso_por_archivo(nombre_archivo, proceso, "LEER");
 
-                obtener_siguiente_ready();
+                //proceso_en_ready();                     
             }
                 enviar_solicitud_fs(nombre_archivo, SOLICITAR_INFO_ARCHIVO_MEMORIA, 0, proceso->puntero, direccion_fisica);
                 int escribir_ok = 0;
@@ -315,7 +316,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             }
         }
 
-        if(string_equals_ignore_case(archi->modo_apertura, "w") == 0)
+        if(string_equals_ignore_case(archi->modo_apertura, "W") == 0)
         {
             if(list_size(archivo_para_cerrar->cola_solicitudes) > 0)
             {
