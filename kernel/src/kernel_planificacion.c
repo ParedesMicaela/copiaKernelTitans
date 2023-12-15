@@ -149,7 +149,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 
     //La CPU nos dice pq finalizo
     pthread_mutex_lock(&mutex_contexto);
-    char *devuelto_por = recibir_contexto(proceso_seleccionado);
+    char *devuelto_por = string_duplicate(recibir_contexto(proceso_seleccionado));
     pthread_mutex_unlock(&mutex_contexto);
     
     aumentar_evento_cpu();
@@ -268,7 +268,7 @@ static void a_mimir(t_pcb* proceso){
         if (!pthread_create(&pcb_en_sleep, NULL, (void *)proceso_en_sleep, (void *)proceso)){
             pthread_detach(pcb_en_sleep);
         } else {
-            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", motivo_de_devolucion);
+            log_error(kernel_logger,"Error en la creacion de hilo \n");
             abort();
         }  
             //free(motivo_de_devolucion);
@@ -277,7 +277,7 @@ static void a_mimir(t_pcb* proceso){
         if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
             pthread_detach(peticiones_fs);
         } else {
-            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", motivo_de_devolucion);
+            log_error(kernel_logger,"Error en la creacion de hilo \n");
             abort();
         }  
             //free(motivo_de_devolucion);
@@ -287,7 +287,7 @@ static void a_mimir(t_pcb* proceso){
         if (!pthread_create(&pcb_page_fault, NULL, (void *)proceso_en_page_fault, (void *)proceso)){
             pthread_detach(pcb_page_fault);
         } else {
-            log_error(kernel_logger,"Error en la creacion de hilo para realizar %s\n", motivo_de_devolucion);
+            log_error(kernel_logger,"Error en la creacion de hilo \n");
             abort();
         }
 

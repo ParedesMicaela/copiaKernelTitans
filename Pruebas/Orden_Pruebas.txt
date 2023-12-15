@@ -43,7 +43,7 @@ DETENER_PLANIFICACION
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_A.txt" 64 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_B.txt" 64 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_C.txt" 64 1
-INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_D.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_D.txt" 16 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/FS_E.txt" 64 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ERROR_3.txt" 64 1
 INICIAR_PLANIFICACION
