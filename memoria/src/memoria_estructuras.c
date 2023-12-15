@@ -50,10 +50,12 @@ void crear_tablas_paginas_proceso(int pid, int cantidad_bytes_proceso, char* pat
 
     // Leemos el path antes de guardarlo en el proceso en memoria
 	char* instrucciones_leidas = leer_archivo_instrucciones(path_recibido);
+
+    free(path_recibido);
+
     proceso_en_memoria->path_proceso = strdup(instrucciones_leidas);
 
     free(instrucciones_leidas);
-    //free(proceso_en_memoria->path_proceso);
 
     list_add(procesos_en_memoria, (void*)proceso_en_memoria);
     

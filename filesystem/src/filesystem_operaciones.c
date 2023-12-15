@@ -147,6 +147,7 @@ void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo u
 
 		config_destroy (archivo_nuevo);
 		free (path_archivo);
+		free(nombre_archivo);
 	}
 } 
 
@@ -188,6 +189,7 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 	}
 	
 	free(path_archivo); 
+	free(nombre_archivo);
 }
 
 void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido){
@@ -339,6 +341,7 @@ void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel)
 	int tamanio_actual_archivo = fcb_a_truncar->tamanio_archivo;
 	int bloque_inicial = fcb_a_truncar->bloque_inicial;
 	free(fcb_a_truncar);
+	free(nombre);
 
 	log_info(filesystem_logger,"Truncando archivo: Nombre %s, tamanio %d, Bloque inicial %d \n",nombre_archivo, tamanio_actual_archivo, bloque_inicial);
 
@@ -356,7 +359,9 @@ void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel)
 		printf("Bobi no truncaste\n");
 	}
 
-	cargamos_cambios_a_fcb(tamanio_nuevo, nombre);
+	cargamos_cambios_a_fcb(tamanio_nuevo, nombre_archivo);
+
+	free(nombre_archivo);
 
 	//Confirmamos truncado
 	int truncado = 1;
@@ -372,18 +377,8 @@ void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, i
 	//Nos ponemos en la posicion que tenemos que agregar dependiendo del blooque inicial
 	for (int posicion_bloque_agregado = 0; posicion_bloque_agregado < bloques_a_agregar; posicion_bloque_agregado++)
 	{
-		uint32_t* nuevo_ultimo_bloque_fat = malloc(tam_bloque);
-		bloque_archivo_bloques* nuevo_ultimo_bloque_bloques = malloc(tam_bloque);
-
-		if (nuevo_ultimo_bloque_fat == NULL && nuevo_ultimo_bloque_bloques == NULL)
-		{
-			perror("No se pudo alocar memoria para hacer la entrada fat\n");
-			abort();
-		}
-
 		actualizar_tabla_fat_ampliar(posicion_bloque_agregado, posicion_ultimo_bloque);		
 		
-		//actualizar_archivo_de_bloques_ampliar(posicion_bloque_agregado, posicion_ultimo_bloque, nuevo_ultimo_bloque_bloques);
 	}
 }
 
@@ -424,7 +419,6 @@ void reducir_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, i
 
 	actualizar_tabla_fat_reducir(posicion_bloque_agregado, bloques_a_quitar, posicion_primer_bloque_a_quitar);
 	
-
     }
 
     log_info(filesystem_logger, "Se redujo el tamaño del archivo\n");
