@@ -158,8 +158,8 @@ void desocupar_marco(int nro_marco)
 void finalizar_en_memoria(int pid) {
     t_proceso_en_memoria* proceso_en_memoria = buscar_proceso_en_memoria(pid);
 
-     if (proceso_en_memoria->path_proceso != NULL) {
-    free(proceso_en_memoria->path_proceso);
+    if (proceso_en_memoria->path_proceso != NULL) {
+        free(proceso_en_memoria->path_proceso);
     }
     
     liberar_swap(proceso_en_memoria);

@@ -114,6 +114,17 @@ void planificador_corto_plazo()
 
 //======================================================== Estados ==================================================================
 
+void meter_en_ready(t_pcb *proceso)
+{
+    pthread_mutex_lock(&mutex_exec);
+    list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
+    pthread_mutex_unlock(&mutex_exec);
+
+    pthread_mutex_lock(&mutex_ready);
+    meter_en_cola(proceso, READY, cola_READY);
+    pthread_mutex_unlock(&mutex_ready);
+}
+
 void proceso_en_ready()
 {
     t_pcb *siguiente_proceso = obtener_siguiente_ready();

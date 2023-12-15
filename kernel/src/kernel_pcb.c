@@ -186,7 +186,7 @@ void eliminar_pcb(t_pcb* proceso)
     }
 
     list_destroy(proceso->archivos_abiertos);
-    free(proceso);
+    //free(proceso);
     proceso = NULL;
 }
 

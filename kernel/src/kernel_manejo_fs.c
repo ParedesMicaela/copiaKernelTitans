@@ -21,7 +21,7 @@ void iniciar_tabla_archivos_abiertos()
 
 void atender_peticiones_al_fs(t_pcb* proceso)
 {
-    log_info(kernel_logger, "Atendemos la peticion del fs");
+    //log_info(kernel_logger, "Atendemos la peticion del fs");
    
     char* nombre_archivo = NULL;
     char* modo_apertura = NULL;
@@ -30,11 +30,11 @@ void atender_peticiones_al_fs(t_pcb* proceso)
     uint32_t direccion_fisica = 0;
     existe_en_tabla = false;
    
-    int numero = tipo_motivo(proceso->motivo_bloqueo);
+    //int numero = tipo_motivo(proceso->motivo_bloqueo);
 
-    proceso->motivo_bloqueo = NULL;
+    //proceso->motivo_bloqueo = NULL;
 
-    switch(numero){  
+    switch(tipo_motivo(proceso->motivo_bloqueo)){  
 
     case ABRIR_ARCHIVO:
         nombre_archivo =  proceso->nombre_archivo;
@@ -108,16 +108,20 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
         }else if(string_equals_ignore_case(proceso->modo_apertura, "R") && !archivo_encontrado->fcb->lock_escritura)
         {
-            //si yo quiere leer y nadie esta escribiendo, lo asigno
+            //si yo quiero leer y nadie esta escribiendo, lo asigno
             asignar_archivo_al_proceso(archivo_encontrado, proceso, modo_apertura);
-            consola_proceso_estado();
-            proceso_en_execute(proceso);
+            archivo_encontrado->fcb->lock_lectura = true;
+            //consola_proceso_estado();
+            meter_en_ready(proceso);
+            proceso_en_ready();
 
         //si quiero escribir y nadie esta leyendo, lo asigno
         }else if(string_equals_ignore_case(proceso->modo_apertura, "W") && !(archivo_encontrado->fcb->lock_escritura && archivo_encontrado->fcb->lock_lectura))
         {
             asignar_archivo_al_proceso(archivo_encontrado, proceso, modo_apertura);
-            proceso_en_execute(proceso);       
+            archivo_encontrado->fcb->lock_escritura = true;
+            meter_en_ready(proceso);
+            proceso_en_ready();       
 
         //si quiero escribir y alguien esta usando el archivo, lo bloqueo    
         }else{
@@ -149,7 +153,8 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         {
             log_error(kernel_logger, "Hubo un error con la respuesta de fs de truncar \n");
         }else{
-            proceso_en_execute(proceso);
+            meter_en_ready(proceso);
+            proceso_en_ready(); 
         }
         break;
 
@@ -170,7 +175,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             proceso_en_exit(proceso);   
         }else{
 
-            modo_apertura = archivo_para_leer->modo_apertura;
+            //modo_apertura = archivo_para_leer->modo_apertura;
 
             if(string_equals_ignore_case(archivo_para_leer->modo_apertura, "r") || string_equals_ignore_case(archivo_para_leer->modo_apertura, "w") )
             {
@@ -201,7 +206,8 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     {
                         log_error(kernel_logger, "Hubo un error con la respuesta de fs\n");
                     }
-                    obtener_siguiente_blocked(proceso);
+                    meter_en_ready(proceso);
+                    proceso_en_ready(); 
                 }
             }else{
                 log_info(kernel_logger, "El proceso no puede realizar operaciones sobre este archivo");
@@ -219,7 +225,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         t_archivo_proceso* archivo_para_escribir = buscar_en_tabla_de_archivos_proceso(proceso, nombre_archivo);
         modo_apertura = archivo_para_escribir->modo_apertura;
 
-        if(string_equals_ignore_case(modo_apertura, "w"))
+        if(string_equals_ignore_case(archivo_para_escribir->modo_apertura, "w"))
         {
             log_info(kernel_logger, "PID: %d - Escribir Archivo: %s", proceso->pid, nombre_archivo);
                     
@@ -230,8 +236,10 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             {                                     
                 //meto al proceso en la cola de bloqueados del archivo
                 list_add(archivo_para_escribir->cola_solicitudes,(void*)proceso);
+                bloquear_proceso_por_archivo(nombre_archivo, proceso, "LEER");
+
+                obtener_siguiente_ready();
             }
-                archivo_para_escribir->fcb->lock_escritura = true;
                 enviar_solicitud_fs(nombre_archivo, SOLICITAR_INFO_ARCHIVO_MEMORIA, 0, proceso->puntero, direccion_fisica);
                 int escribir_ok = 0;
                 recv(socket_filesystem, &escribir_ok, sizeof(int),0);
@@ -240,7 +248,8 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     log_info(kernel_logger, "problema");
                 }else{
                     
-                    obtener_siguiente_blocked(proceso);
+                    meter_en_ready(proceso);
+                    proceso_en_ready();                     
                 }
         }else{
             log_info(kernel_logger, "El proceso no puede realizar esta operacion sobre este archivo");
@@ -255,14 +264,16 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
         t_archivo_proceso* archivo_buscado = buscar_en_tabla_de_archivos_proceso(proceso, nombre_archivo);
         
-        if(archivo_buscado == NULL){
+        /*if(archivo_buscado == NULL){
             log_info(kernel_logger, "El proceso no puede realizar operaciones sobre este archivo");
             log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
             proceso_en_exit(proceso);       
-        }
+        }*/
 
-        archivo_buscado->puntero_posicion = puntero;
+        archivo_buscado->puntero_posicion = (uint32_t*)proceso->puntero;
         log_info(kernel_logger, "PID: %d - Actualizar puntero Archivo: %s - Puntero: %d\n",proceso->pid, nombre_archivo, archivo_buscado->puntero_posicion);
+        
+        //aca es necesario mandarlo para que siga el mismo proceso
         proceso_en_execute(proceso);
         break;
 
@@ -279,9 +290,9 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             proceso_en_exit(proceso);       
         }
 
-        if(string_equals_ignore_case(archi->modo_apertura, "r") == 0)
+        if(string_equals_ignore_case(archi->modo_apertura, "R") == 0)
         {
-            if(cola_locks_lectura != NULL)
+            if(list_size(cola_locks_lectura) != 0)
             {
                 //elimino de la cola de lectura al proceso que cerro el archivo
                 list_remove_element(cola_locks_lectura, (void *)proceso);
@@ -294,7 +305,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     if(list_size(archivo_para_cerrar->cola_solicitudes) > 0)
                     {
                         t_pcb* siguiente_proceso = (t_pcb*)list_get(archivo_para_cerrar->cola_solicitudes, 0);
-                        proceso_en_execute(siguiente_proceso);
+                        obtener_siguiente_blocked(siguiente_proceso);
                     }else{
 
                         //si nadie lo esta leyendo y nadie esta esperando hacer algo con el archivo, lo cierro de la TGAA
@@ -309,7 +320,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             if(list_size(archivo_para_cerrar->cola_solicitudes) > 0)
             {
                 t_pcb* siguiente_proceso = (t_pcb*)list_get(archivo_para_cerrar->cola_solicitudes, 0);
-                proceso_en_execute(siguiente_proceso);
+                obtener_siguiente_blocked(siguiente_proceso);
             }
         }
 
@@ -320,7 +331,10 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         {
             list_remove_element(tabla_global_archivos_abiertos, (void*)archivo_para_cerrar);
         }
-        proceso_en_execute(proceso);
+
+            meter_en_ready(proceso);
+            proceso_en_ready(); 
+
         break;
 
     default:
@@ -360,7 +374,7 @@ static int tipo_motivo(char *motivo)
 
     }
 
-    free(motivo);
+    //free(motivo);
 
     return numero;
 }
@@ -387,6 +401,8 @@ void bloquear_proceso_por_archivo(char* nombre_archivo, t_pcb* proceso, char* mo
     pthread_mutex_lock(&mutex_blocked);
     meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
     pthread_mutex_unlock(&mutex_blocked);
+
+    consola_proceso_estado();
 
     log_info(kernel_logger, "PID[%d] bloqueado por accion: %s en archivo <%s>\n", proceso->pid, modo_apertura ,nombre_archivo);
 }
