@@ -48,6 +48,7 @@ int main(void)
 
     crear_fat();
     crear_archivo_de_bloque();
+    inicializar_swap();
     
     //mapear_archivo_de_bloques();
 

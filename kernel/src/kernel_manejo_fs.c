@@ -23,7 +23,6 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 {
     //log_info(kernel_logger, "Atendemos la peticion del fs");
    
-    char* nombre_archivo = NULL;
     char* modo_apertura = NULL;
     int tamanio = 0 ;
     int puntero = 0;
@@ -37,18 +36,17 @@ void atender_peticiones_al_fs(t_pcb* proceso)
     switch(tipo_motivo(proceso->motivo_bloqueo)){  
 
     case ABRIR_ARCHIVO:
-        nombre_archivo =  proceso->nombre_archivo;
         modo_apertura = proceso->modo_apertura;
-        log_info(kernel_logger, "PID: %d - Abrir Archivo: %s Modo Apertura: %s", proceso->pid, nombre_archivo, proceso->modo_apertura);
+        log_info(kernel_logger, "PID: %d - Abrir Archivo: %s Modo Apertura: %s", proceso->pid, proceso->nombre_archivo, proceso->modo_apertura);
                 
-        t_archivo* archivo_buscado_tabla = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
+        t_archivo* archivo_buscado_tabla = buscar_en_tabla_de_archivos_abiertos(proceso->nombre_archivo);
         
         //aca vemos si el archivo lo tengo en la TGAA
         if (!existe_en_tabla)
         {
-            log_info(kernel_logger, "El archivo no se encuentra en la TGAA. Enviando al filesystem apertura del archivo %s\n", nombre_archivo);
+            log_info(kernel_logger, "El archivo no se encuentra en la TGAA. Enviando al filesystem apertura del archivo %s\n", proceso->nombre_archivo);
             //si no lo tengo, le pido al fs que lo abra
-            enviar_solicitud_fs(nombre_archivo, ABRIR_ARCHIVO, 0, 0, 0);
+            enviar_solicitud_fs(proceso->nombre_archivo, ABRIR_ARCHIVO, 0, 0, 0);
             bool apertura_terminada = false;
     
             while(!apertura_terminada)
@@ -63,14 +61,15 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     int entero = sacar_entero_de_paquete(&stream);
 
                     //si el fs me dice que no existe, lo mando a que me lo cree
-                    enviar_solicitud_fs(nombre_archivo, CREAR_ARCHIVO, 0, 0, 0);
-                    log_info(kernel_logger, "Enviando al filesystem creacion del archivo %s\n", nombre_archivo);
+                    log_info(kernel_logger, "Enviando al filesystem creacion del archivo %s\n", proceso->nombre_archivo);
+                    enviar_solicitud_fs(proceso->nombre_archivo, CREAR_ARCHIVO, 0, 0, 0);
 
                 }
                 else if (paquete->codigo_operacion == ARCHIVO_CREADO || paquete->codigo_operacion == ARCHIVO_EXISTE)
                 {
                     //ahora mandamos devuelta abrirlo
-                    enviar_solicitud_fs(nombre_archivo, ABRIR_ARCHIVO, 0, 0, 0);
+                    enviar_solicitud_fs(proceso->nombre_archivo, ABRIR_ARCHIVO, 0, 0, 0);
+                    
                 }
                 else if(paquete->codigo_operacion == ARCHIVO_ABIERTO){
                     
@@ -79,7 +78,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     uint32_t direccion_archivo = sacar_entero_de_paquete(&stream); //direccion inicial (creo que esta bien esto)
 
                     //poner en tabla de archivos abiertos
-                    agregar_archivo_tgaa(nombre_archivo, tamanio, direccion_archivo);
+                    agregar_archivo_tgaa(proceso->nombre_archivo, tamanio, direccion_archivo);
                     
                     apertura_terminada = true;
                 }
@@ -93,24 +92,31 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             if (string_equals_ignore_case(proceso->modo_apertura, "W"))
             {
                 list_add(archivo_buscado_tabla->cola_solicitudes,(void*)proceso);
-                bloquear_proceso_por_archivo(nombre_archivo, proceso, "ESCRIBIR");
+                bloquear_proceso_por_archivo(proceso->nombre_archivo, proceso, "ESCRIBIR");
             }
         }
 
-        t_archivo* archivo_encontrado = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
+        t_archivo* archivo_encontrado = buscar_en_tabla_de_archivos_abiertos(proceso->nombre_archivo);
         
         //si hay un proceso escribiendo y yo quiero leer, me bloqueo hasta que el otro termine de escribir
         if(string_equals_ignore_case(proceso->modo_apertura, "R") && archivo_encontrado->fcb->lock_escritura)
         {
             //bloqueamos hasta que termine de escribir el otro proceso
             list_add(archivo_encontrado->cola_solicitudes,(void*)proceso);
-            bloquear_proceso_por_archivo(nombre_archivo, proceso, "LEER");
+            bloquear_proceso_por_archivo(proceso->nombre_archivo, proceso, "LEER");
+
+            free(proceso->nombre_archivo);
+            proceso->nombre_archivo = NULL;
 
         }else if(string_equals_ignore_case(proceso->modo_apertura, "R") && !archivo_encontrado->fcb->lock_escritura)
         {
             //si yo quiero leer y nadie esta escribiendo, lo asigno
             asignar_archivo_al_proceso(archivo_encontrado, proceso, modo_apertura);
             archivo_encontrado->fcb->lock_lectura = true;
+
+            free(proceso->nombre_archivo);
+            proceso->nombre_archivo = NULL;
+
             //consola_proceso_estado();
             meter_en_ready(proceso);
             proceso_en_ready();
@@ -120,19 +126,25 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         {
             asignar_archivo_al_proceso(archivo_encontrado, proceso, modo_apertura);
             archivo_encontrado->fcb->lock_escritura = true;
+
+            free(proceso->nombre_archivo);
+            proceso->nombre_archivo = NULL;
+
             meter_en_ready(proceso);
             proceso_en_ready();       
 
         //si quiero escribir y alguien esta usando el archivo, lo bloqueo    
         }else{
             list_add(archivo_encontrado->cola_solicitudes,(void*)proceso);
-            bloquear_proceso_por_archivo(nombre_archivo, proceso, "ESCRIBIR");
+            bloquear_proceso_por_archivo(proceso->nombre_archivo, proceso, "ESCRIBIR");
+
+            free(proceso->nombre_archivo);
+            proceso->nombre_archivo = NULL;
         }
         
         break;
 
     case TRUNCAR_ARCHIVO:
-        nombre_archivo = proceso->nombre_archivo;
         tamanio = proceso->tamanio_archivo;
         
         t_archivo_proceso* archivo = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
@@ -145,6 +157,9 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         }
         
         enviar_solicitud_fs(proceso->nombre_archivo, TRUNCAR_ARCHIVO, tamanio, 0, 0);
+        
+        free(proceso->nombre_archivo);
+        proceso->nombre_archivo = NULL;
                 
         int respuesta = 0;
         recv(socket_filesystem, &respuesta, sizeof(int),0);
@@ -159,14 +174,13 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         break;
 
     case LEER_ARCHIVO:
-        nombre_archivo =  proceso->nombre_archivo;
         puntero = proceso->puntero;
         direccion_fisica = proceso->direccion_fisica_proceso;
 
         //en la tabla del proceso guardo en que modo abrio el archivo
-        t_archivo_proceso* archivo_para_leer = buscar_en_tabla_de_archivos_proceso(proceso, nombre_archivo);
+        t_archivo_proceso* archivo_para_leer = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
 
-        t_archivo* archivo_para_leer_tgaa = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
+        t_archivo* archivo_para_leer_tgaa = buscar_en_tabla_de_archivos_abiertos(proceso->nombre_archivo);
 
         if(archivo_para_leer == NULL)
         {
@@ -179,7 +193,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
             if(string_equals_ignore_case(archivo_para_leer->modo_apertura, "R") || string_equals_ignore_case(archivo_para_leer->modo_apertura, "W") )
             {
-                log_info(kernel_logger, "PID: %d - Leer Archivo: %s", proceso->pid, nombre_archivo);
+                log_info(kernel_logger, "PID: %d - Leer Archivo: %s", proceso->pid, proceso->nombre_archivo);
                         
                 //si hay un lock de escritura, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
                 if(archivo_para_leer->fcb->lock_escritura)
@@ -188,14 +202,17 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     list_add(archivo_para_leer_tgaa->cola_solicitudes,(void*)proceso);
 
                     //lo meto en la lista de los que van a leer
-                    bloquear_proceso_por_archivo(nombre_archivo, proceso, "LEER");
+                    bloquear_proceso_por_archivo(proceso->nombre_archivo, proceso, "LEER");
 
                     proceso_en_ready();
                 }else{
                     
                     list_add(cola_locks_lectura, (void*)proceso);
 
-                    enviar_solicitud_fs(nombre_archivo, LEER_ARCHIVO, 0, 0, direccion_fisica);
+                    enviar_solicitud_fs(proceso->nombre_archivo, LEER_ARCHIVO, 0, 0, direccion_fisica);
+
+                    free(proceso->nombre_archivo);
+                    proceso->nombre_archivo = NULL;
 
                     //el proceso se bloquea hasta que el fs me informe la finalizacion de la operacion
                     int ok_read = 0;
@@ -218,17 +235,16 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         break;
 
     case ESCRIBIR_ARCHIVO:
-        nombre_archivo =  proceso->nombre_archivo;
         direccion_fisica = proceso->direccion_fisica_proceso;
 
-        t_archivo_proceso* archivo_para_escribir = buscar_en_tabla_de_archivos_proceso(proceso, nombre_archivo);
+        t_archivo_proceso* archivo_para_escribir = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
         modo_apertura = archivo_para_escribir->modo_apertura;
 
         if(string_equals_ignore_case(archivo_para_escribir->modo_apertura, "W"))
         {
-            log_info(kernel_logger, "PID: %d - Escribir Archivo: %s", proceso->pid, nombre_archivo);
+            log_info(kernel_logger, "PID: %d - Escribir Archivo: %s", proceso->pid, proceso->nombre_archivo);
                     
-            t_archivo* archivo_para_escribir = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
+            t_archivo* archivo_para_escribir = buscar_en_tabla_de_archivos_abiertos(proceso->nombre_archivo);
 
             //si hay un lock de escritura, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
             if(archivo_para_escribir->fcb->lock_escritura)
@@ -237,11 +253,15 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
                 //meto al proceso en la cola de bloqueados del archivo
                 list_add(archivo_para_escribir->cola_solicitudes,(void*)proceso);
-                bloquear_proceso_por_archivo(nombre_archivo, proceso, "LEER");
+                bloquear_proceso_por_archivo(proceso->nombre_archivo, proceso, "LEER");
 
                 //proceso_en_ready();                     
             }
-                enviar_solicitud_fs(nombre_archivo, SOLICITAR_INFO_ARCHIVO_MEMORIA, 0, proceso->puntero, direccion_fisica);
+                enviar_solicitud_fs(proceso->nombre_archivo, SOLICITAR_INFO_ARCHIVO_MEMORIA, 0, proceso->puntero, direccion_fisica);
+
+                free(proceso->nombre_archivo);
+                proceso->nombre_archivo = NULL;
+
                 int escribir_ok = 0;
                 recv(socket_filesystem, &escribir_ok, sizeof(int),0);
 
@@ -260,30 +280,22 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         break;
 
     case BUSCAR_ARCHIVO:
-        nombre_archivo =  proceso->nombre_archivo;
         puntero = proceso->puntero;
 
-        t_archivo_proceso* archivo_buscado = buscar_en_tabla_de_archivos_proceso(proceso, nombre_archivo);
-        
-        /*if(archivo_buscado == NULL){
-            log_info(kernel_logger, "El proceso no puede realizar operaciones sobre este archivo");
-            log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
-            proceso_en_exit(proceso);       
-        }*/
+        t_archivo_proceso* archivo_buscado = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
 
         archivo_buscado->puntero_posicion = (uint32_t*)proceso->puntero;
-        log_info(kernel_logger, "PID: %d - Actualizar puntero Archivo: %s - Puntero: %d\n",proceso->pid, nombre_archivo, archivo_buscado->puntero_posicion);
+        log_info(kernel_logger, "PID: %d - Actualizar puntero Archivo: %s - Puntero: %d\n",proceso->pid, proceso->nombre_archivo, archivo_buscado->puntero_posicion);
         
         //aca es necesario mandarlo para que siga el mismo proceso
         proceso_en_execute(proceso);
         break;
 
     case CERRAR_ARCHIVO:
-        nombre_archivo =  proceso->nombre_archivo;
 
         //busco el archivo en la TGAA y en la tabla del proceso para cerrarlo de ambos si es necesario
-        t_archivo_proceso* archi = buscar_en_tabla_de_archivos_proceso(proceso, nombre_archivo);
-        t_archivo* archivo_para_cerrar = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
+        t_archivo_proceso* archi = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
+        t_archivo* archivo_para_cerrar = buscar_en_tabla_de_archivos_abiertos(proceso->nombre_archivo);
 
         if(archi == NULL){
             log_info(kernel_logger, "El proceso no puede realizar operaciones sobre este archivo");
@@ -390,6 +402,7 @@ void enviar_solicitud_fs(char* nombre_archivo, op_code operacion, int tamanio, u
     agregar_entero_sin_signo_a_paquete(paquete, direccion_fisica);
 
     enviar_paquete(paquete, socket_filesystem);
+
     eliminar_paquete(paquete);
 }
 

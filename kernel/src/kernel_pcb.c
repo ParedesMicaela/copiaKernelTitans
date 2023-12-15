@@ -11,7 +11,7 @@ uint32_t CX;
 uint32_t DX;
 
 static void enviar_creacion_estructuras(t_pcb* pcb, int cant_paginas_proceso, char* path);
-
+static void liberar_tabla_archivos_abiertos(t_pcb* proceso);
 //============================================================================================================================================================================
 t_pcb* crear_pcb(int prioridad, int cant_paginas_proceso, char* path) 
 {
@@ -172,6 +172,7 @@ char* recibir_contexto(t_pcb* proceso)
 void eliminar_pcb(t_pcb* proceso)
 {
     eliminar_recursos_asignados(proceso);
+
     if (proceso->path_proceso != NULL) {
         free(proceso->path_proceso);
     }
@@ -183,7 +184,16 @@ void eliminar_pcb(t_pcb* proceso)
         free(proceso->motivo_bloqueo);
     }
 
-    list_destroy(proceso->archivos_abiertos);
+    if(proceso->nombre_archivo != NULL) {
+        free(proceso->nombre_archivo);
+    }
+
+    if(proceso->modo_apertura != NULL) {
+        free(proceso->modo_apertura != NULL);
+    }
+
+    liberar_tabla_archivos_abiertos(proceso);
+
     //free(proceso);
     proceso = NULL;
 }
@@ -194,6 +204,24 @@ void eliminar_recursos_asignados(t_pcb* proceso) {
     free(proceso->recursos_asignados);
 }
 
+static void liberar_tabla_archivos_abiertos(t_pcb* proceso) {
+    int cantidad_archivos = list_size(proceso->archivos_abiertos);
+
+    for(int i = 0; i < cantidad_archivos; i++) {
+        t_archivo_proceso* archivo = list_get(proceso->archivos_abiertos, i);
+
+         if(archivo->fcb != NULL) {   
+            free(archivo->fcb);
+        }
+
+        if(archivo != NULL) {   
+            free(archivo);
+        }
+    }
+
+    list_destroy(proceso->archivos_abiertos);
+
+}
 void liberar_todos_recurso(t_pcb* proceso)
 {
     //por cada recurso asignado que tiene el proceso, tengo que liberarlo y ver si ese recurso tiene procesos esperando

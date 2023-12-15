@@ -23,7 +23,7 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica, t_contexto_ejecu
     offset = direccion_logica - (numero_pagina  * tam_pagina);
 
     //Llamos a la  Memoria, para conseguir el número de marco correspondiente a la página 
-    numero_marco = traducir_pagina_a_marco(numero_pagina, contexto_ejecucion); //ver si marco deberia ser uint32_t
+    numero_marco = traducir_pagina_a_marco(numero_pagina, contexto_ejecucion); 
 
     //Le avisa a Kernel que hay Page_fault(-1)
     if(numero_marco == page_fault) {
@@ -32,7 +32,7 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica, t_contexto_ejecu
     }
 
     // Calculamos la direcion fisica
-    direccion_fisica = numero_marco + offset;
+    direccion_fisica = numero_marco * tam_pagina  + offset;
 
     return direccion_fisica;
 }
