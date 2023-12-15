@@ -91,6 +91,7 @@ void asignacion_recursos(t_pcb *proceso)
             pthread_mutex_lock(&mutex_ready);
             meter_en_cola(proceso, READY, cola_READY);
             mostrar_lista_pcb(cola_READY,"READY");
+            pthread_mutex_unlock(&mutex_ready);
         }else
         {
             proceso_en_execute(proceso);
@@ -179,6 +180,7 @@ void liberacion_recursos(t_pcb *proceso)
             pthread_mutex_lock(&mutex_ready);
             meter_en_cola(proceso, READY, cola_READY);
             mostrar_lista_pcb(cola_READY,"READY");
+            pthread_mutex_unlock(&mutex_ready);
         }else
         {
             proceso_en_execute(proceso);

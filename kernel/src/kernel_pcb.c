@@ -71,8 +71,6 @@ t_pcb* crear_pcb(int prioridad, int cant_paginas_proceso, char* path)
     pthread_mutex_lock(&mutex_new);
     meter_en_cola(pcb, NEW,cola_NEW);
     pthread_mutex_unlock(&mutex_new);
-
-    mostrar_lista_pcb(cola_NEW,"NEW");
    
     enviar_creacion_estructuras(pcb,cant_paginas_proceso, path);
 
