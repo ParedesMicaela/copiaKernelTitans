@@ -366,6 +366,7 @@ void proceso_en_page_fault(t_pcb* proceso){
     pthread_mutex_unlock(&mutex_ready);
    
 }
+}
 
 void meter_en_ready(t_pcb *proceso)
 {

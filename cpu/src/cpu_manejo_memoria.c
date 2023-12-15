@@ -32,7 +32,7 @@ uint32_t traducir_de_logica_a_fisica(uint32_t direccion_logica, t_contexto_ejecu
     }
 
     // Calculamos la direcion fisica
-    direccion_fisica = numero_marco + offset;
+    direccion_fisica = numero_marco * tam_pagina + offset; 
 
     return direccion_fisica;
 }

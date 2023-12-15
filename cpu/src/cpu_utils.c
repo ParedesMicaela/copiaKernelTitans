@@ -188,19 +188,15 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
         if(string_starts_with(instruccion, "MOV_OUT"))
         {
 
-        log_info(cpu_logger,"%s requiere traduccion", instruccion);
         uint32_t direccion_logica = atoi(datos[1]);
         direccion_logica_aux = direccion_logica;
         direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, contexto_ejecucion);
-        log_info(cpu_logger, "Se tradujo %d", direccion_fisica);  
 
         }else if(string_starts_with(instruccion, "MOV_IN") || string_starts_with(instruccion, "F_READ") || string_starts_with(instruccion, "F_WRITE")){
             
-        log_info(cpu_logger,"%s requiere traduccion", instruccion);
         uint32_t direccion_logica = atoi(datos[2]);
         direccion_logica_aux = direccion_logica;
         direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, contexto_ejecucion);
-        log_info(cpu_logger, "Se tradujo la direccion %d", direccion_fisica);      
 
         }   
         

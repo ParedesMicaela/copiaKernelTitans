@@ -146,7 +146,7 @@ void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 //..................................FUNCIONES ARCHIVOS DEL MERGE.....................................................................
 void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica);
 void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido);
-void escribir_contenido_en_archivo(uint32_t bloque_a_escribir, uint32_t bloque_inicial, void* contenido, uint32_t puntero); 
+void escribir_contenido_en_archivo(uint32_t bloque_a_escribir, uint32_t bloque_inicial, void* contenido, uint32_t puntero, char* nombre_archivo);
 void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo);
 void crear_archivo_de_bloque();
 void cerrar_archivo(char* nombre_archivo);
