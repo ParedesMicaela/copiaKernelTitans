@@ -189,7 +189,7 @@ void eliminar_pcb(t_pcb* proceso)
     }
 
     if(proceso->modo_apertura != NULL) {
-        free(proceso->modo_apertura != NULL);
+        free(proceso->modo_apertura);
     }
 
     liberar_tabla_archivos_abiertos(proceso);
@@ -283,9 +283,3 @@ void liberar_todos_recurso(t_pcb* proceso)
 }
 
 
-
-void eliminar_archivos_abiertos(t_dictionary *archivosAbiertos)
-{
-    //esto hay que revisarlo porque no se si esta bien, pero a rezar que lo ultimo que se pierde es la esperanza
-    dictionary_destroy_and_destroy_elements(archivosAbiertos, dictionary_elements(archivosAbiertos));
-}

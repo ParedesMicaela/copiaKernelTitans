@@ -157,7 +157,6 @@ void liberar_todos_recurso(t_pcb* );
 void eliminar_pcb(t_pcb *);
 void eliminar_registros_pcb(t_registros_cpu);
 void eliminar_recursos_asignados(t_pcb* );
-void eliminar_archivos_abiertos(t_dictionary *);
 void eliminar_mutex(pthread_mutex_t *);
 
 //================================================ Consola ==================================================================================================================

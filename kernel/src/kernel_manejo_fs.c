@@ -21,11 +21,9 @@ void iniciar_tabla_archivos_abiertos()
 
 void atender_peticiones_al_fs(t_pcb* proceso)
 {
-    //log_info(kernel_logger, "Atendemos la peticion del fs");
    
     char* modo_apertura = NULL;
     int tamanio = 0 ;
-    int puntero = 0;
     uint32_t direccion_fisica = 0;
     existe_en_tabla = false;
    
@@ -174,7 +172,6 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         break;
 
     case LEER_ARCHIVO:
-        puntero = proceso->puntero;
         direccion_fisica = proceso->direccion_fisica_proceso;
 
         //en la tabla del proceso guardo en que modo abrio el archivo
@@ -280,11 +277,10 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         break;
 
     case BUSCAR_ARCHIVO:
-        puntero = proceso->puntero;
 
         t_archivo_proceso* archivo_buscado = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
 
-        archivo_buscado->puntero_posicion = (uint32_t*)proceso->puntero;
+        archivo_buscado->puntero_posicion = proceso->puntero;
         log_info(kernel_logger, "PID: %d - Actualizar puntero Archivo: %s - Puntero: %d\n",proceso->pid, proceso->nombre_archivo, archivo_buscado->puntero_posicion);
         
         //aca es necesario mandarlo para que siga el mismo proceso
@@ -478,6 +474,12 @@ void agregar_archivo_tgaa(char* nombre_archivo, int tamanio, uint32_t direccion)
 
     list_add(tabla_global_archivos_abiertos, (void*)archivo_nuevo);
     existe_en_tabla = true;
+}
+
+bool es_una_operacion_con_archivos(char* motivo_bloqueo) {
+    return string_equals_ignore_case(motivo_bloqueo, "F_WRITE") ||
+           string_equals_ignore_case(motivo_bloqueo, "F_TRUNCATE") ||
+           string_equals_ignore_case(motivo_bloqueo, "F_READ");
 }
 
 
