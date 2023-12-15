@@ -36,6 +36,7 @@ int id_evento_cpu;
 static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2);
 static void a_mimir(t_pcb* proceso);
 static void atender_round_robin(int* evento_para_interrupt);
+static void tratamiento_archivos(t_pcb* proceso);
 static void aumentar_evento_cpu();
 //====================================================== Planificadores ========================================================
 void inicializar_planificador()
@@ -144,14 +145,14 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
     }
 
-     // La CPU despues nos dice pq regresa
+    // La CPU despues nos dice pq regresa
     enviar_pcb_a_cpu(proceso_seleccionado);
 
     //La CPU nos dice pq finalizo
     pthread_mutex_lock(&mutex_contexto);
     char *devuelto_por = string_duplicate(recibir_contexto(proceso_seleccionado));
     pthread_mutex_unlock(&mutex_contexto);
-    
+
     aumentar_evento_cpu();
 
     // Observamos los motivos de devolucion
@@ -214,7 +215,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     }
     if (string_equals_ignore_case(devuelto_por, "f_truncate"))
     {
-        a_mimir(proceso_seleccionado);
+        atender_peticiones_al_fs(proceso_seleccionado);
     }
     
     if (string_equals_ignore_case(devuelto_por, "finalizacion"))
@@ -241,6 +242,13 @@ static void atender_round_robin(int* evento_para_interrupt) {
     pthread_mutex_unlock(&mutex_cpu);
 }
 
+static void tratamiento_archivos(t_pcb* proceso) {
+
+    pthread_t tratamiento_fs;
+    pthread_create(&tratamiento_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso);
+    pthread_detach(tratamiento_fs);
+}
+
 static void a_mimir(t_pcb* proceso){
 
     log_info(kernel_logger, "PID[%d] bloqueado por %s\n", proceso->pid, proceso->motivo_bloqueo);
@@ -262,36 +270,26 @@ static void a_mimir(t_pcb* proceso){
     if(pf_listo == 1)
     {
 
-     if (string_equals_ignore_case(proceso->motivo_bloqueo, "sleep")){
+        if (string_equals_ignore_case(proceso->motivo_bloqueo, "sleep")){
 
-        pthread_t pcb_en_sleep;
-        if (!pthread_create(&pcb_en_sleep, NULL, (void *)proceso_en_sleep, (void *)proceso)){
-            pthread_detach(pcb_en_sleep);
-        } else {
-            log_error(kernel_logger,"Error en la creacion de hilo \n");
-            abort();
-        }  
-            //free(motivo_de_devolucion);
-        }  else if (es_una_operacion_con_archivos(proceso->motivo_bloqueo)) {
-        pthread_t peticiones_fs;
-        if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
-            pthread_detach(peticiones_fs);
-        } else {
-            log_error(kernel_logger,"Error en la creacion de hilo \n");
-            abort();
-        }  
-            //free(motivo_de_devolucion);
+            pthread_t pcb_en_sleep;
+            if (!pthread_create(&pcb_en_sleep, NULL, (void *)proceso_en_sleep, (void *)proceso)){
+                pthread_detach(pcb_en_sleep);
+            } else {
+                log_error(kernel_logger,"Error en la creacion de hilo \n");
+                abort();
+            }  
+
         } else if (string_equals_ignore_case(proceso->motivo_bloqueo, "page_fault")){
         
-        pthread_t pcb_page_fault;
-        if (!pthread_create(&pcb_page_fault, NULL, (void *)proceso_en_page_fault, (void *)proceso)){
-            pthread_detach(pcb_page_fault);
-        } else {
-            log_error(kernel_logger,"Error en la creacion de hilo \n");
-            abort();
-        }
+            pthread_t pcb_page_fault;
+            if (!pthread_create(&pcb_page_fault, NULL, (void *)proceso_en_page_fault, (void *)proceso)){
+                pthread_detach(pcb_page_fault);
+            } else {
+                log_error(kernel_logger,"Error en la creacion de hilo \n");
+                abort();
+            }
 
-        free(motivo_de_devolucion);
         }
     }
 }
@@ -362,11 +360,10 @@ void proceso_en_page_fault(t_pcb* proceso){
 
     //una vez se atienda, el proceso vuelve a ready
     //obtener_siguiente_blocked(proceso);
-
+    consola_proceso_estado();
     pthread_mutex_lock(&mutex_ready);
     meter_en_cola(proceso, READY, cola_READY);
     pthread_mutex_unlock(&mutex_ready);
-    }    
    
 }
 
@@ -480,7 +477,6 @@ void obtener_siguiente_blocked(t_pcb* proceso)
     mostrar_lista_pcb(cola_READY,"READY");
     pthread_mutex_unlock(&mutex_ready);
 
-    proceso_en_ready();
 }
 
 t_pcb *obtener_siguiente_FIFO()
@@ -628,8 +624,14 @@ void meter_en_cola(t_pcb *pcb, estado ESTADO, t_list *cola)
         }
     }
 
+
     // el estado viejo va a ser el estado original en que estaba el pcb
     estado estado_viejo = pcb->estado_pcb;
+
+    if(estado_viejo != NEW)
+    {
+        list_remove_element(dictionary_int_get(diccionario_colas, estado_viejo), pcb);
+    }
 
     // nuestro nuevo estado va a ser el estado al cual queremos cambiarlo
     pcb->estado_pcb = ESTADO;

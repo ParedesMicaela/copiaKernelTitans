@@ -85,13 +85,14 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                 }
             }
         }
-        else if (existe_en_tabla)
+        else 
         {
             log_info(kernel_logger, "El archivo ya fue abierto y se encuentra en la TGAA\n");
 
             //si fue abierto, independientemente de si tiene lock de escritura o lectura, si quiero escribir tengo que esperar a que termine el resto
             if (string_equals_ignore_case(proceso->modo_apertura, "W"))
             {
+                printf("\n bloqueo el proceso %d porque tengo w y ya fue abierto\n", proceso->pid);
                 list_add(archivo_buscado_tabla->cola_solicitudes,(void*)proceso);
                 bloquear_proceso_por_archivo(nombre_archivo, proceso, "ESCRIBIR");
             }
@@ -104,6 +105,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         {
             //bloqueamos hasta que termine de escribir el otro proceso
             list_add(archivo_encontrado->cola_solicitudes,(void*)proceso);
+            printf("\n bloqueo el proceso %d porque tengo r y ya fue abierto fuera del if\n", proceso->pid);
             bloquear_proceso_por_archivo(nombre_archivo, proceso, "LEER");
 
         }else if(string_equals_ignore_case(proceso->modo_apertura, "R") && !archivo_encontrado->fcb->lock_escritura)
@@ -117,8 +119,6 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             meter_en_cola(proceso, READY, cola_READY);
             pthread_mutex_unlock(&mutex_ready);
             
-            //proceso_en_ready();   
-
         //si quiero escribir y nadie esta leyendo, lo asigno
         }else if(string_equals_ignore_case(proceso->modo_apertura, "W") && !(archivo_encontrado->fcb->lock_escritura) && !(archivo_encontrado->fcb->lock_lectura))
         {
@@ -130,15 +130,14 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             meter_en_cola(proceso, READY, cola_READY);
             pthread_mutex_unlock(&mutex_ready);
             
-            //proceso_en_ready();       
-
         //si quiero escribir y alguien esta usando el archivo, lo bloqueo    
         }else{
             list_add(archivo_encontrado->cola_solicitudes,(void*)proceso);
+            printf("\n bloqueo el proceso %d porque tengo w y ya fue abierto fuera del if\n", proceso->pid);
             bloquear_proceso_por_archivo(nombre_archivo, proceso, "ESCRIBIR");
         }
 
-        proceso_en_ready();   
+        proceso_en_ready();
         break;
 
     case TRUNCAR_ARCHIVO:
@@ -153,6 +152,10 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
             proceso_en_exit(proceso);  
         }
+
+        pthread_mutex_lock(&mutex_ready);
+        meter_en_cola(proceso, READY, cola_READY);
+        pthread_mutex_unlock(&mutex_ready);
         
         enviar_solicitud_fs(proceso->nombre_archivo, TRUNCAR_ARCHIVO, tamanio, 0, 0);
                 
@@ -163,12 +166,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         {
             log_error(kernel_logger, "Hubo un error con la respuesta de fs de truncar \n");
         }
-
-        pthread_mutex_lock(&mutex_ready);
-        meter_en_cola(proceso, READY, cola_READY);
-        pthread_mutex_unlock(&mutex_ready);
         
-        consola_proceso_estado();
         break;
 
     case LEER_ARCHIVO:
@@ -202,12 +200,17 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     list_add(archivo_para_leer_tgaa->cola_solicitudes,(void*)proceso);
 
                     //lo meto en la lista de los que van a leer
+                    printf("\n bloqueo el proceso %d porque tengo r y hay lock de escritura\n", proceso->pid);
                     bloquear_proceso_por_archivo(nombre_archivo, proceso, "LEER");
 
                 }else{
                     
                     //si no tiene un lock de escritura, lo puedo leer
                     list_add(cola_locks_lectura, (void*)proceso);
+
+                    pthread_mutex_lock(&mutex_ready);
+                    meter_en_cola(proceso, READY, cola_READY);
+                    pthread_mutex_unlock(&mutex_ready);
 
                     enviar_solicitud_fs(nombre_archivo, LEER_ARCHIVO, 0, 0, direccion_fisica);
 
@@ -219,11 +222,6 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     {
                         log_error(kernel_logger, "Hubo un error con la respuesta de fs\n");
                     }
-                    pthread_mutex_lock(&mutex_ready);
-                    meter_en_cola(proceso, READY, cola_READY);
-                    pthread_mutex_unlock(&mutex_ready);
-                    
-                    proceso_en_ready();                   
                 }
             }else{
                 log_info(kernel_logger, "El proceso no puede realizar operaciones sobre este archivo");
@@ -237,8 +235,6 @@ void atender_peticiones_al_fs(t_pcb* proceso)
     case ESCRIBIR_ARCHIVO:
         nombre_archivo =  proceso->nombre_archivo;
         //direccion_fisica = proceso->direccion_fisica_proceso;
-
-        printf("el archivo que quiero escribir es: %s", proceso->nombre_archivo);
 
         t_archivo_proceso* archivo_para_escribir = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
         //modo_apertura = archivo_para_escribir->modo_apertura;
@@ -257,34 +253,36 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     
             t_archivo* archivo_para_escribir = buscar_en_tabla_de_archivos_abiertos(nombre_archivo);
 
-            //si hay un lock de escritura, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
+            //si hay un lock de escritura pero yo puse le lock de escritura, puedo escribir
             if(archivo_para_escribir->fcb->lock_escritura && (proceso->pid != archivo_para_escribir_tgaa->pid_que_me_lockeo))
             {              
                 log_info(kernel_logger, "TENGO_LOCk_ESCRITURA");  
 
                 //meto al proceso en la cola de bloqueados del archivo
                 list_add(archivo_para_escribir->cola_solicitudes,(void*)proceso);
+                printf("\n bloqueo el proceso %d porque tengo r y hay lock de escritura\n", proceso->pid);
                 bloquear_proceso_por_archivo(nombre_archivo, proceso, "LEER");
-            }
+
+            }else{
+
+                pthread_mutex_lock(&mutex_ready);
+                meter_en_cola(proceso, READY, cola_READY);
+                pthread_mutex_unlock(&mutex_ready);
+
                 enviar_solicitud_fs(nombre_archivo, SOLICITAR_INFO_ARCHIVO_MEMORIA, 0, proceso->puntero, proceso->direccion_fisica_proceso);
                 int escribir_ok = 0;
                 recv(socket_filesystem, &escribir_ok, sizeof(int),0);
 
                 if(escribir_ok !=1){
                     log_info(kernel_logger, "problema");
-                }else{
-                                
                 }
-                pthread_mutex_lock(&mutex_ready);
-                meter_en_cola(proceso, READY, cola_READY);
-                pthread_mutex_unlock(&mutex_ready);
+            }
                 
         }else{
             log_info(kernel_logger, "El proceso no puede realizar esta operacion sobre este archivo");
             log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_WRITE\n", proceso->pid);
             proceso_en_exit(proceso);       
         }
-
         proceso_en_ready();      
         break;
 
