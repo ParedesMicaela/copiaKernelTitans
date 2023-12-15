@@ -181,6 +181,10 @@ void eliminar_pcb(t_pcb* proceso)
         free(proceso->recurso_pedido);
     }
 
+    if(proceso->motivo_bloqueo != NULL) {
+        free(proceso->motivo_bloqueo);
+    }
+
     list_destroy(proceso->archivos_abiertos);
     free(proceso);
     proceso = NULL;

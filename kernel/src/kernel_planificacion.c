@@ -37,7 +37,6 @@ static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2);
 static void a_mimir(t_pcb* proceso);
 static void atender_round_robin(int* evento_para_interrupt);
 static void aumentar_evento_cpu();
-static void liberar_devuelto_por(char* devuelto_por);
 //====================================================== Planificadores ========================================================
 void inicializar_planificador()
 {
@@ -150,112 +149,84 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 
     //La CPU nos dice pq finalizo
     pthread_mutex_lock(&mutex_contexto);
-    char *devuelto_por = recibir_contexto(proceso_seleccionado);
+    char *devuelto_por = string_duplicate(recibir_contexto(proceso_seleccionado));
     pthread_mutex_unlock(&mutex_contexto);
     
     aumentar_evento_cpu();
 
     // Observamos los motivos de devolucion
+    if (string_equals_ignore_case(devuelto_por, "exit"))
+    {
+        proceso_en_exit(proceso_seleccionado);
+    }
+
+    if (string_equals_ignore_case(devuelto_por, "wait"))
+    {
+        asignacion_recursos(proceso_seleccionado);
+    }
+
+    if (string_equals_ignore_case(devuelto_por, "signal"))
+    {
+        liberacion_recursos(proceso_seleccionado);
+    }
 
     if (string_equals_ignore_case(devuelto_por, "sleep"))
     {
-        // Lo mandamos a dormir
         a_mimir(proceso_seleccionado);
     }
 
-    if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "page_fault")){
-            a_mimir(proceso_seleccionado);
-        }
+     if (string_equals_ignore_case(devuelto_por, "page_fault"))
+    {
+        a_mimir(proceso_seleccionado);
+    }
+
+     if (string_equals_ignore_case(devuelto_por, "desalojo"))
+    {   
+        // Lo agregamos nuevamente a la cola de Ready
+        pthread_mutex_lock(&mutex_ready);
+        meter_en_cola(proceso_seleccionado, READY, cola_READY);
+        mostrar_lista_pcb(cola_READY,"READY");
+        pthread_mutex_unlock(&mutex_ready);
+
+        proceso_en_ready();
+    }
+
+    if (string_equals_ignore_case(devuelto_por, "f_open"))
+    {
+        atender_peticiones_al_fs(proceso_seleccionado);
+    }
+
+    if (string_equals_ignore_case(devuelto_por, "f_close"))
+    {
+        atender_peticiones_al_fs(proceso_seleccionado);
+    }
+
+    if (string_equals_ignore_case(devuelto_por, "f_seek"))
+    {
+        atender_peticiones_al_fs(proceso_seleccionado);
     }
     
-
-    if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "exit")){
-            liberar_devuelto_por(devuelto_por);
-
-            proceso_en_exit(proceso_seleccionado);
-        }
+    if (string_equals_ignore_case(devuelto_por, "f_read"))
+    {
+        a_mimir(proceso_seleccionado);
     }
 
-      if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "wait")){
-            liberar_devuelto_por(devuelto_por);
-
-            asignacion_recursos(proceso_seleccionado);
-        }
+    if (string_equals_ignore_case(devuelto_por, "f_write"))
+    {
+        a_mimir(proceso_seleccionado);
     }
 
-    if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "signal")){
-            liberar_devuelto_por(devuelto_por);
-
-            liberacion_recursos(proceso_seleccionado);
-        }
-    }
-
-     if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "f_open")){
-            atender_peticiones_al_fs(proceso_seleccionado);
-        }
-     }
-    if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "f_close")){
-            atender_peticiones_al_fs(proceso_seleccionado);
-        }
-    }
-    if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "f_seek")){
-            atender_peticiones_al_fs(proceso_seleccionado);
-        }
-    }
-   if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "f_read")){
-             a_mimir(proceso_seleccionado);
-        }
-   }
-    if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "f_write")){
-             a_mimir(proceso_seleccionado);
-        }
-    }
-
-    if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "f_truncate")){
-             a_mimir(proceso_seleccionado);
-        }
-    }
-    if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "desalojo")){
-             liberar_devuelto_por(devuelto_por);
-
-            // Lo agregamos nuevamente a la cola de Ready
-            pthread_mutex_lock(&mutex_ready);
-            meter_en_cola(proceso_seleccionado, READY, cola_READY);
-            mostrar_lista_pcb(cola_READY,"READY");
-            pthread_mutex_unlock(&mutex_ready);
-
-            proceso_en_ready();
-        }
+    if (string_equals_ignore_case(devuelto_por, "f_truncate"))
+    {
+        a_mimir(proceso_seleccionado);
     }
     
-    if(devuelto_por != NULL) {
-        if (string_equals_ignore_case(devuelto_por, "finalizacion")){
-               liberar_devuelto_por(devuelto_por);
-        
-            proceso_en_exit(proceso_seleccionado);
-        }
-
-        }
-}
-
-static void liberar_devuelto_por(char* devuelto_por) {
-    
-    if(devuelto_por != NULL) {
-        free(devuelto_por);
-        devuelto_por = NULL;
+    if (string_equals_ignore_case(devuelto_por, "finalizacion"))
+    {
+        proceso_en_exit(proceso_seleccionado);
     }
-    
+
+    free(devuelto_por);
 }
 
 static void atender_round_robin(int* evento_para_interrupt) {
@@ -295,20 +266,8 @@ static void a_mimir(t_pcb* proceso){
     if(pf_listo == 1)
     {
 
-    if (es_una_operacion_con_archivos(proceso->motivo_bloqueo)) {
+     if (string_equals_ignore_case(proceso->motivo_bloqueo, "sleep")){
         
-        pthread_t peticiones_fs;
-
-        if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
-            pthread_detach(peticiones_fs);
-        } else {
-            log_error(kernel_logger,"Error en la creacion de hilo\n");
-            abort();
-        } 
-        } else if (proceso->motivo_bloqueo != NULL) {
-        if(string_equals_ignore_case(proceso->motivo_bloqueo, "sleep")){
-        liberar_devuelto_por(proceso->motivo_bloqueo);
-
         pthread_t pcb_en_sleep;
         if (!pthread_create(&pcb_en_sleep, NULL, (void *)proceso_en_sleep, (void *)proceso)){
             pthread_detach(pcb_en_sleep);
@@ -316,13 +275,16 @@ static void a_mimir(t_pcb* proceso){
             log_error(kernel_logger,"Error en la creacion de hilo\n");
             abort();
         }  
-        }
-        } 
-         else if (proceso->motivo_bloqueo != NULL){
+        }  else if (es_una_operacion_con_archivos(proceso->motivo_bloqueo)) {
+        pthread_t peticiones_fs;
+        if (!pthread_create(&peticiones_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso)){
+            pthread_detach(peticiones_fs);
+        } else {
+            log_error(kernel_logger,"Error en la creacion de hilo\n");
+            abort();
+        }  
+        } else if (string_equals_ignore_case(proceso->motivo_bloqueo, "page_fault")){
         
-        if(string_equals_ignore_case(proceso->motivo_bloqueo, "page_fault")) {
-        liberar_devuelto_por(proceso->motivo_bloqueo);
-
         pthread_t pcb_page_fault;
         if (!pthread_create(&pcb_page_fault, NULL, (void *)proceso_en_page_fault, (void *)proceso)){
             pthread_detach(pcb_page_fault);
@@ -330,12 +292,10 @@ static void a_mimir(t_pcb* proceso){
             log_error(kernel_logger,"Error en la creacion de hilo\n");
             abort();
         }
-        }
 
         }
     }
 }
-
 void proceso_en_exit(t_pcb *proceso)
 {
     algoritmo algoritmo_elegido = obtener_algoritmo();

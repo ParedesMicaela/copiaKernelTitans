@@ -31,6 +31,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
     existe_en_tabla = false;
    
     int numero = tipo_motivo(proceso->motivo_bloqueo);
+    proceso->motivo_bloqueo = NULL;
 
     switch(numero){  
 
