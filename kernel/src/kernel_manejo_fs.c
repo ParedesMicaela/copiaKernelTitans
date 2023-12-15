@@ -22,15 +22,6 @@ void iniciar_tabla_archivos_abiertos()
 void atender_peticiones_al_fs(t_pcb* proceso)
 {
     log_info(kernel_logger, "Atendemos la peticion del fs");
-    
-    if(motivo_bloqueo!=NULL)
-    {
-        strcpy(proceso->motivo_bloqueo,motivo_bloqueo);
-        log_info(kernel_logger, "Guardamos %s en motivo de bloqueo de proceso", motivo_bloqueo);
-        free(motivo_bloqueo);
-        motivo_bloqueo = NULL;
-        log_info(kernel_logger, "Liberamos");
-    }
    
     char* nombre_archivo = NULL;
     char* modo_apertura = NULL;
@@ -41,7 +32,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
    
     int numero = tipo_motivo(proceso->motivo_bloqueo);
 
-    switch(tipo_motivo(proceso->motivo_bloqueo)){  
+    switch(numero){  
 
     case ABRIR_ARCHIVO:
         nombre_archivo =  proceso->nombre_archivo;
@@ -366,6 +357,9 @@ static int tipo_motivo(char *motivo)
         numero = TRUNCAR_ARCHIVO;
 
     }
+
+    free(motivo);
+    
     return numero;
 }
 
