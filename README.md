@@ -10,3 +10,19 @@ sudo ./ips.sh
 chmod 777 pruebas.sh
 
 sudo ./pruebas.sh
+
+chmod 777 logs.sh
+
+sudo ./logs.sh
+
+chmod 777 archivos_fs.sh
+
+sudo ./archivos_fs.sh
+
+chmod 777 commons.sh
+
+sudo ./commons.sh
+
+chmod 777 shares.sh
+
+sudo ./shares.sh

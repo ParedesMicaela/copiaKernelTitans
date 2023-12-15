@@ -24,14 +24,14 @@ sCpu="IP_CPU=[0-9\.]*"
 
 # kernel
 kc0="../kernel/cfg/kernel.config"
-kc1="../configs/Base/kernel_baseFIFO.config"
-kc2="../configs/Base/kernel_baseRR.config"
-kc3="../configs/Base/kernel_basePRIORIDADES.config"
-kc4="../configs/Recursos/kernel_recursos.config"
-kc5="../configs/Memoria/kernel_memoria.config"
-kc6="../configs/FileSystem/kernel_filesystem.config"
-kc7="../configs/Integral/kernel_integral.config"
-kc8="../configs/Estres/kernel_estres.config"
+kc1="../deploy/Base/kernel_baseFIFO.config"
+kc2="../deploy/Base/kernel_baseRR.config"
+kc3="../deploy/Base/kernel_basePRIORIDADES.config"
+kc4="../deploy/Recursos/kernel_recursos.config"
+kc5="../deploy/Memoria/kernel_memoria.config"
+kc6="../deploy/FileSystem/kernel_filesystem.config"
+kc7="../deploy/Integral/kernel_integral.config"
+kc8="../deploy/Estres/kernel_estres.config"
 # Search and replace Memoria
 sed -E -i "s/$sMem/IP_MEMORIA=$ipMemoria/" $kc0
 sed -E -i "s/$sMem/IP_MEMORIA=$ipMemoria/" $kc1
@@ -65,12 +65,12 @@ sed -E -i "s/$sFs/IP_FILESYSTEM=$ipFS/" $kc8
 
 # filesystem
 filesystemc0="../filesystem/cfg/filesystem.config"
-filesystemc1="../configs/Base/filesystem_base.config"
-filesystemc2="../configs/Recursos/filesystem_recursos.config"
-filesystemc3="../configs/Memoria/filesystem_memoria.config"
-filesystemc4="../configs/FileSystem/filesystem_filesystem.config"
-filesystemc5="../configs/Integral/filesystem_integral.config"
-filesystemc6="../configs/Estres/filesystem_estres.config"
+filesystemc1="../deploy/Base/filesystem_base.config"
+filesystemc2="../deploy/Recursos/filesystem_recursos.config"
+filesystemc3="../deploy/Memoria/filesystem_memoria.config"
+filesystemc4="../deploy/FileSystem/filesystem_filesystem.config"
+filesystemc5="../deploy/Integral/filesystem_integral.config"
+filesystemc6="../deploy/Estres/filesystem_estres.config"
 # Search and replace Memoria
 sed -E -i "s/$sMem/IP_MEMORIA=$ipMemoria/" $filesystemc0
 sed -E -i "s/$sMem/IP_MEMORIA=$ipMemoria/" $filesystemc1
@@ -82,7 +82,7 @@ sed -E -i "s/$sMem/IP_MEMORIA=$ipMemoria/" $filesystemc6
 
 # cpu
 cpc0="../cpu/cfg/cpu.config"
-cpc1="../configs/Base/cpu_base.config"
+cpc1="../deploy/Base/cpu_base.config"
 
 # Search and replace Memoria
 sed -E -i "s/$sMem/IP_MEMORIA=$ipMemoria/" $cpc0
@@ -90,13 +90,13 @@ sed -E -i "s/$sMem/IP_MEMORIA=$ipMemoria/" $cpc1
 
 # memoria
 mc0="../memoria/cfg/memoria.config"
-mc1="../configs/Base/memoria_base.config"
-mc2="../configs/Recursos/memoria_recursos.config"
-mc3="../configs/Memoria/memoria_memoriaFIFO.config"
-mc4="../configs/Memoria/memoria_memoriaLRU.config"
-mc5="../configs/FileSystem/memoria_filesystem.config"
-mc6="../configs/Integral/memoria_integral.config"
-mc7="../configs/Estres/memoria_estres.config"
+mc1="../deploy/Base/memoria_base.config"
+mc2="../deploy/Recursos/memoria_recursos.config"
+mc3="../deploy/Memoria/memoria_memoriaFIFO.config"
+mc4="../deploy/Memoria/memoria_memoriaLRU.config"
+mc5="../deploy/FileSystem/memoria_filesystem.config"
+mc6="../deploy/Integral/memoria_integral.config"
+mc7="../deploy/Estres/memoria_estres.config"
 
 # Search and replace Memoria
 sed -E -i "s/$sMem/IP_MEMORIA=$ipMemoria/" $mc0

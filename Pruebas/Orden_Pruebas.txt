@@ -27,6 +27,9 @@ INICIAR_PLANIFICACION
 
 DETENER_PLANIFICACION
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/MEMORIA_2.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/MEMORIA_2.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/MEMORIA_2.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/MEMORIA_2.txt" 64 1
 INICIAR_PLANIFICACION
 
 DETENER_PLANIFICACION
@@ -35,6 +38,9 @@ FINALIZAR_PROCESO 2
 FINALIZAR_PROCESO 3
 FINALIZAR_PROCESO 4
 MULTIPROGRAMACION 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/MEMORIA_2.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/MEMORIA_2.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/MEMORIA_2.txt" 64 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/MEMORIA_2.txt" 64 1
 INICIAR_PLANIFICACION
 
@@ -59,6 +65,9 @@ FINALIZAR_PROCESO 1
 DETENER_PLANIFICACION
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ESTRES_1.txt" 64 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ESTRES_2.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ESTRES_3.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ESTRES_3.txt" 64 1
+INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ESTRES_3.txt" 64 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ESTRES_3.txt" 64 1
 INICIAR_PROCESO "/home/utnso/tp-2023-2c-KernelTitans/Pruebas/ESTRES_4.txt" 256 1
 
