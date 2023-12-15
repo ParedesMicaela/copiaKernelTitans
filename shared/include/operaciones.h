@@ -151,7 +151,7 @@ typedef struct
 
 typedef struct {   
 	fcb_proceso* fcb;
-    uint32_t puntero_posicion; //si lo manejamos con file, como lo habias hecho creoque es mas facil
+    uint32_t puntero_posicion; 
 	char* modo_apertura;
 	//esto es distinto al bloque inical porque podemos usar FSEEK. el bloque incial es siempre el mismo para moverse mas facil
 } t_archivo_proceso;
@@ -160,6 +160,7 @@ typedef struct {
 	fcb_proceso* fcb;
     uint32_t puntero_posicion;
 	t_list* cola_solicitudes;
+	int pid_que_me_lockeo;
 } t_archivo;
 
 

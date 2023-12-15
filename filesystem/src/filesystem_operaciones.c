@@ -237,13 +237,15 @@ static uint32_t buscar_bloque_en_FAT(uint32_t cantidad_bloques_a_recorrer, uint3
 
 static void escribir_contenido_en_bloque (uint32_t nro_bloque, uint32_t puntero, void* contenido) 
 {
+	//uint32_t puntero_offset = puntero / tam_bloque;
+
 	int retardo = config_valores_filesystem.retardo_acceso_bloque;
 
 	//direccion ultimo bloque a leer
 	uint32_t direccion_bloque = tam_bloque * nro_bloque;
 
 	//tiene que ser puntero + tam_swap
-	uint32_t offset = direccion_bloque + tamanio_swap + puntero;
+	uint32_t offset = direccion_bloque + tamanio_swap;
 	
 	//Abrimos archivo
 	archivo_de_bloques = levantar_archivo_bloque();

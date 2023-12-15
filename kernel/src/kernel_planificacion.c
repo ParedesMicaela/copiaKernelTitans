@@ -206,11 +206,11 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     }
     if (string_equals_ignore_case(devuelto_por, "f_read"))
     {
-        a_mimir(proceso_seleccionado);
+        atender_peticiones_al_fs(proceso_seleccionado);
     }
     if (string_equals_ignore_case(devuelto_por, "f_write"))
     {
-        a_mimir(proceso_seleccionado);
+        atender_peticiones_al_fs(proceso_seleccionado);
     }
     if (string_equals_ignore_case(devuelto_por, "f_truncate"))
     {
@@ -222,7 +222,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         proceso_en_exit(proceso_seleccionado);
     }
 
-    free(devuelto_por);
+    //free(devuelto_por);
 }
 
 static void atender_round_robin(int* evento_para_interrupt) {
@@ -252,7 +252,7 @@ static void a_mimir(t_pcb* proceso){
     list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
     pthread_mutex_unlock(&mutex_exec);
 
-     // Movemos el proceso a la cola de BLOCKED
+    //Movemos el proceso a la cola de BLOCKED
     pthread_mutex_lock(&mutex_blocked);
     meter_en_cola(proceso, BLOCKED, cola_BLOCKED);
     pthread_mutex_unlock(&mutex_blocked);
@@ -291,7 +291,7 @@ static void a_mimir(t_pcb* proceso){
             abort();
         }
 
-    //free(motivo_de_devolucion);
+        free(motivo_de_devolucion);
         }
     }
 }
@@ -346,7 +346,10 @@ void proceso_en_exit(t_pcb *proceso)
 void proceso_en_sleep(t_pcb *proceso) 
 {
     sleep(proceso->sleep);
-    obtener_siguiente_blocked(proceso);
+    //obtener_siguiente_blocked(proceso);
+    pthread_mutex_lock(&mutex_ready);
+    meter_en_cola(proceso, READY, cola_READY);
+    pthread_mutex_unlock(&mutex_ready);
 }
 
 void proceso_en_page_fault(t_pcb* proceso){
@@ -358,7 +361,11 @@ void proceso_en_page_fault(t_pcb* proceso){
     atender_page_fault(proceso);
 
     //una vez se atienda, el proceso vuelve a ready
-    obtener_siguiente_blocked(proceso);
+    //obtener_siguiente_blocked(proceso);
+
+    pthread_mutex_lock(&mutex_ready);
+    meter_en_cola(proceso, READY, cola_READY);
+    pthread_mutex_unlock(&mutex_ready);
     }    
    
 }
@@ -473,7 +480,7 @@ void obtener_siguiente_blocked(t_pcb* proceso)
     mostrar_lista_pcb(cola_READY,"READY");
     pthread_mutex_unlock(&mutex_ready);
 
-    proceso_en_ready(proceso);
+    proceso_en_ready();
 }
 
 t_pcb *obtener_siguiente_FIFO()
