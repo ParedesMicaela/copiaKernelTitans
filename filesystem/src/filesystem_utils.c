@@ -37,7 +37,6 @@ void cargar_configuracion(char* path) {
 void atender_clientes_filesystem(void* conexion) {
     int cliente_fd = *(int*)conexion;
     char* nombre_archivo = NULL;
-	char* modo_apertura = NULL;
     int nuevo_tamanio_archivo = -1;
     uint32_t puntero_archivo = 0; 
     uint32_t direccion_fisica; 

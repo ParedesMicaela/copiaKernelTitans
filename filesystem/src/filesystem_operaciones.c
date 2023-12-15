@@ -9,7 +9,7 @@ FILE* archivo_tabla_fat;
 
 static uint32_t buscar_bloque_en_FAT(uint32_t bloque_final, uint32_t bloque_inicial);
 static void escribir_en_memoria(int tam_bloque, void* contenido, uint32_t direccion_fisica);
-static void escribir_contenido_en_bloque (uint32_t nro_bloque, uint32_t puntero, void* contenido); 
+static void escribir_contenido_en_bloque (uint32_t nro_bloque, uint32_t puntero, void* contenido, char* nombre_archivo);
 static void actualizar_tabla_fat_reducir(int posicion_bloque_agregado, int bloques_a_quitar, int posicion_primer_bloque_a_quitar); 
 static void actualizar_tabla_fat_ampliar(int posicion_bloque_agregado, int posicion_ultimo_bloque);
 //static void actualizar_archivo_de_bloques_ampliar(int posicion_bloque_agregado, int posicion_ultimo_bloque, bloque_archivo_bloques* nuevo_ultimo_bloque_bloques);
@@ -192,21 +192,22 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 void escribir_archivo(char* nombre_archivo, uint32_t puntero_archivo, void* contenido){
 	
 	fcb* archivo_a_leer = levantar_fcb (nombre_archivo);
-
+	
+	free(archivo_a_leer->nombre_archivo);
 	uint32_t bloque_inicial = archivo_a_leer->bloque_inicial; 
 	uint32_t bloque_a_escribir = puntero_archivo/tam_bloque;
 	free(archivo_a_leer);
 
-	escribir_contenido_en_archivo(bloque_a_escribir,bloque_inicial, contenido, puntero_archivo);
+	escribir_contenido_en_archivo(bloque_a_escribir,bloque_inicial, contenido, puntero_archivo, nombre_archivo);
 }
 
-void escribir_contenido_en_archivo(uint32_t bloque_a_escribir, uint32_t bloque_inicial, void* contenido, uint32_t puntero) 
+void escribir_contenido_en_archivo(uint32_t bloque_a_escribir, uint32_t bloque_inicial, void* contenido, uint32_t puntero, char* nombre_archivo) 
 {
 	//Buscamos el bloque en el Mapa(FAT)
 	uint32_t nro_bloque = buscar_bloque_en_FAT(bloque_a_escribir, bloque_inicial);
 
 	//Escribimos en el bloque encontrado el contenido (con un corrimiento dado por el puntero)
-	escribir_contenido_en_bloque(nro_bloque, puntero, contenido);
+	escribir_contenido_en_bloque(nro_bloque, puntero, contenido, nombre_archivo);
 }
 
 static uint32_t buscar_bloque_en_FAT(uint32_t cantidad_bloques_a_recorrer, uint32_t bloque_inicial)
@@ -236,7 +237,7 @@ static uint32_t buscar_bloque_en_FAT(uint32_t cantidad_bloques_a_recorrer, uint3
 	return nro_bloque;
 }
 
-static void escribir_contenido_en_bloque (uint32_t nro_bloque, uint32_t puntero, void* contenido) 
+static void escribir_contenido_en_bloque (uint32_t nro_bloque, uint32_t puntero, void* contenido, char* nombre_archivo) 
 {
 	//uint32_t puntero_correcto = puntero / tam_bloque;
 	
@@ -257,14 +258,16 @@ static void escribir_contenido_en_bloque (uint32_t nro_bloque, uint32_t puntero,
 	//Accedemos al bloque
 	usleep(1000* retardo);
 
-	log_info(filesystem_logger, "Acceso Bloque - Archivo: consolas - Bloque Archivo: %d - Bloque FS: %d \n", nro_bloque, offset);
+	log_info(filesystem_logger, "Acceso Bloque - Archivo: %s  - Bloque Archivo: %d - Bloque FS: %d \n", nombre_archivo, nro_bloque, offset);
 
 	if (fwrite(contenido, tam_bloque, 1, archivo_de_bloques) != 1) {
 		log_error(filesystem_logger, "La cagamos chicos \n");
     }
-
 	//mem_hexdump(contenido, sizeof(contenido));
 	fclose(archivo_de_bloques);
+
+	free(nombre_archivo);
+	free(contenido);
 }
 
 void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, char* nombre_archivo, uint32_t puntero_archivo)
@@ -276,6 +279,7 @@ void solicitar_informacion_memoria(uint32_t direccion_fisica, int tam_bloque, ch
 	agregar_cadena_a_paquete(paquete, nombre_archivo);
 	enviar_paquete(paquete, socket_memoria);
 	eliminar_paquete(paquete);
+	free(nombre_archivo);
 }
 
 void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direccion_fisica)
