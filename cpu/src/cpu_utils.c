@@ -295,17 +295,23 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
         case (WAIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso_wait = datos[1];
-            contexto_ejecucion->program_counter += 1;
-            devolver_contexto_ejecucion(contexto_ejecucion, "wait",recurso_wait, 0, -1, "basura", "basura", -1);
-            seguir_ejecutando = false;
+            if(!hay_interrupcion())
+            {
+                contexto_ejecucion->program_counter += 1;
+                devolver_contexto_ejecucion(contexto_ejecucion, "wait",recurso_wait, 0, -1, "basura", "basura", -1);
+                seguir_ejecutando = false;           
+            }
             break;
 
         case (SIGNAL):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso_signal = datos[1];
+            if(!hay_interrupcion())
+            {
             contexto_ejecucion->program_counter += 1;
             devolver_contexto_ejecucion(contexto_ejecucion, "signal", recurso_signal, 0, -1, "basura", "basura",-1);
             seguir_ejecutando = false;
+            }
             break;
 
         case(MOV_IN):
@@ -385,9 +391,13 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             break;
 
         case (INSTRUCCION_EXIT):
+            if(!hay_interrupcion())
+            {
             log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
+            
             devolver_contexto_ejecucion(contexto_ejecucion, "exit","basura", 0, -1, "basura", "basura", -1);
             seguir_ejecutando = false;
+            }
             break;
         }
 
