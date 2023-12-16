@@ -14,21 +14,25 @@ char **nombres_recursos;
 // funcion de wait
 void asignacion_recursos(t_pcb *proceso)
 {
-    char *recurso = proceso->recurso_pedido;
+    liberar_memoria(&proceso->modo_apertura);
+    liberar_memoria(&proceso->nombre_archivo);
+    liberar_memoria(&proceso->motivo_bloqueo);
+
     int instancias = 0;
 
-    int indice_pedido = indice_recurso(recurso);
+    int indice_pedido = indice_recurso(proceso->recurso_pedido);
     
     // si el recurso no existe, mando el proceso a exit
     if (indice_pedido == -1)
     {
-        proceso->recurso_pedido = NULL;
+        liberar_memoria(&proceso->recurso_pedido);
         log_error(kernel_logger, "El recurso solicitado no existe\n");
         log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_RESOURCE\n", proceso->pid);
 
         proceso_en_exit(proceso);
         return;
     }
+
     // Restamos la instancia pedida
     pthread_mutex_lock(&mutex_recursos);
     instancias = instancias_del_recurso[indice_pedido];
@@ -71,10 +75,10 @@ void asignacion_recursos(t_pcb *proceso)
         sino termino sumando una instancia siempre al mismo. Si pongo el indice del recurso del que
         estamos hablando, cambia la cosa*/
 
-        strcpy(proceso->recursos_asignados[indice_pedido].nombre_recurso, recurso);
+        strcpy(proceso->recursos_asignados[indice_pedido].nombre_recurso, proceso->recurso_pedido);
         proceso->recursos_asignados[indice_pedido].instancias_recurso++;
 
-        proceso->recurso_pedido = NULL;
+        liberar_memoria(&proceso->recurso_pedido);
 
         if(proceso->estado_pcb == BLOCKED)
         {
@@ -98,10 +102,13 @@ void asignacion_recursos(t_pcb *proceso)
 // funcion de signal
 void liberacion_recursos(t_pcb *proceso)
 {
-    char *recurso = proceso->recurso_pedido;
+    liberar_memoria(&proceso->modo_apertura);
+    liberar_memoria(&proceso->nombre_archivo);
+    liberar_memoria(&proceso->motivo_bloqueo);
+    
     int instancias = 0;
 
-    int indice_pedido = indice_recurso(recurso);
+    int indice_pedido = indice_recurso(proceso->recurso_pedido);
 
      // si el recurso no existe, mando el proceso a exit
     if (indice_pedido == -1)
@@ -114,7 +121,7 @@ void liberacion_recursos(t_pcb *proceso)
     }
 
     // actualizo la cantidad de instancias para el recurso que me pidio el proceso y lo borro de recurso_pedido
-    proceso->recurso_pedido = NULL;
+    liberar_memoria(&proceso->recurso_pedido);
     pthread_mutex_lock(&mutex_recursos);
     instancias = instancias_del_recurso[indice_pedido];
     instancias++;
@@ -132,7 +139,7 @@ void liberacion_recursos(t_pcb *proceso)
         instancias_del_recurso[indice_pedido] = instancias;
         pthread_mutex_unlock(&mutex_recursos);
 
-        log_info(kernel_logger, "PID: %d - Signal: %s - Instancias: %d\n", proceso->pid, recurso, instancias);
+        log_info(kernel_logger, "PID: %d - Signal: %s - Instancias: %d\n", proceso->pid, proceso->recurso_pedido, instancias);
 
         if(list_remove_element((t_list *)list_get(lista_recursos, indice_pedido), (void *)proceso))
 

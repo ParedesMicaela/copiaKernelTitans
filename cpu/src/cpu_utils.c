@@ -254,10 +254,13 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             contexto_ejecucion->program_counter += 1;
             break;
           case (INSTRUCCION_EXIT):
+            if(!hay_interrupcion())
+            {
             log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
             
             devolver_contexto_ejecucion(contexto_ejecucion, "exit","basura", 0, -1, "basura", "basura", -1);
             seguir_ejecutando = false;
+            }
             break;
 
         case (SUM):

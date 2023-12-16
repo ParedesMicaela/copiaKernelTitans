@@ -34,9 +34,11 @@ void deteccion_deadlock (t_pcb* proceso, char* recurso_pedido)
                         {                       
                             //P1 que esta reteniendo el que P2 necesita
                             mensaje_deadlock_detectado(proceso, proceso->recurso_pedido);
+                            liberar_memoria(&proceso->recurso_pedido);
                             hay_deadlock = true;
                         }else
                         {
+                            //liberar_memoria(&proceso->recurso_pedido);
                             log_info(kernel_logger,"Analisis de deteccion de deadlock completado: NO hay deadlock");
                         }
                     }
@@ -46,10 +48,10 @@ void deteccion_deadlock (t_pcb* proceso, char* recurso_pedido)
     }else
     {
         log_info(kernel_logger,"Analisis de deteccion de deadlock completado: NO hay deadlock");
+        //liberar_memoria(&proceso->recurso_pedido);
         hay_deadlock = false;
     }
-    //si no retiene recursos, entonces no puede estar en deadlockproceso->recurso_pedido
-    //free(recurso_retenido);
+    liberar_memoria(&proceso->recurso_pedido);
 }
 
 bool proceso_reteniendo_recurso(t_pcb* proceso_involucrado, char* recurso) {

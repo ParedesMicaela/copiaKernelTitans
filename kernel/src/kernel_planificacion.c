@@ -192,32 +192,25 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 
     if (string_equals_ignore_case(devuelto_por, "exit"))
     {
-        free(proceso_seleccionado->motivo_bloqueo);
-        proceso_seleccionado->motivo_bloqueo = NULL;
-
         proceso_en_exit(proceso_seleccionado);
     }
 
     if (string_equals_ignore_case(devuelto_por, "wait"))
     {
-        free(proceso_seleccionado->motivo_bloqueo);
-        proceso_seleccionado->motivo_bloqueo = NULL;
-
         asignacion_recursos(proceso_seleccionado);
     }
 
     if (string_equals_ignore_case(devuelto_por, "signal"))
     {
-        free(proceso_seleccionado->motivo_bloqueo);
-        proceso_seleccionado->motivo_bloqueo = NULL;
-
         liberacion_recursos(proceso_seleccionado);
     }
 
      if (string_equals_ignore_case(devuelto_por, "desalojo"))
     {   
-        free(proceso_seleccionado->motivo_bloqueo);
-        proceso_seleccionado->motivo_bloqueo = NULL;
+        liberar_memoria(&proceso_seleccionado->modo_apertura);
+        liberar_memoria(&proceso_seleccionado->recurso_pedido);
+        liberar_memoria(&proceso_seleccionado->nombre_archivo);
+        liberar_memoria(&proceso_seleccionado->motivo_bloqueo);
 
         // Lo agregamos nuevamente a la cola de Ready
         pthread_mutex_lock(&mutex_ready);
@@ -230,13 +223,12 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     
     if (string_equals_ignore_case(devuelto_por, "finalizacion"))
     {
-        free(proceso_seleccionado->motivo_bloqueo);
-        proceso_seleccionado->motivo_bloqueo = NULL;
-
         proceso_en_exit(proceso_seleccionado);
     }
 
     free(devuelto_por);
+    //liberar_memoria(&proceso_seleccionado->motivo_bloqueo);
+
 }
 
 static void atender_round_robin(int* evento_para_interrupt) {
@@ -260,6 +252,9 @@ static void atender_round_robin(int* evento_para_interrupt) {
 static void a_mimir(t_pcb* proceso){
 
     log_info(kernel_logger, "PID[%d] bloqueado por %s\n", proceso->pid, proceso->motivo_bloqueo);
+
+    liberar_memoria(&proceso->modo_apertura);
+    liberar_memoria(&proceso->recurso_pedido);
 
     //motivo_de_devolucion = string_duplicate(proceso->motivo_bloqueo);
 
@@ -305,6 +300,11 @@ static void a_mimir(t_pcb* proceso){
 }
 void proceso_en_exit(t_pcb *proceso)
 {
+    liberar_memoria(&proceso->modo_apertura);
+    liberar_memoria(&proceso->recurso_pedido);
+    liberar_memoria(&proceso->nombre_archivo);
+    liberar_memoria(&proceso->motivo_bloqueo);
+
     algoritmo algoritmo_elegido = obtener_algoritmo();
     
     if(algoritmo_elegido != RR) {

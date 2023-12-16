@@ -147,20 +147,11 @@ char* recibir_contexto(t_pcb* proceso)
         abort();
     }    
 
-    if(string_equals_ignore_case(proceso->recurso_pedido, "basura")) {
-        free(proceso->recurso_pedido);
-        proceso->recurso_pedido = NULL;
-    }
+    liberar_condicional(&proceso->recurso_pedido, "basura");
+    liberar_condicional(&proceso->nombre_archivo, "basura");
+    liberar_condicional(&proceso->modo_apertura, "basura");
 
-    if(string_equals_ignore_case(proceso->nombre_archivo, "basura")) {
-        free(proceso->nombre_archivo);
-        proceso->nombre_archivo = NULL;
-    }
-
-    if(string_equals_ignore_case(proceso->modo_apertura, "basura")) {
-        free(proceso->modo_apertura); 
-        proceso->modo_apertura = NULL;
-    }
+    
 
     log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, proceso->motivo_bloqueo);
 
@@ -175,21 +166,12 @@ void eliminar_pcb(t_pcb* proceso)
     if (proceso->path_proceso != NULL) {
         free(proceso->path_proceso);
     }
-     if (proceso->recurso_pedido != NULL) {
-        free(proceso->recurso_pedido);
-    }
 
-    if(proceso->motivo_bloqueo != NULL) {
-        free(proceso->motivo_bloqueo);
-    }
+    liberar_memoria(&proceso->modo_apertura);
+    liberar_memoria(&proceso->recurso_pedido);
+    liberar_memoria(&proceso->nombre_archivo);
+    liberar_memoria(&proceso->motivo_bloqueo);
 
-    if(proceso->nombre_archivo != NULL) {
-        free(proceso->nombre_archivo);
-    }
-
-    if(proceso->modo_apertura != NULL) {
-        free(proceso->modo_apertura);
-    }
 
     liberar_tabla_archivos_abiertos(proceso);
 
@@ -277,6 +259,20 @@ void liberar_todos_recurso(t_pcb* proceso)
             instancias++;
             instancias_del_recurso[i] = instancias;
         }
+    }
+}
+
+void liberar_memoria(char** ptr) {
+    if (*ptr != NULL) {
+        free(*ptr);
+        *ptr = NULL;
+    }
+}
+
+void liberar_condicional(char** ptr, char* valor_condicional) {
+    if (*ptr != NULL && string_equals_ignore_case(*ptr, valor_condicional)) {
+        free(*ptr);
+        *ptr = NULL;
     }
 }
 

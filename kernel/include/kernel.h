@@ -73,8 +73,9 @@ extern int corriendo;
 extern bool hay_deadlock;
 extern bool existe_en_tabla;
 
-extern char* motivo_de_devolucion;
 extern int pf_listo;
+
+
 
 //==============================================================================================================================
 
@@ -159,6 +160,8 @@ void eliminar_registros_pcb(t_registros_cpu);
 void eliminar_recursos_asignados(t_pcb* );
 void eliminar_archivos_abiertos(t_dictionary *);
 void eliminar_mutex(pthread_mutex_t *);
+void liberar_memoria(char** ptr);
+void liberar_condicional(char** ptr, char* valor_condicional);
 
 //================================================ Consola ==================================================================================================================
 void inicializar_consola_interactiva();
@@ -190,8 +193,10 @@ void fread_kernel_filesystem();
 void fwrite_kernel_filesystem();
 void ftruncate_kernel_filesystem();
 void iniciar_tabla_archivos_abiertos();
-void enviar_solicitud_fs(char* nombre_archivo, op_code operacion, int tamanio, uint32_t posicion, uint32_t direccion_fisica);
-void agregar_archivo_tgaa(char* nombre_archivo, int tamanio, uint32_t direccion, int pid);
-void asignar_archivo_al_proceso(t_archivo* archivo,t_pcb* proceso, char* modo_apertura);
-void bloquear_proceso_por_archivo(char* nombre_archivo, t_pcb* proceso, char* modo_apertura);
+void agregar_archivo_tgaa(t_pcb* proceso, int tamanio, uint32_t direccion, int pid);
+void asignar_archivo_al_proceso(t_archivo* archivo,t_pcb* proceso);
+void bloquear_proceso_por_archivo(t_pcb* proceso);
+void enviar_solicitud_fs(t_pcb* proceso, char* nombre_archivo, op_code operacion, int tamanio, uint32_t puntero, uint32_t direccion_fisica);
+
+
 #endif
