@@ -60,12 +60,9 @@ void inicializar_semaforos()
     pthread_mutex_init(&mutex_colas, NULL);
     pthread_mutex_init(&mutex_recursos, NULL);
     pthread_mutex_init(&mutex_corriendo , NULL);
-    //pthread_mutex_init(&cond_corriendo , NULL);
     pthread_mutex_init(&mutex_contexto , NULL);
     pthread_mutex_init(&mutex_cpu , NULL);
     pthread_mutex_init(&mutex_corriendo_pf , NULL);
-    //pthread_mutex_init(&cond_corriendo_pf , NULL);
-
 
 
     sem_init(&grado_multiprogramacion, 0, config_valores_kernel.grado_multiprogramacion_ini);
@@ -131,6 +128,9 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 {
     pf_listo = 1;
 
+    // La CPU despues nos dice pq regresa
+    enviar_pcb_a_cpu(proceso_seleccionado);
+
     if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR") == 0)
     {
         aumentar_evento_cpu();
@@ -145,8 +145,6 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
     }
 
-    // La CPU despues nos dice pq regresa
-    enviar_pcb_a_cpu(proceso_seleccionado);
 
     //La CPU nos dice pq finalizo
     pthread_mutex_lock(&mutex_contexto);
@@ -156,44 +154,8 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     aumentar_evento_cpu();
 
     // Observamos los motivos de devolucion
-    if (string_equals_ignore_case(devuelto_por, "exit"))
-    {
-        proceso_en_exit(proceso_seleccionado);
-    }
 
-    if (string_equals_ignore_case(devuelto_por, "wait"))
-    {
-        asignacion_recursos(proceso_seleccionado);
-    }
-
-    if (string_equals_ignore_case(devuelto_por, "signal"))
-    {
-        liberacion_recursos(proceso_seleccionado);
-    }
-
-    if (string_equals_ignore_case(devuelto_por, "sleep"))
-    {
-        // Lo mandamos a dormir
-        a_mimir(proceso_seleccionado);
-    }
-
-     if (string_equals_ignore_case(devuelto_por, "page_fault"))
-    {
-        a_mimir(proceso_seleccionado);
-    }
-
-     if (string_equals_ignore_case(devuelto_por, "desalojo"))
-    {   
-        // Lo agregamos nuevamente a la cola de Ready
-        pthread_mutex_lock(&mutex_ready);
-        meter_en_cola(proceso_seleccionado, READY, cola_READY);
-        mostrar_lista_pcb(cola_READY,"READY");
-        pthread_mutex_unlock(&mutex_ready);
-
-        proceso_en_ready();
-    }
-
-    if (string_equals_ignore_case(devuelto_por, "f_open"))
+     if (string_equals_ignore_case(devuelto_por, "f_open"))
     {
         atender_peticiones_al_fs(proceso_seleccionado);
     }
@@ -217,13 +179,65 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
     {
         atender_peticiones_al_fs(proceso_seleccionado);
     }
-    
-    if (string_equals_ignore_case(devuelto_por, "finalizacion"))
+
+    if (string_equals_ignore_case(devuelto_por, "sleep"))
     {
+        // Lo mandamos a dormir
+        a_mimir(proceso_seleccionado);
+    }
+
+     if (string_equals_ignore_case(devuelto_por, "page_fault"))
+    {
+        a_mimir(proceso_seleccionado);
+    }
+
+    if (string_equals_ignore_case(devuelto_por, "exit"))
+    {
+        free(proceso_seleccionado->motivo_bloqueo);
+        proceso_seleccionado->motivo_bloqueo = NULL;
+
         proceso_en_exit(proceso_seleccionado);
     }
 
-    //free(devuelto_por);
+    if (string_equals_ignore_case(devuelto_por, "wait"))
+    {
+        free(proceso_seleccionado->motivo_bloqueo);
+        proceso_seleccionado->motivo_bloqueo = NULL;
+
+        asignacion_recursos(proceso_seleccionado);
+    }
+
+    if (string_equals_ignore_case(devuelto_por, "signal"))
+    {
+        free(proceso_seleccionado->motivo_bloqueo);
+        proceso_seleccionado->motivo_bloqueo = NULL;
+
+        liberacion_recursos(proceso_seleccionado);
+    }
+
+     if (string_equals_ignore_case(devuelto_por, "desalojo"))
+    {   
+        free(proceso_seleccionado->motivo_bloqueo);
+        proceso_seleccionado->motivo_bloqueo = NULL;
+
+        // Lo agregamos nuevamente a la cola de Ready
+        pthread_mutex_lock(&mutex_ready);
+        meter_en_cola(proceso_seleccionado, READY, cola_READY);
+        mostrar_lista_pcb(cola_READY,"READY");
+        pthread_mutex_unlock(&mutex_ready);
+
+        proceso_en_ready();
+    }
+    
+    if (string_equals_ignore_case(devuelto_por, "finalizacion"))
+    {
+        free(proceso_seleccionado->motivo_bloqueo);
+        proceso_seleccionado->motivo_bloqueo = NULL;
+
+        proceso_en_exit(proceso_seleccionado);
+    }
+
+    free(devuelto_por);
 }
 
 static void atender_round_robin(int* evento_para_interrupt) {
@@ -291,6 +305,8 @@ static void a_mimir(t_pcb* proceso){
             }
 
         }
+        free(proceso->motivo_bloqueo);
+        proceso->motivo_bloqueo = NULL;
     }
 }
 void proceso_en_exit(t_pcb *proceso)

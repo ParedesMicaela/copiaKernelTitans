@@ -8,8 +8,6 @@ bool existe_en_tabla = true;
 t_list *cola_locks_lectura; //tiene a todos los archivos que se estan leyendo
 op_code devuelto_por=-1;
 
-char* motivo_bloqueo;
-
 static int tipo_motivo(char *motivo);
 //=============================================================================================================
 
@@ -27,13 +25,15 @@ void atender_peticiones_al_fs(t_pcb* proceso)
     uint32_t direccion_fisica = 0;
     existe_en_tabla = false;
    
-    //int numero = tipo_motivo(proceso->motivo_bloqueo);
+    char* motivo_bloqueo = string_duplicate(proceso->motivo_bloqueo);
 
-    //proceso->motivo_bloqueo = NULL;
+    free(proceso->motivo_bloqueo);
+    proceso->motivo_bloqueo;
 
-    switch(tipo_motivo(proceso->motivo_bloqueo)){  
+    switch(tipo_motivo(motivo_bloqueo)){  
 
     case ABRIR_ARCHIVO:
+        free(motivo_bloqueo);
         modo_apertura = proceso->modo_apertura;
         log_info(kernel_logger, "PID: %d - Abrir Archivo: %s Modo Apertura: %s", proceso->pid, proceso->nombre_archivo, proceso->modo_apertura);
                 
@@ -137,6 +137,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         break;
 
     case TRUNCAR_ARCHIVO:
+        free(motivo_bloqueo);
         tamanio = proceso->tamanio_archivo;
         
         t_archivo_proceso* archivo = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
@@ -165,6 +166,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         break;
 
     case LEER_ARCHIVO:
+        free(motivo_bloqueo);
         direccion_fisica = proceso->direccion_fisica_proceso;
 
         //en la tabla del proceso guardo en que modo abrio el archivo
@@ -226,7 +228,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         break;
 
     case ESCRIBIR_ARCHIVO:
-
+        free(motivo_bloqueo);
         t_archivo_proceso* archivo_para_escribir = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
         if(archivo_para_escribir == NULL)
         {
@@ -277,7 +279,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         break;
 
     case BUSCAR_ARCHIVO:
-
+        free(motivo_bloqueo);
         t_archivo_proceso* archivo_buscado = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
 
         archivo_buscado->puntero_posicion = proceso->puntero;
@@ -288,6 +290,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         break;
 
     case CERRAR_ARCHIVO:
+        free(motivo_bloqueo);
 
         //busco el archivo en la TGAA y en la tabla del proceso para cerrarlo de ambos si es necesario
         t_archivo_proceso* archi = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);

@@ -161,6 +161,7 @@ char* recibir_contexto(t_pcb* proceso)
         free(proceso->modo_apertura); 
         proceso->modo_apertura = NULL;
     }
+
     log_info(kernel_logger, "Recibi el PCB %d de la cpu por motivo de: %s\n", proceso->pid, proceso->motivo_bloqueo);
 
     eliminar_paquete(paquete);
@@ -192,8 +193,7 @@ void eliminar_pcb(t_pcb* proceso)
 
     liberar_tabla_archivos_abiertos(proceso);
 
-    //free(proceso);
-    proceso = NULL;
+    free(proceso);
 }
 
 void eliminar_recursos_asignados(t_pcb* proceso) {
@@ -280,10 +280,3 @@ void liberar_todos_recurso(t_pcb* proceso)
     }
 }
 
-
-
-void eliminar_archivos_abiertos(t_dictionary *archivosAbiertos)
-{
-    //esto hay que revisarlo porque no se si esta bien, pero a rezar que lo ultimo que se pierde es la esperanza
-    dictionary_destroy_and_destroy_elements(archivosAbiertos, dictionary_elements(archivosAbiertos));
-}
