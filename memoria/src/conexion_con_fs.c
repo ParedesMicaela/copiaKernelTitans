@@ -32,7 +32,6 @@ void escribir_en_swap(t_pagina* pagina_a_escribir, int pid){
     agregar_entero_a_paquete(paquete, pid);
     agregar_entero_a_paquete(paquete, pagina_a_escribir->numero_de_pagina);
     agregar_entero_a_paquete(paquete, pagina_a_escribir->posicion_swap);
-    //agregar_entero_a_paquete(paquete, pagina_a_escribir->marco);
     enviar_paquete(paquete, socket_fs);
     eliminar_paquete(paquete);
 }
@@ -40,18 +39,20 @@ void escribir_en_swap(t_pagina* pagina_a_escribir, int pid){
 
 void escribir_en_memoria(void* contenido, size_t tamanio_contenido, uint32_t direccion_fisica)
 {
+    log_info(memoria_logger, "Acción: %s - Dirección física: %d ", "ESCRIBIR", direccion_fisica);
+
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
     char* puntero_a_direccion_fisica = espacio_usuario + direccion_fisica; 
 
     memcpy(puntero_a_direccion_fisica, contenido, tamanio_contenido);
 
-    log_info(memoria_logger, "Acción: %s - Dirección física: %d ", "ESCRIBIR EN MEMORIA", direccion_fisica);
-
     enviar_paquete_confirmacion_escritura();
  }
 
 void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica) {
+
+    log_info(memoria_logger, "Acción: %s - Dirección física: %d ", "LEER", direccion_fisica);
 
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
@@ -59,8 +60,6 @@ void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica) {
     void* contenido = malloc(tamanio_contenido);
 
 	memcpy(contenido, puntero_direccion_fisica, tamanio_contenido);
-
-    log_info(memoria_logger, "Acción: %s - Dirección física: %d ", "LEER EN MEMORIA", direccion_fisica);
 
 	return contenido; 
 }

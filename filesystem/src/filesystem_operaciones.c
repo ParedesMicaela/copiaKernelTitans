@@ -11,7 +11,7 @@ static uint32_t buscar_bloque_en_FAT(uint32_t bloque_final, uint32_t bloque_inic
 static void escribir_en_memoria(int tam_bloque, void* contenido, uint32_t direccion_fisica);
 static void escribir_contenido_en_bloque (uint32_t nro_bloque, uint32_t puntero, void* contenido, char* nombre_archivo);
 static void actualizarFAT(uint32_t bloque, uint32_t nuevo_valor);
-static void lista_de_punteros(void *punteros_archivo, uint32_t bloque_inicial, size_t tamanio_archivo);
+static void punteros(void *punteros_archivo, uint32_t bloque_inicial, size_t tamanio_archivo);
 //============================================== INICIALIZACION ============================================
 
 void crear_fat()
@@ -360,7 +360,10 @@ void ampliar_tamanio_archivo(int tamanio_nuevo, int tamanio_actual_archivo, uint
     // Si no estamos en 0
     if (bloque_inicial != 0) {
         while (1) {
-            memcpy(&proximo_bloque_a_agregar, tabla_fat_en_memoria + (bloque_inicial * sizeof(uint32_t)), sizeof(uint32_t));
+			
+			//Voy copiando de a un bloque
+			uint32_t offset = bloque_inicial * sizeof(uint32_t);
+            memcpy(&proximo_bloque_a_agregar, tabla_fat_en_memoria + offset, sizeof(uint32_t));
             usleep(1000 * config_valores_filesystem.retardo_acceso_fat);
             log_info(filesystem_logger, "Acceso FAT - Entrada: %d - Valor: %d", bloque_inicial, proximo_bloque_a_agregar);
 
@@ -374,12 +377,15 @@ void ampliar_tamanio_archivo(int tamanio_nuevo, int tamanio_actual_archivo, uint
         }
     }
 
-    // Asigno bloques al archivo
+    // Asignación
     while (bloques_a_agregar > 0) {
-        // Buscamos el primer bloque libre
+        
+		// Buscamos el primer bloque libre
         while (1) {
-            // Leemos el siguiente bloque en la secuencia de bloques libres
-            memcpy(&proximo_bloque_a_agregar, tabla_fat_en_memoria + (puntero_bloque_libre * sizeof(uint32_t)), sizeof(uint32_t));
+
+			//Voy copiando de a un bloque 
+			uint32_t offset = puntero_bloque_libre * sizeof(uint32_t);
+			memcpy(&proximo_bloque_a_agregar, tabla_fat_en_memoria + offset, sizeof(uint32_t));
             log_info(filesystem_logger, "Acceso FAT - Entrada: %d - Valor: %d", puntero_bloque_libre, proximo_bloque_a_agregar);
             usleep(1000 * config_valores_filesystem.retardo_acceso_fat);
 
@@ -392,15 +398,19 @@ void ampliar_tamanio_archivo(int tamanio_nuevo, int tamanio_actual_archivo, uint
             puntero_bloque_libre++;
         }
 
-        // Actualizamos la FAT y asignamos el bloque al archivo
+        // Caso de EOF
         if (bloque_inicial == 0) {
             // Primer bloque del archivo
             bloque_inicial = puntero_bloque_libre;
-            memcpy(tabla_fat_en_memoria + (bloque_inicial * sizeof(uint32_t)), &eof, sizeof(uint32_t));
+			uint32_t offset = bloque_inicial * sizeof(uint32_t);
+            memcpy(tabla_fat_en_memoria + offset, &eof, sizeof(uint32_t));
         } else {
             // Bloque subsiguiente en la secuencia del archivo
-            memcpy(tabla_fat_en_memoria + (bloque_inicial * sizeof(uint32_t)), &puntero_bloque_libre, sizeof(uint32_t));
-            memcpy(tabla_fat_en_memoria + (puntero_bloque_libre * sizeof(uint32_t)), &eof, sizeof(uint32_t));
+			uint32_t offset_bloque_subsiguiente = bloque_inicial * sizeof(uint32_t);
+            memcpy(tabla_fat_en_memoria + offset_bloque_subsiguiente, &puntero_bloque_libre, sizeof(uint32_t));
+
+			uint32_t offset_eof = puntero_bloque_libre * sizeof(uint32_t);
+            memcpy(tabla_fat_en_memoria + offset_eof, &eof, sizeof(uint32_t));
             bloque_inicial = puntero_bloque_libre;
         }
 
@@ -420,34 +430,41 @@ void reducir_tamanio_archivo(int tamanio_nuevo, int tamanio_actual_archivo, uint
     
     uint32_t cantidad_a_reducir = cantidad_bloques * sizeof(uint32_t);
 
-    void *punteros_archivo = malloc(cantidad_a_reducir);
+    void *buffer = malloc(cantidad_a_reducir);
 
-    lista_de_punteros(punteros_archivo, bloque_inicial, tamanio_actual_archivo);
     int eof = UINT32_MAX;
     
     int cantidad_correcta_de_bloques = cantidad_bloques - 1;
-    int bloque_libre = 0;
     
-    while (bloques_a_sacar > 0) {
-        int desplazamiento;
-        memcpy(&desplazamiento, punteros_archivo + (cantidad_correcta_de_bloques * sizeof(uint32_t)), sizeof(uint32_t));
+	int bloque_libre = 0;
+	    
+	punteros(buffer, bloque_inicial, tamanio_actual_archivo);
 
-        // Marcar el bloque como libre en la FAT
-        actualizarFAT(desplazamiento, bloque_libre);
+	int bloque;
+    
+	//Mientras haya bloques que sacar
+    while (bloques_a_sacar > 0) {
+
+		//Copio el contenido que hay en el buffer en el bloque
+		uint32_t offset = cantidad_correcta_de_bloques * sizeof(uint32_t);
+        memcpy(&bloque, buffer + offset, sizeof(uint32_t));
+
+        // Marco el bloque como libre en la FAT
+        actualizarFAT(bloque, bloque_libre);
 
         cantidad_correcta_de_bloques--;
         bloques_a_sacar--;
 
-        // Si es el último bloque a eliminar, actualizar la FAT para marcar el final del archivo
+        // Si es el último bloque a eliminar, actualizo la FAT para marcar el final del archivo
         if (bloques_a_sacar == 0) {
-            actualizarFAT(desplazamiento, eof);
+            actualizarFAT(bloque, eof);
             break;
         }
     }
 
     msync(tabla_fat_en_memoria, tamanio_fat, MS_INVALIDATE);
 
-    free(punteros_archivo);
+    free(buffer);
     return;
 }
 
@@ -459,7 +476,7 @@ static void actualizarFAT(uint32_t bloque, uint32_t nuevo_valor) {
 }
 
 
-static void lista_de_punteros(void *punteros_archivo, uint32_t bloque_inicial, size_t tamanio_archivo) {
+static void punteros(void *punteros_archivo, uint32_t bloque_inicial, size_t tamanio_archivo) {
     
     uint32_t *puntero_actual = &(bloque_inicial); 
 

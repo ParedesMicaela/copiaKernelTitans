@@ -174,11 +174,11 @@ static void liberar_paginas(t_proceso_en_memoria* proceso_en_memoria) {
 
     int cantidad_de_paginas_a_liberar = list_size(proceso_en_memoria->paginas_en_memoria);
 
+    log_info(memoria_logger, "PID: %d - Tamaño: %d\n", proceso_en_memoria->pid, cantidad_de_paginas_a_liberar);
+
     liberar_tabla_de_paginas(proceso_en_memoria);
     free_list(proceso_en_memoria->bloques_reservados);
     list_destroy(proceso_en_memoria->bloques_reservados);
-
-    log_info(memoria_logger, "PID: %d - Paginas a liberar: %d\n", proceso_en_memoria->pid, cantidad_de_paginas_a_liberar);
 
 }
 
