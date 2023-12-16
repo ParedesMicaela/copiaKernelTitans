@@ -50,14 +50,11 @@ int main(void)
     crear_archivo_de_bloque();
     inicializar_swap();
     
-    //mapear_archivo_de_bloques();
 
-    //atender peticiones de kernel
     while(1) 
     {
         int* cliente_fd = malloc(sizeof(int));
         *cliente_fd = esperar_cliente(server_fd);
-        log_info(filesystem_logger,"Se conecto un cliente \n");
         pthread_t multihilo;
 	    pthread_create(&multihilo,NULL,(void*) atender_clientes_filesystem, cliente_fd);
 	    pthread_detach(multihilo);

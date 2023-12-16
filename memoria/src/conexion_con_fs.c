@@ -60,11 +60,7 @@ void* leer_en_memoria(size_t tamanio_contenido, uint32_t direccion_fisica) {
 
 	memcpy(contenido, puntero_direccion_fisica, tamanio_contenido);
 
-    //log_info(memoria_logger, "Acción: %s - Dirección física: %d ", "LEER EN MEMORIA", direccion_fisica);
-
-    log_info(memoria_logger, "Acción: %s - Dirección física: %d - Tamaño: %zu", "LEER EN MEMORIA", direccion_fisica, tamanio_contenido);
-
-	mem_hexdump(contenido, sizeof(contenido));
+    log_info(memoria_logger, "Acción: %s - Dirección física: %d ", "LEER EN MEMORIA", direccion_fisica);
 
 	return contenido; 
 }

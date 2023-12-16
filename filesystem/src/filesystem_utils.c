@@ -63,7 +63,6 @@ void atender_clientes_filesystem(void* conexion) {
 
 			case CREAR_ARCHIVO:
 				nombre_archivo = sacar_cadena_de_paquete(&stream);
-				log_info(filesystem_logger, "Crear Archivo: %s", nombre_archivo);
 				crear_archivo(nombre_archivo, cliente_fd); 
 				break;
 
