@@ -299,38 +299,10 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             proceso_en_exit(proceso);       
         }
 
-        if(string_equals_ignore_case(archi->modo_apertura, "R") == 0)
+        if(list_size(archivo_para_cerrar->cola_solicitudes) > 0)
         {
-            if(list_size(cola_locks_lectura) != 0)
-            {
-                //elimino de la cola de lectura al proceso que cerro el archivo
-                list_remove_element(cola_locks_lectura, (void *)proceso);
-
-                if(list_size(cola_locks_lectura) < 0)
-                {
-                    list_destroy(cola_locks_lectura);
-
-                    //si nadie lo esta leyendo, busco el proceso que esta esperando a escribirlo
-                    if(list_size(archivo_para_cerrar->cola_solicitudes) > 0)
-                    {
-                        t_pcb* siguiente_proceso = (t_pcb*)list_get(archivo_para_cerrar->cola_solicitudes, 0);
-                        obtener_siguiente_blocked(siguiente_proceso);
-                    }else{
-
-                        //si nadie lo esta leyendo y nadie esta esperando hacer algo con el archivo, lo cierro de la TGAA
-                        list_remove(tabla_global_archivos_abiertos, (void*)archivo_para_cerrar);
-                    }
-                }
-            }
-        }
-
-        if(string_equals_ignore_case(archi->modo_apertura, "W") == 0)
-        {
-            if(list_size(archivo_para_cerrar->cola_solicitudes) > 0)
-            {
-                t_pcb* siguiente_proceso = (t_pcb*)list_get(archivo_para_cerrar->cola_solicitudes, 0);
-                obtener_siguiente_blocked(siguiente_proceso);
-            }
+            t_pcb* siguiente_proceso = (t_pcb*)list_get(archivo_para_cerrar->cola_solicitudes, 0);
+            obtener_siguiente_blocked(siguiente_proceso);
         }
 
         list_remove_element(proceso->archivos_abiertos, (void*)archi);
