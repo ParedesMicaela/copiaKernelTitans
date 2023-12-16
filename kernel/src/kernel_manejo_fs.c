@@ -290,6 +290,8 @@ void atender_peticiones_al_fs(t_pcb* proceso)
     case CERRAR_ARCHIVO:
         free(motivo_bloqueo);
 
+        if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR") != 0)
+        {
         //busco el archivo en la TGAA y en la tabla del proceso para cerrarlo de ambos si es necesario
         t_archivo_proceso* archi = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
         t_archivo* archivo_para_cerrar = buscar_en_tabla_de_archivos_abiertos(archi->fcb->nombre_archivo);
@@ -345,7 +347,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             }
         }
         
-        list_remove(archivo_para_cerrar->cola_solicitudes,(void*) proceso);
+        //list_remove(archivo_para_cerrar->cola_solicitudes,(void*) proceso);
         //saco el archivo de la lista de archivos del proceso
         list_remove_element(proceso->archivos_abiertos, (void*)archi);
 
@@ -354,13 +356,22 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         {
             list_remove_element(tabla_global_archivos_abiertos, (void*)archivo_para_cerrar);
         }*/
-
+        
         pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso, READY, cola_READY);
         pthread_mutex_unlock(&mutex_ready);
         
         proceso_en_ready();   
+        }else{
+        pthread_mutex_lock(&mutex_ready);
+        meter_en_cola(proceso, READY, cola_READY);
+        pthread_mutex_unlock(&mutex_ready); 
 
+        if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
+        {
+            proceso_en_ready();
+        }  
+        }
         break;
 
     default:

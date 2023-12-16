@@ -348,31 +348,63 @@ void proceso_en_exit(t_pcb *proceso)
     }
     
     eliminar_pcb(proceso);
-    if(list_size(cola_READY) > 0)
-        {
-            proceso_en_ready();
-        }
+    if(list_size(cola_READY) > 0 && !strcmp(config_valores_kernel.algoritmo_planificacion, "RR"))
+    {
+        proceso_en_ready();
+    }
+
+    if((list_size(cola_EXEC) == 0) && strcmp(config_valores_kernel.algoritmo_planificacion, "RR"))
+    {
+        proceso_en_ready();
+    }    
     sem_post(&grado_multiprogramacion);
 }
 
 void proceso_en_sleep(t_pcb *proceso) 
 {
-    if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
+    if(! strcmp(config_valores_kernel.algoritmo_planificacion, "RR"))
     {
-        proceso_en_ready();
-    }
-    sleep(proceso->sleep);
-    if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
-    {
-        proceso_en_ready();
-    }
-    pthread_mutex_lock(&mutex_ready);
-    meter_en_cola(proceso, READY, cola_READY);
-    pthread_mutex_unlock(&mutex_ready);
-    
-    if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
-    {
-        proceso_en_ready();
+        if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
+        {
+            proceso_en_ready();
+        }
+        sleep(proceso->sleep);
+        if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
+        {
+            proceso_en_ready();
+        }
+        pthread_mutex_lock(&mutex_ready);
+        meter_en_cola(proceso, READY, cola_READY);
+        pthread_mutex_unlock(&mutex_ready);
+        
+        if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
+        {
+            proceso_en_ready();
+        }
+    }else if ((strcmp(config_valores_kernel.algoritmo_planificacion, "RR"))){
+
+        if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
+        {
+            proceso_en_ready();
+        }
+
+        sleep(proceso->sleep);
+
+        pthread_mutex_lock(&mutex_ready);
+        meter_en_cola(proceso, READY, cola_READY);
+        mostrar_lista_pcb(cola_READY,"READY");
+        pthread_mutex_unlock(&mutex_ready);
+
+        if(list_size(cola_EXEC) == 1)
+        {
+            proceso_en_ready();
+        }
+
+        if((list_size(cola_EXEC) == 0) && list_size(cola_READY) > 0 )
+        {
+            proceso_en_ready();
+        }
+        
     }
 }
 

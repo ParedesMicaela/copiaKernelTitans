@@ -174,7 +174,7 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
         //=============================================== FETCH =================================================================
         log_info(cpu_logger, "PID: %d - FETCH - Program Counter: %d", contexto_ejecucion->pid, contexto_ejecucion->program_counter);
 
-        log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d\n", AX, BX, CX, DX);
+        //log_info(cpu_logger, "AX = %d BX = %d CX = %d DX = %d\n", AX, BX, CX, DX);
 
         //le mando el program pointer a la memoria para que me pase la instruccion a la que apunta
         pedir_instruccion(contexto_ejecucion->program_counter, contexto_ejecucion->pid);
@@ -253,11 +253,14 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             setear_registro(registro_SET, valor_SET);
             contexto_ejecucion->program_counter += 1;
             break;
-          case (INSTRUCCION_EXIT):
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
-            
-            devolver_contexto_ejecucion(contexto_ejecucion, "exit","basura", 0, -1, "basura", "basura", -1);
-            seguir_ejecutando = false;
+
+        case (INSTRUCCION_EXIT):
+            if(!hay_interrupcion())
+            {
+                log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
+                devolver_contexto_ejecucion(contexto_ejecucion, "exit","basura", 0, -1, "basura", "basura", -1);
+                seguir_ejecutando = false;
+            }
             break;
 
         case (SUM):
@@ -283,7 +286,7 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             registro_JNZ = datos[1];
             num_instruccion = atoi(datos[2]);
             int valor_registro_JNZ = buscar_registro(registro_JNZ);
-            if (valor_registro_JNZ != 0 && valor_registro_JNZ > 0) {
+            if (valor_registro_JNZ != 0 ) {
                  contexto_ejecucion->program_counter = num_instruccion;
             } else {
                 contexto_ejecucion->program_counter += 1;
@@ -395,6 +398,16 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             seguir_ejecutando = false;
             }
             break;
+        /*
+        case (INSTRUCCION_EXIT):
+            if(!hay_interrupcion())
+            {
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
+            
+            devolver_contexto_ejecucion(contexto_ejecucion, "exit","basura", 0, -1, "basura", "basura", -1);
+            seguir_ejecutando = false;
+            }
+            break;*/
         }
 
         //CHECK INTERRUPT
@@ -445,9 +458,9 @@ void atender_interrupt(void *socket_servidor_interrupt)
             interrupcion += 1;
             pthread_mutex_unlock(&mutex_interrupcion);
         } else {
-        //Nada
+            printf("No recibi una interrupcion\n");
+            abort();
         }
-        
         eliminar_paquete(paquete);
     }
 }

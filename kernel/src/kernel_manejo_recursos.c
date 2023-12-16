@@ -88,6 +88,14 @@ void asignacion_recursos(t_pcb *proceso)
             meter_en_cola(proceso, READY, cola_READY);
             mostrar_lista_pcb(cola_READY,"READY");
             pthread_mutex_unlock(&mutex_ready);
+
+            if((list_size(cola_EXEC) == 0) && list_size(cola_READY) > 0 )
+            {
+                proceso_en_ready();
+            }else if(list_size(cola_EXEC) == 1 && list_size(cola_READY) == 6)
+            {
+                proceso_en_ready();
+            }
         }else
         {
             proceso_en_execute(proceso);
@@ -173,6 +181,11 @@ void liberacion_recursos(t_pcb *proceso)
             meter_en_cola(proceso, READY, cola_READY);
             mostrar_lista_pcb(cola_READY,"READY");
             pthread_mutex_unlock(&mutex_ready);
+
+            if((list_size(cola_EXEC) == 0) && list_size(cola_READY) > 0 )
+            {
+                proceso_en_ready();
+            }   
         }else
         {
             proceso_en_execute(proceso);
