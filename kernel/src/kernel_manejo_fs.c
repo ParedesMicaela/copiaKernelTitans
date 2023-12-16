@@ -184,11 +184,11 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             //modo_apertura = archivo_para_leer->modo_apertura;
 
             //si lo abro para escirbir tambien lo puedo leer
-            if(string_equals_ignore_case(archivo_para_leer->modo_apertura, "R") || string_equals_ignore_case(proceso->modo_apertura, "W") ) //creo ue es proceso
+            if(string_equals_ignore_case(archivo_para_leer->modo_apertura, "R") || string_equals_ignore_case(archivo_para_leer->modo_apertura, "W") ) 
             {
                 log_info(kernel_logger, "PID: %d - Leer Archivo: %s", proceso->pid, proceso->nombre_archivo);
                         
-                //si hay un lock de escritura y NO ES MIO, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
+                /*si hay un lock de escritura y NO ES MIO, en cualquiera de los casos voy a bloquear porque no puedo hacer nada
                 if(archivo_para_leer->fcb->lock_escritura && (proceso->pid != archivo_para_leer_tgaa->pid_que_me_lockeo))
                 {                                
                     //meto al proceso en la cola de bloqueados del archivo
@@ -201,22 +201,24 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                 }else{
                     
                     //si no tiene un lock de escritura, lo puedo leer
-                    list_add(cola_locks_lectura, (void*)proceso);
+                    list_add(cola_locks_lectura, (void*)proceso);*/
+                if (string_equals_ignore_case(archivo_para_leer->modo_apertura, "R")){
+                    archivo_para_leer->fcb->lock_lectura = true;    
+                }
 
-                    pthread_mutex_lock(&mutex_ready);
-                    meter_en_cola(proceso, READY, cola_READY);
-                    pthread_mutex_unlock(&mutex_ready);
+                pthread_mutex_lock(&mutex_ready);
+                meter_en_cola(proceso, READY, cola_READY);
+                pthread_mutex_unlock(&mutex_ready);
 
-                    enviar_solicitud_fs(proceso->nombre_archivo, LEER_ARCHIVO, 0, 0, direccion_fisica);
+                enviar_solicitud_fs(proceso->nombre_archivo, LEER_ARCHIVO, 0, 0, direccion_fisica);
 
-                    //el proceso se bloquea hasta que el fs me informe la finalizacion de la operacion
-                    int ok_read = 0;
-                    recv(socket_filesystem, &ok_read, sizeof(int),0);
+                //el proceso se bloquea hasta que el fs me informe la finalizacion de la operacion
+                int ok_read = 0;
+                recv(socket_filesystem, &ok_read, sizeof(int),0);
 
-                    if (ok_read != 1)
-                    {
-                        log_error(kernel_logger, "Hubo un error con la respuesta de fs\n");
-                    }
+                if (ok_read != 1)
+                {
+                    log_error(kernel_logger, "Hubo un error con la respuesta de fs\n");
                 }
             }else{
                 log_info(kernel_logger, "El proceso no puede realizar operaciones sobre este archivo");
@@ -224,7 +226,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                 proceso_en_exit(proceso);   
             }
         }
-
+        proceso_en_ready();
         break;
 
     case ESCRIBIR_ARCHIVO:
@@ -240,22 +242,22 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
         //si yo abri el archivo en modo de escritura, puedo escribir
         if(string_equals_ignore_case(archivo_para_escribir->modo_apertura, "W"))
-        {
-            log_info(kernel_logger, "PID: %d - Escribir Archivo: %s", proceso->pid, proceso->nombre_archivo);
-                    
+        {                    
             t_archivo* archivo_para_escribir = buscar_en_tabla_de_archivos_abiertos(proceso->nombre_archivo);
 
             //si hay un lock de escritura pero yo puse le lock de escritura, puedo escribir
-            if(archivo_para_escribir->fcb->lock_escritura && (proceso->pid != archivo_para_escribir_tgaa->pid_que_me_lockeo))
+            if(archivo_para_escribir_tgaa->fcb->lock_lectura)
             {              
-                log_info(kernel_logger, "TENGO_LOCk_ESCRITURA");  
+                log_info(kernel_logger, "Alguien esta leyendo");  
 
                 //meto al proceso en la cola de bloqueados del archivo
                 list_add(archivo_para_escribir->cola_solicitudes,(void*)proceso);
                 printf("\n bloqueo el proceso %d porque tengo r y hay lock de escritura\n", proceso->pid);
-                bloquear_proceso_por_archivo(proceso->nombre_archivo, proceso, "LEER");
+                bloquear_proceso_por_archivo(proceso->nombre_archivo, proceso, "ESCRIBIR");
 
             }else{
+
+                log_info(kernel_logger, "PID: %d - Escribir Archivo: %s", proceso->pid, proceso->nombre_archivo);
 
                 pthread_mutex_lock(&mutex_ready);
                 meter_en_cola(proceso, READY, cola_READY);
@@ -294,7 +296,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
         //busco el archivo en la TGAA y en la tabla del proceso para cerrarlo de ambos si es necesario
         t_archivo_proceso* archi = buscar_en_tabla_de_archivos_proceso(proceso, proceso->nombre_archivo);
-        t_archivo* archivo_para_cerrar = buscar_en_tabla_de_archivos_abiertos(proceso->nombre_archivo);
+        t_archivo* archivo_para_cerrar = buscar_en_tabla_de_archivos_abiertos(archi->fcb->nombre_archivo);
 
         if(archi == NULL){
             log_info(kernel_logger, "El proceso no puede realizar operaciones sobre este archivo");
@@ -302,40 +304,35 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             proceso_en_exit(proceso);       
         }
 
-        if(string_equals_ignore_case(archi->modo_apertura, "R") == 0)
+        //si hay procesos esperando por ese archivo
+        if(list_size(archivo_para_cerrar->cola_solicitudes) > 0)
         {
-            if(list_size(cola_locks_lectura) != 0)
+            //agarro cada proceso de la lista de espera
+            for(int i = 0 ; i < list_size(archivo_para_cerrar->cola_solicitudes) ; i ++)
             {
-                //elimino de la cola de lectura al proceso que cerro el archivo
-                list_remove_element(cola_locks_lectura, (void *)proceso);
+                t_pcb* siguiente_proceso = (t_pcb*)list_get(archivo_para_cerrar->cola_solicitudes, i);
 
-                if(list_size(cola_locks_lectura) < 0)
-                {
-                    list_destroy(cola_locks_lectura);
+                //t_archivo_proceso* archivo_del_proceso = buscar_en_tabla_de_archivos_proceso (siguiente_proceso,archivo_para_cerrar->fcb->nombre_archivo);   
 
-                    //si nadie lo esta leyendo, busco el proceso que esta esperando a escribirlo
-                    if(list_size(archivo_para_cerrar->cola_solicitudes) > 0)
-                    {
-                        t_pcb* siguiente_proceso = (t_pcb*)list_get(archivo_para_cerrar->cola_solicitudes, 0);
-                        obtener_siguiente_blocked(siguiente_proceso);
-                    }else{
+                list_remove(archivo_para_cerrar->cola_solicitudes,i);
 
-                        //si nadie lo esta leyendo y nadie esta esperando hacer algo con el archivo, lo cierro de la TGAA
-                        list_remove(tabla_global_archivos_abiertos, (void*)archivo_para_cerrar);
-                    }
-                }
-            }
-        }
+                asignar_archivo_al_proceso(archivo_para_cerrar, siguiente_proceso, siguiente_proceso->modo_apertura);
 
-        if(string_equals_ignore_case(archi->modo_apertura, "W") == 0)
-        {
-            if(list_size(archivo_para_cerrar->cola_solicitudes) > 0)
-            {
-                t_pcb* siguiente_proceso = (t_pcb*)list_get(archivo_para_cerrar->cola_solicitudes, 0);
                 obtener_siguiente_blocked(siguiente_proceso);
+
+                //busco el archivo dentro de la tabla de cada proceso
+                //t_archivo_proceso* archivo_del_proceso = buscar_en_tabla_de_archivos_proceso (siguiente_proceso,archivo_para_cerrar->fcb->nombre_archivo);   
+
+                /*si abrio el archivo en lectura
+                if(string_equals_ignore_case(archivos_del_proceso->modo_apertura, "R"))
+                {
+                    //mando el proceso a ready
+                    obtener_siguiente_blocked(siguiente_proceso);
+                }*/
             }
         }
 
+        //saco el archivo de la lista de archivos del proceso
         list_remove_element(proceso->archivos_abiertos, (void*)archi);
 
         //si no hay ningun proceso esperando por el archivo, lo saco de la TGAA

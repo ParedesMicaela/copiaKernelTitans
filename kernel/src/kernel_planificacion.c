@@ -354,17 +354,24 @@ void proceso_en_exit(t_pcb *proceso)
     }
     
     eliminar_pcb(proceso);
+    if(list_size(cola_READY) > 0)
+        {
+            proceso_en_ready();
+        }
     sem_post(&grado_multiprogramacion);
 }
 
 void proceso_en_sleep(t_pcb *proceso) 
 {
     sleep(proceso->sleep);
-    obtener_siguiente_blocked(proceso);
-    /*
     pthread_mutex_lock(&mutex_ready);
     meter_en_cola(proceso, READY, cola_READY);
-    pthread_mutex_unlock(&mutex_ready);*/
+    pthread_mutex_unlock(&mutex_ready);
+    
+    if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
+    {
+        proceso_en_ready();
+    }
 }
 
 void proceso_en_page_fault(t_pcb* proceso){
@@ -377,12 +384,11 @@ void proceso_en_page_fault(t_pcb* proceso){
 
         //una vez se atienda, el proceso vuelve a ready
         //obtener_siguiente_blocked(proceso);
-        consola_proceso_estado();
         pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso, READY, cola_READY);
         pthread_mutex_unlock(&mutex_ready);
 
-        if(list_size(cola_EXEC) == 0)
+        if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
         {
             proceso_en_ready();
         }
