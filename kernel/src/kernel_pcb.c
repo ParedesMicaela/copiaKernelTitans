@@ -188,7 +188,7 @@ void eliminar_pcb(t_pcb* proceso)
     }
 
     if(proceso->modo_apertura != NULL) {
-        free(proceso->modo_apertura != NULL);
+        free(proceso->modo_apertura);
     }
 
     liberar_tabla_archivos_abiertos(proceso);

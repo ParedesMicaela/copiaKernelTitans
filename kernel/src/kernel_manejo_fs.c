@@ -126,12 +126,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
             pthread_mutex_unlock(&mutex_ready);
             
         //si quiero escribir y alguien esta usando el archivo, lo bloqueo    
-        }else{
-            list_add(archivo_encontrado->cola_solicitudes,(void*)proceso);
-            printf("\n bloqueo el proceso %d porque tengo w y ya fue abierto fuera del if\n", proceso->pid);
-            bloquear_proceso_por_archivo(proceso->nombre_archivo, proceso, "ESCRIBIR");
         }
-
         proceso_en_ready();
         break;
 
@@ -246,7 +241,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
         {                    
             t_archivo* archivo_para_escribir = buscar_en_tabla_de_archivos_abiertos(proceso->nombre_archivo);
 
-            //si hay un lock de escritura pero yo puse le lock de escritura, puedo escribir
+            //si hay un lock de escritura pero yo puse le lock de escritura, puedo escribir archivo_para_escribir_tgaa->fcb->lock_lectura && 
             if(archivo_para_escribir_tgaa->fcb->lock_lectura)
             {              
                 log_info(kernel_logger, "Alguien esta leyendo");  
@@ -349,15 +344,16 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                 archivo_para_cerrar->fcb->lock_lectura = false;
             }
         }
-
+        
+        list_remove(archivo_para_cerrar->cola_solicitudes,(void*) proceso);
         //saco el archivo de la lista de archivos del proceso
         list_remove_element(proceso->archivos_abiertos, (void*)archi);
 
-        //si no hay ningun proceso esperando por el archivo, lo saco de la TGAA
+        /*si no hay ningun proceso esperando por el archivo, lo saco de la TGAA
         if(list_size(archivo_para_cerrar->cola_solicitudes) <= 0)
         {
             list_remove_element(tabla_global_archivos_abiertos, (void*)archivo_para_cerrar);
-        }
+        }*/
 
         pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso, READY, cola_READY);
@@ -450,7 +446,8 @@ void asignar_archivo_al_proceso(t_archivo* archivo,t_pcb* proceso, char* modo_ap
     nuevo_archivo->puntero_posicion = direccion_archivo_proceso;
 
     //el modo de apertura es como yo abri al archivo
-    nuevo_archivo->modo_apertura =  strdup(modo_apertura);
+    //nuevo_archivo->modo_apertura =  strdup(modo_apertura);
+    nuevo_archivo->modo_apertura = modo_apertura;
 
     //agregar a la tabla de archivos abiertos del proceso
     list_add(proceso->archivos_abiertos,(void*)nuevo_archivo);

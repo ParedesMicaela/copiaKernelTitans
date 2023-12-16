@@ -36,7 +36,6 @@ int id_evento_cpu;
 static t_pcb* comparar_prioridad(t_pcb* proceso1, t_pcb* proceso2);
 static void a_mimir(t_pcb* proceso);
 static void atender_round_robin(int* evento_para_interrupt);
-static void tratamiento_archivos(t_pcb* proceso);
 static void aumentar_evento_cpu();
 //====================================================== Planificadores ========================================================
 void inicializar_planificador()
@@ -256,12 +255,7 @@ static void atender_round_robin(int* evento_para_interrupt) {
     pthread_mutex_unlock(&mutex_cpu);
 }
 
-static void tratamiento_archivos(t_pcb* proceso) {
 
-    pthread_t tratamiento_fs;
-    pthread_create(&tratamiento_fs, NULL, (void *)atender_peticiones_al_fs, (void *)proceso);
-    pthread_detach(tratamiento_fs);
-}
 
 static void a_mimir(t_pcb* proceso){
 

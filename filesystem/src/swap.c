@@ -50,7 +50,7 @@ t_list* reservar_bloques(int pid, int cantidad_bloques)
 }
 
 //el nro de pagina va a ser la posicion donde este, que va a ser la posicion del bloque porque cada bloque es una pagina
-bloque_swap* asignar_bloque_swap(int tam_bloque, int posicion_actual, int pid)
+/*bloque_swap* asignar_bloque_swap(int tam_bloque, int posicion_actual, int pid)
 {
     archivo_de_bloques = levantar_archivo_bloque();
     bloque_swap* bloque = malloc(sizeof(bloque_swap));
@@ -95,10 +95,10 @@ bloque_swap* asignar_bloque_swap(int tam_bloque, int posicion_actual, int pid)
     fclose(archivo_de_bloques);
     free(bloque);
     return NULL;
-}
+}*/
 
 
-/*
+
 bloque_swap* asignar_bloque_swap (int tam_bloque, int index, int pid)
 {
     bloque_swap* bloque = malloc(sizeof(bloque_swap));
@@ -126,7 +126,7 @@ bloque_swap* asignar_bloque_swap (int tam_bloque, int index, int pid)
 
     return bloque;
 }
-*/
+
 
 
 void enviar_bloques_reservados(t_list* bloques_reservados, int pid) {
