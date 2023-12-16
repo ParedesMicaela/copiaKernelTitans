@@ -131,6 +131,9 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 {
     pf_listo = 1;
 
+    // La CPU despues nos dice pq regresa
+    enviar_pcb_a_cpu(proceso_seleccionado);
+
     if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR") == 0)
     {
         aumentar_evento_cpu();
@@ -144,9 +147,6 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
 
         log_info(kernel_logger, "PID[%d] ha agotado su quantum de RR y se mueve a READY\n", proceso_seleccionado->pid);
     }
-
-    // La CPU despues nos dice pq regresa
-    enviar_pcb_a_cpu(proceso_seleccionado);
 
     //La CPU nos dice pq finalizo
     pthread_mutex_lock(&mutex_contexto);
@@ -187,7 +187,7 @@ void proceso_en_execute(t_pcb *proceso_seleccionado)
         // Lo agregamos nuevamente a la cola de Ready
         pthread_mutex_lock(&mutex_ready);
         meter_en_cola(proceso_seleccionado, READY, cola_READY);
-        mostrar_lista_pcb(cola_READY,"READY");
+        //mostrar_lista_pcb(cola_READY,"READY");
         pthread_mutex_unlock(&mutex_ready);
 
         proceso_en_ready();
@@ -338,6 +338,12 @@ void proceso_en_exit(t_pcb *proceso)
     }
     
     eliminar_pcb(proceso);
+
+    if(list_size(cola_READY) > 0 ||  list_size(cola_EXEC) >0 )
+    {
+        proceso_en_ready();
+    }
+
     sem_post(&grado_multiprogramacion);
 }
 
@@ -365,6 +371,10 @@ void proceso_en_page_fault(t_pcb* proceso){
     meter_en_cola(proceso, READY, cola_READY);
     pthread_mutex_unlock(&mutex_ready);
    
+    if(list_size(cola_EXEC) == 0)
+    {
+        proceso_en_ready();
+    }
 }
 }
 

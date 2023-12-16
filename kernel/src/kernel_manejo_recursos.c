@@ -82,15 +82,10 @@ void asignacion_recursos(t_pcb *proceso)
         }
 
         // Si puede realizar exitosamente wait, sigue ejecutando
-         if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR") == 0)
+        if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR"))
         {
-            pthread_mutex_lock(&mutex_exec);
-            list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
-            pthread_mutex_unlock(&mutex_exec);
-
             pthread_mutex_lock(&mutex_ready);
             meter_en_cola(proceso, READY, cola_READY);
-            mostrar_lista_pcb(cola_READY,"READY");
             pthread_mutex_unlock(&mutex_ready);
         }else
         {
@@ -170,17 +165,14 @@ void liberacion_recursos(t_pcb *proceso)
             proceso->recursos_asignados->nombre_recurso[0] = '\0';
         }
         // por ultimo mandamos el proceso a exec para que siga su camino
-       
-       if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR") == 0)
+
+       if(strcmp(config_valores_kernel.algoritmo_planificacion, "RR") )
         {
-            pthread_mutex_lock(&mutex_exec);
-            list_remove_element(dictionary_int_get(diccionario_colas, EXEC), proceso);
-            pthread_mutex_unlock(&mutex_exec);
 
             pthread_mutex_lock(&mutex_ready);
             meter_en_cola(proceso, READY, cola_READY);
-            mostrar_lista_pcb(cola_READY,"READY");
             pthread_mutex_unlock(&mutex_ready);
+        
         }else
         {
             proceso_en_execute(proceso);
