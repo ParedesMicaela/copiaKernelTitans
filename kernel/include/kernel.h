@@ -59,7 +59,7 @@ extern t_list *cola_EXEC;
 extern t_list *cola_EXIT;
 
 extern t_list *cola_locks_escritura; 
-extern t_list *cola_locks_lectura;
+extern int cola_locks_lectura;
 extern t_list* tabla_global_archivos_abiertos;
 
 extern t_list *lista_recursos;

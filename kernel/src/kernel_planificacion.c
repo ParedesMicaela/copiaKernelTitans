@@ -363,7 +363,15 @@ void proceso_en_exit(t_pcb *proceso)
 
 void proceso_en_sleep(t_pcb *proceso) 
 {
+    if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
+    {
+        proceso_en_ready();
+    }
     sleep(proceso->sleep);
+    if(list_size(cola_EXEC) == 0 && list_size(cola_READY) > 0)
+    {
+        proceso_en_ready();
+    }
     pthread_mutex_lock(&mutex_ready);
     meter_en_cola(proceso, READY, cola_READY);
     pthread_mutex_unlock(&mutex_ready);

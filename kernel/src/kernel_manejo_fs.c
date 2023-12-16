@@ -5,7 +5,7 @@ sem_t instruccion_tipo_archivo;
 t_list *tabla_global_archivos_abiertos;
 bool existe_en_tabla = true;
  
-t_list *cola_locks_lectura; //tiene a todos los archivos que se estan leyendo
+int cola_locks_lectura; //tiene a todos los archivos que se estan leyendo
 op_code devuelto_por=-1;
 
 static int tipo_motivo(char *motivo);
@@ -14,7 +14,6 @@ static int tipo_motivo(char *motivo);
 void iniciar_tabla_archivos_abiertos()
 {
     tabla_global_archivos_abiertos = list_create();
-    cola_locks_lectura =  list_create();
 }
 
 void atender_peticiones_al_fs(t_pcb* proceso)
@@ -202,8 +201,10 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     
                     //si no tiene un lock de escritura, lo puedo leer
                     list_add(cola_locks_lectura, (void*)proceso);*/
+
                 if (string_equals_ignore_case(archivo_para_leer->modo_apertura, "R")){
                     archivo_para_leer->fcb->lock_lectura = true;    
+                    cola_locks_lectura += 1;
                 }
 
                 pthread_mutex_lock(&mutex_ready);
@@ -253,6 +254,7 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                 //meto al proceso en la cola de bloqueados del archivo
                 list_add(archivo_para_escribir->cola_solicitudes,(void*)proceso);
                 printf("\n bloqueo el proceso %d porque tengo r y hay lock de escritura\n", proceso->pid);
+                proceso->modo_apertura = strdup("W");
                 bloquear_proceso_por_archivo(proceso->nombre_archivo, proceso, "ESCRIBIR");
 
             }else{
@@ -271,13 +273,12 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     log_info(kernel_logger, "problema");
                 }
             }
-                
+            proceso_en_ready();     
         }else{
             log_info(kernel_logger, "El proceso no puede realizar esta operacion sobre este archivo");
             log_info(kernel_logger, "Finaliza el proceso %d - Motivo: INVALID_WRITE\n", proceso->pid);
             proceso_en_exit(proceso);       
         }
-        proceso_en_ready();      
         break;
 
     case BUSCAR_ARCHIVO:
@@ -316,9 +317,16 @@ void atender_peticiones_al_fs(t_pcb* proceso)
 
                 list_remove(archivo_para_cerrar->cola_solicitudes,i);
 
-                asignar_archivo_al_proceso(archivo_para_cerrar, siguiente_proceso, siguiente_proceso->modo_apertura);
+                if(string_equals_ignore_case(siguiente_proceso->modo_apertura,"R"))
+                {
+                    asignar_archivo_al_proceso(archivo_para_cerrar, siguiente_proceso, siguiente_proceso->modo_apertura);
 
-                obtener_siguiente_blocked(siguiente_proceso);
+                    obtener_siguiente_blocked(siguiente_proceso);
+                }else{
+                    asignar_archivo_al_proceso(archivo_para_cerrar, siguiente_proceso, "W");
+
+                    obtener_siguiente_blocked(siguiente_proceso);
+                }
 
                 //busco el archivo dentro de la tabla de cada proceso
                 //t_archivo_proceso* archivo_del_proceso = buscar_en_tabla_de_archivos_proceso (siguiente_proceso,archivo_para_cerrar->fcb->nombre_archivo);   
@@ -329,6 +337,16 @@ void atender_peticiones_al_fs(t_pcb* proceso)
                     //mando el proceso a ready
                     obtener_siguiente_blocked(siguiente_proceso);
                 }*/
+            }
+        }
+
+        if(string_equals_ignore_case(archi->modo_apertura, "R"))
+        {
+            cola_locks_lectura --;
+
+            if(cola_locks_lectura <= 0)
+            {
+                archivo_para_cerrar->fcb->lock_lectura = false;
             }
         }
 
@@ -436,6 +454,8 @@ void asignar_archivo_al_proceso(t_archivo* archivo,t_pcb* proceso, char* modo_ap
 
     //agregar a la tabla de archivos abiertos del proceso
     list_add(proceso->archivos_abiertos,(void*)nuevo_archivo);
+
+    //free(modo_apertura);
 
     log_info(kernel_logger, "Se guardo el archivo %s en la tabla de archivos del proceso PID [%d]\n",nuevo_archivo->fcb->nombre_archivo ,proceso->pid);
 }
