@@ -253,6 +253,12 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             setear_registro(registro_SET, valor_SET);
             contexto_ejecucion->program_counter += 1;
             break;
+          case (INSTRUCCION_EXIT):
+            log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
+            
+            devolver_contexto_ejecucion(contexto_ejecucion, "exit","basura", 0, -1, "basura", "basura", -1);
+            seguir_ejecutando = false;
+            break;
 
         case (SUM):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1], datos[2]);
@@ -386,16 +392,6 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             contexto_ejecucion->direccion_fisica_proceso = direccion_fisica;
             contexto_ejecucion->program_counter += 1;
             devolver_contexto_ejecucion(contexto_ejecucion, "f_write", "basura", 0, -1, nombre_archivo_f_write, "basura", -1);
-            seguir_ejecutando = false;
-            }
-            break;
-
-        case (INSTRUCCION_EXIT):
-            if(!hay_interrupcion())
-            {
-            log_info(cpu_logger, "PID: %d - Ejecutando: %s\n", contexto_ejecucion->pid, datos[0]);
-            
-            devolver_contexto_ejecucion(contexto_ejecucion, "exit","basura", 0, -1, "basura", "basura", -1);
             seguir_ejecutando = false;
             }
             break;
