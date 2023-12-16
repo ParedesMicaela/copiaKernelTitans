@@ -33,11 +33,12 @@ int main(void)
     int server_fd = iniciar_servidor(config_valores_filesystem.ip_filesystem,config_valores_filesystem.puerto_escucha);
 
     tamanio_fat = (config_valores_filesystem.cant_bloques_total - config_valores_filesystem.cant_bloques_swap) * sizeof(uint32_t);
+    tam_bloque = config_valores_filesystem.tam_bloque;
     tamanio_swap = config_valores_filesystem.cant_bloques_swap * config_valores_filesystem.tam_bloque;
     tamanio_archivo_bloques = config_valores_filesystem.cant_bloques_total * config_valores_filesystem.tam_bloque;
     espacio_de_FAT = tamanio_archivo_bloques - tamanio_swap;
     path_archivo_bloques = config_valores_filesystem.path_bloques;
-    tam_bloque = config_valores_filesystem.tam_bloque;
+    
 
     procesos_en_filesystem = list_create();
 

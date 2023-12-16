@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <commons/log.h>
+#include <math.h>
 #include <commons/collections/list.h>
 #include <commons/bitarray.h>
 #include <commons/memory.h>
@@ -33,6 +34,8 @@ extern int espacio_de_FAT;
 extern t_bitarray* mapa_bits_swap;
 extern t_dictionary* diccionario_archivos_abiertos;
 extern int proximo_bloque_inicial;
+extern uint32_t* tabla_fat_en_memoria;
+
 
 //STRUCTS//
 typedef struct  
@@ -105,7 +108,8 @@ fcb* levantar_fcb (char * path);
 void crear_archivo (char *nombre_archivo, int socket_kernel);
 void abrir_archivo (char *nombre_archivo, int socket_kernel);
 char* devolver_direccion_archivo(char* nombre);
-void cargamos_cambios_a_fcb(int tamanio_nuevo, char* nombre);
+void cargamos_cambios_a_fcb_ampliar(int tamanio_nuevo, uint32_t bloque_inicial, char* nombre_archivo);
+void cargamos_cambios_a_fcb_reducir(int tamanio_nuevo, char* nombre_archivo);
 
 int* buscar_y_rellenar_fcb(char* nombre);
 
@@ -122,9 +126,9 @@ int dividirRedondeando(int numero1 , int numero2);
 //void truncarArchivo(char *nombre, int tamanioNuevo);
 void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel);
 
-void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, int tamanio_actual_archivo, int bloque_inicial);
+void ampliar_tamanio_archivo(int tamanio_nuevo, int tamanio_actual_archivo, uint32_t bloque_inicial);
 
-void reducir_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, int tamanio_actual_archivo, int bloque_inicial);
+void reducir_tamanio_archivo(int tamanio_nuevo, int tamanio_actual_archivo, uint32_t bloque_inicial);
 
 void destruir_entrada_fat(bloque_swap* ultimo_bloque_fat);
 
