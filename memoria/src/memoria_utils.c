@@ -174,7 +174,6 @@ void manejo_conexiones(void* conexion)
 		valor_registro = sacar_entero_de_paquete(&stream);
 
 		escribir(&valor_registro, direccion_fisica, direccion_logica, pid_proceso_escribir, cliente);
-		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso_escribir, "ESCRIBIR", direccion_fisica);
 		break;
 
 	case READ:
@@ -185,7 +184,6 @@ void manejo_conexiones(void* conexion)
 
 		uint32_t valor_a_enviar = leer(direccion_fisica, direccion_logica, pid_proceso_leer);
 		enviar_valor_de_lectura(valor_a_enviar, cliente);
-		log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid_proceso_leer, "LEER\n", direccion_fisica);
 		break;
 
 	case SOLUCIONAR_PAGE_FAULT_MEMORIA:

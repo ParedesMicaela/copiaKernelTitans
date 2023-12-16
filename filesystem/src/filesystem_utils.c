@@ -38,9 +38,7 @@ void atender_clientes_filesystem(void* conexion) {
     int cliente_fd = *(int*)conexion;
     char* nombre_archivo = NULL;
     int nuevo_tamanio_archivo = -1;
-	uint32_t puntero_archivo_leer = 0; 
-	uint32_t puntero_archivo_escribir = 0; 
-	uint32_t puntero_archivo_memoria = 0; 
+    uint32_t puntero_archivo = 0; 
     uint32_t direccion_fisica; 
 	int tamanio = 0;
 	int pid =-1;
@@ -65,7 +63,6 @@ void atender_clientes_filesystem(void* conexion) {
 
 			case CREAR_ARCHIVO:
 				nombre_archivo = sacar_cadena_de_paquete(&stream);
-				log_info(filesystem_logger, "Crear Archivo: %s", nombre_archivo);
 				crear_archivo(nombre_archivo, cliente_fd); 
 				break;
 
@@ -79,13 +76,12 @@ void atender_clientes_filesystem(void* conexion) {
 			case LEER_ARCHIVO:
 				nombre_archivo = sacar_cadena_de_paquete(&stream);
 				tamanio = sacar_entero_de_paquete(&stream);
-				puntero_archivo_leer = sacar_entero_sin_signo_de_paquete(&stream); 
+				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream); 
 				direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-				log_info(filesystem_logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d", nombre_archivo, puntero_archivo_leer, direccion_fisica);
-				leer_archivo(nombre_archivo, puntero_archivo_leer, direccion_fisica); 
+				log_info(filesystem_logger, "Leer Archivo: %s - Puntero: %d - Memoria: %d", nombre_archivo, puntero_archivo, direccion_fisica);
+				leer_archivo(nombre_archivo, puntero_archivo, direccion_fisica); 
 
 				sem_wait(&lectura_completada);
-
 				//Avisa al kernel que terminó
 				int ok_read = 1;
 				send(cliente_fd, &ok_read, sizeof(int), 0);
@@ -99,10 +95,10 @@ void atender_clientes_filesystem(void* conexion) {
 			case SOLICITAR_INFO_ARCHIVO_MEMORIA:
 				nombre_archivo = sacar_cadena_de_paquete(&stream);
 				tamanio = sacar_entero_de_paquete(&stream); 			
-				puntero_archivo_memoria = sacar_entero_sin_signo_de_paquete(&stream);
+				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
 				direccion_fisica = sacar_entero_sin_signo_de_paquete(&stream);
-				log_info(filesystem_logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d ", nombre_archivo, puntero_archivo_memoria, direccion_fisica);
-				solicitar_informacion_memoria(direccion_fisica, tam_bloque, nombre_archivo, puntero_archivo_memoria);
+				log_info(filesystem_logger, "Escribir Archivo: %s - Puntero: %d - Memoria: %d ", nombre_archivo, puntero_archivo, direccion_fisica);
+				solicitar_informacion_memoria(direccion_fisica, tam_bloque, nombre_archivo, puntero_archivo);
 				sem_wait(&escritura_completada);
 
 				int escribir_ok = 1;
@@ -112,9 +108,9 @@ void atender_clientes_filesystem(void* conexion) {
 
 			case ESCRIBIR_EN_ARCHIVO_BLOQUES:
 				contenido_a_escrbir = sacar_bytes_de_paquete(&stream, tam_bloque); 			
-				puntero_archivo_escribir = sacar_entero_sin_signo_de_paquete(&stream);
+				puntero_archivo = sacar_entero_sin_signo_de_paquete(&stream);
 				nombre_archivo = sacar_cadena_de_paquete(&stream); 
-				escribir_archivo(nombre_archivo,puntero_archivo_escribir,contenido_a_escrbir);
+				escribir_archivo(nombre_archivo,puntero_archivo,contenido_a_escrbir);
 				sem_post(&escritura_completada);	
 
 			break;
@@ -158,10 +154,13 @@ void atender_clientes_filesystem(void* conexion) {
 				pid = sacar_entero_de_paquete(&stream);
 				nro_pag = sacar_entero_de_paquete(&stream);
 				posicion_swap = sacar_entero_de_paquete(&stream);
+				//marco = sacar_entero_de_paquete(&stream);
 				swap_in(pid, nro_pag,posicion_swap);
 			break;
 
 			default:
+				//printf("Operacion desconocida \n");
+				//abort();
 			break;
 		}
 		eliminar_paquete(paquete);

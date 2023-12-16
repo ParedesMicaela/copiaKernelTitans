@@ -188,15 +188,19 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
         if(string_starts_with(instruccion, "MOV_OUT"))
         {
 
+        log_info(cpu_logger,"%s requiere traduccion", instruccion);
         uint32_t direccion_logica = atoi(datos[1]);
         direccion_logica_aux = direccion_logica;
         direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, contexto_ejecucion);
+        log_info(cpu_logger, "Se tradujo %d", direccion_fisica);  
 
         }else if(string_starts_with(instruccion, "MOV_IN") || string_starts_with(instruccion, "F_READ") || string_starts_with(instruccion, "F_WRITE")){
             
+        log_info(cpu_logger,"%s requiere traduccion", instruccion);
         uint32_t direccion_logica = atoi(datos[2]);
         direccion_logica_aux = direccion_logica;
         direccion_fisica = traducir_de_logica_a_fisica(direccion_logica, contexto_ejecucion);
+        log_info(cpu_logger, "Se tradujo la direccion %d", direccion_fisica);      
 
         }   
         
@@ -273,7 +277,7 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
             registro_JNZ = datos[1];
             num_instruccion = atoi(datos[2]);
             int valor_registro_JNZ = buscar_registro(registro_JNZ);
-            if (valor_registro_JNZ != 0) {
+            if (valor_registro_JNZ != 0 && valor_registro_JNZ > 0) {
                  contexto_ejecucion->program_counter = num_instruccion;
             } else {
                 contexto_ejecucion->program_counter += 1;
@@ -291,23 +295,17 @@ void ciclo_de_instruccion(t_contexto_ejecucion *contexto_ejecucion)
         case (WAIT):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso_wait = datos[1];
-            if(!hay_interrupcion())
-            {
             contexto_ejecucion->program_counter += 1;
             devolver_contexto_ejecucion(contexto_ejecucion, "wait",recurso_wait, 0, -1, "basura", "basura", -1);
             seguir_ejecutando = false;
-            }
             break;
 
         case (SIGNAL):
             log_info(cpu_logger, "PID: %d - Ejecutando: %s - %s\n", contexto_ejecucion->pid, datos[0], datos[1]);
             recurso_signal = datos[1];
-            if(!hay_interrupcion())
-            {
-                contexto_ejecucion->program_counter += 1;
-                devolver_contexto_ejecucion(contexto_ejecucion, "signal", recurso_signal, 0, -1, "basura", "basura",-1);
-                seguir_ejecutando = false;
-            }
+            contexto_ejecucion->program_counter += 1;
+            devolver_contexto_ejecucion(contexto_ejecucion, "signal", recurso_signal, 0, -1, "basura", "basura",-1);
+            seguir_ejecutando = false;
             break;
 
         case(MOV_IN):

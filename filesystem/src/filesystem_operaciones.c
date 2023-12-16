@@ -10,10 +10,8 @@ FILE* archivo_tabla_fat;
 static uint32_t buscar_bloque_en_FAT(uint32_t bloque_final, uint32_t bloque_inicial);
 static void escribir_en_memoria(int tam_bloque, void* contenido, uint32_t direccion_fisica);
 static void escribir_contenido_en_bloque (uint32_t nro_bloque, uint32_t puntero, void* contenido, char* nombre_archivo);
-static void actualizar_tabla_fat_reducir(int posicion_bloque_agregado, int bloques_a_quitar, int posicion_primer_bloque_a_quitar); 
-static void actualizar_tabla_fat_ampliar(int posicion_bloque_agregado, int posicion_ultimo_bloque);
-//static void actualizar_archivo_de_bloques_ampliar(int posicion_bloque_agregado, int posicion_ultimo_bloque, bloque_archivo_bloques* nuevo_ultimo_bloque_bloques);
-//static void actualizar_archivo_de_bloques_reducir(int posicion_bloque_agregado, int bloques_a_quitar, int posicion_primer_bloque_a_quitar);
+static void actualizarFAT(uint32_t bloque, uint32_t nuevo_valor);
+static void punteros(void *punteros_archivo, uint32_t bloque_inicial, size_t tamanio_archivo);
 //============================================== INICIALIZACION ============================================
 
 void crear_fat()
@@ -52,6 +50,10 @@ void crear_fat()
             fclose(archivo_fat);
         }
     }
+
+	int fd_tabla_FAT = open(path, O_RDWR);
+    tabla_fat_en_memoria = mmap(NULL, tamanio_fat, PROT_WRITE, MAP_SHARED, fd_tabla_FAT, 0);
+    close(fd_tabla_FAT);
 
 }
 
@@ -94,32 +96,13 @@ void crear_archivo_de_bloque()
     close (fd);
 }
 
-void mapear_archivo_de_bloques() {
-
-    int fd_bloques = open(path_archivo_bloques, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-    if (fd_bloques == -1) {
-        perror("Error al abrir el archivo de bloques mapear");
-        abort();
-    }
-
-    // Mapear el archivo
-    swap_mapeado = mmap(NULL, tamanio_swap, PROT_WRITE, MAP_SHARED, fd_bloques, 0);
-    fat_mapeado = mmap(NULL, espacio_de_FAT, PROT_WRITE, MAP_SHARED, fd_bloques, tamanio_swap);
-
-    if (swap_mapeado == MAP_FAILED || fat_mapeado == MAP_FAILED) {
-        perror("Error al mapear el archivo en memoria");
-        close(fd_bloques);
-        abort();
-    }
-
-    close(fd_bloques);
-}
-
 //================================================= OPERACIONES ARCHIVOS ============================================
-void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo unico que funciona
+void crear_archivo (char *nombre_archivo, int socket_kernel) 
 {
+	log_info(filesystem_logger, "Crear Archivo: %s", nombre_archivo);
+
     char *path_archivo = string_from_format ("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
-	
+
 	FILE *archivo = fopen(path_archivo, "w"); //en cambio ahí sí lo crea
 	fclose(archivo);		
 
@@ -128,7 +111,7 @@ void crear_archivo (char *nombre_archivo, int socket_kernel) //literalmente lo u
 	
 	if (archivo_nuevo!=NULL)
 	{
-		//nos guardamos la direccion de memoria del archivos (uint por el envio de paquete, por las dudas pa que no rompa)
+		//nos guardamos la direccion de memoria del archivos 
 		uint32_t direccion = (uint32_t)archivo;
 
 		config_set_value(archivo_nuevo, "NOMBRE_ARCHIVO", nombre_archivo);
@@ -152,12 +135,8 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 {
 	char *path_archivo = string_from_format("%s/%s.fcb", config_valores_filesystem.path_fcb, nombre_archivo);
 	
-	printf("entramos al path: %s\n", path_archivo);
-
 	if (!access (path_archivo, F_OK))
-	{
-		log_info(filesystem_logger,"Tamanio del archivo (que ya existe): %d \n", config_valores_fcb.tamanio_archivo);
-						
+	{			
 		int tamanio = config_valores_fcb.tamanio_archivo;
 		t_paquete *paquete = crear_paquete(ARCHIVO_ABIERTO);
 		agregar_entero_a_paquete(paquete, tamanio);
@@ -166,11 +145,9 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 		FILE *archivo = fopen(path_archivo,"r");
 		uint32_t direccion = (uint32_t)archivo;
 		agregar_entero_a_paquete(paquete,direccion);
-		log_info(filesystem_logger, "Enviando confirmacion de que existe el archivo solicitado\n");
 
 		//diccionario de archivos abiertos
 		dictionary_put(diccionario_archivos_abiertos,nombre_archivo,archivo);
-		log_info(filesystem_logger, "Guardamos el tipo FILE en el diccionario\n");
 
 		//fclose(archivo); esto creo que no, solo cuando mandan FCLOSE
 		enviar_paquete(paquete, socket_kernel);
@@ -178,7 +155,6 @@ void abrir_archivo (char *nombre_archivo, int socket_kernel)
 
     }else // el archivo no existe
 	{
-		log_info(filesystem_logger, "No existe el archivo solicitado\n");
 	    t_paquete *paquete = crear_paquete(ARCHIVO_NO_EXISTE);
 		agregar_entero_a_paquete(paquete, 1);
 		enviar_paquete(paquete, socket_kernel);
@@ -238,9 +214,7 @@ static uint32_t buscar_bloque_en_FAT(uint32_t cantidad_bloques_a_recorrer, uint3
 }
 
 static void escribir_contenido_en_bloque (uint32_t nro_bloque, uint32_t puntero, void* contenido, char* nombre_archivo) 
-{
-	//uint32_t puntero_correcto = puntero / tam_bloque;
-	
+{	
 	int retardo = config_valores_filesystem.retardo_acceso_bloque;
 
 	//direccion ultimo bloque a leer
@@ -263,7 +237,6 @@ static void escribir_contenido_en_bloque (uint32_t nro_bloque, uint32_t puntero,
 	if (fwrite(contenido, tam_bloque, 1, archivo_de_bloques) != 1) {
 		log_error(filesystem_logger, "La cagamos chicos \n");
     }
-	//mem_hexdump(contenido, sizeof(contenido));
 	fclose(archivo_de_bloques);
 
 	free(nombre_archivo);
@@ -317,8 +290,6 @@ void leer_archivo(char *nombre_archivo, uint32_t puntero_archivo, uint32_t direc
 	usleep(1000* retardo);
 	fread(contenido, tam_bloque, 1, archivo_de_bloques);
 
-	//mem_hexdump(contenido, sizeof(contenido));
-
 	//Mandamos el contenido a que se persista en memoria
 	escribir_en_memoria(tam_bloque, contenido, direccion_fisica);
 
@@ -343,131 +314,181 @@ void cerrar_archivo(char* nombre_archivo)
 	log_info(filesystem_logger, "Cerramos el archivo\n");
 }
 
-void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel)
-{	
-	fcb* fcb_a_truncar = levantar_fcb(nombre);
+
+void truncar_archivo(char *nombre, int tamanio_nuevo, int socket_kernel) {
+
+    fcb* fcb_a_truncar = levantar_fcb(nombre);
 	char* nombre_archivo = fcb_a_truncar->nombre_archivo;
 	int tamanio_actual_archivo = fcb_a_truncar->tamanio_archivo;
-	int bloque_inicial = fcb_a_truncar->bloque_inicial;
+	uint32_t bloque_inicial = fcb_a_truncar->bloque_inicial;
 	free(fcb_a_truncar);
 	free(nombre);
 
-	log_info(filesystem_logger,"Truncando archivo: Nombre %s, tamanio %d, Bloque inicial %d \n",nombre_archivo, tamanio_actual_archivo, bloque_inicial);
+    log_info(filesystem_logger,"Truncando archivo: Nombre %s, tamanio %d, Bloque inicial %d \n",nombre_archivo, tamanio_actual_archivo, bloque_inicial);
 
-	if(tamanio_actual_archivo < tamanio_nuevo && tamanio_nuevo < espacio_de_FAT)
-	{
-		ampliar_tamanio_archivo(tamanio_nuevo, nombre_archivo, tamanio_actual_archivo, bloque_inicial);
-		log_info(filesystem_logger,"Ampliamos\n");
-	}
-	else if (tamanio_actual_archivo > tamanio_nuevo)
-	{
-		reducir_tamanio_archivo(tamanio_nuevo, nombre_archivo, tamanio_actual_archivo, bloque_inicial);
-		log_info(filesystem_logger,"Reducimos\n");
-	}
-	else{
+    if(tamanio_actual_archivo < tamanio_nuevo) {
+
+        ampliar_tamanio_archivo(tamanio_nuevo, tamanio_actual_archivo, bloque_inicial);
+
+        cargamos_cambios_a_fcb_ampliar(tamanio_nuevo, bloque_inicial, nombre_archivo);
+
+    } else if(tamanio_actual_archivo > tamanio_nuevo) {
+        
+        reducir_tamanio_archivo(tamanio_nuevo, tamanio_actual_archivo, bloque_inicial);
+
+        cargamos_cambios_a_fcb_reducir(tamanio_nuevo, nombre_archivo);
+
+    } else{
 		printf("Bobi no truncaste\n");
 	}
 
-	cargamos_cambios_a_fcb(tamanio_nuevo, nombre_archivo);
 
 	free(nombre_archivo);
 
 	//Confirmamos truncado
 	int truncado = 1;
     send(socket_kernel, &truncado, sizeof(int), 0);
+
 }
 
-void ampliar_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, int tamanio_actual_archivo, int bloque_inicial)
-{
-	int bloques_a_agregar = ((nuevo_tamanio_archivo - tamanio_actual_archivo)/tam_bloque);
-	
-	int posicion_ultimo_bloque = bloque_inicial + bloques_a_agregar;
+void ampliar_tamanio_archivo(int tamanio_nuevo, int tamanio_actual_archivo, uint32_t bloque_inicial) {
+    uint32_t bloques_a_agregar = ceil((tamanio_nuevo - tamanio_actual_archivo) / tam_bloque);
+    const uint32_t eof = UINT32_MAX;
+    uint32_t puntero_bloque_libre = 1;
+    uint32_t proximo_bloque_a_agregar;
 
-	//Nos ponemos en la posicion que tenemos que agregar dependiendo del blooque inicial
-	for (int posicion_bloque_agregado = 0; posicion_bloque_agregado < bloques_a_agregar; posicion_bloque_agregado++)
-	{
-		actualizar_tabla_fat_ampliar(posicion_bloque_agregado, posicion_ultimo_bloque);		
-		
-	}
-}
+    // Si no estamos en 0
+    if (bloque_inicial != 0) {
+        while (1) {
+			
+			//Voy copiando de a un bloque
+			uint32_t offset = bloque_inicial * sizeof(uint32_t);
+            memcpy(&proximo_bloque_a_agregar, tabla_fat_en_memoria + offset, sizeof(uint32_t));
+            usleep(1000 * config_valores_filesystem.retardo_acceso_fat);
+            log_info(filesystem_logger, "Acceso FAT - Entrada: %d - Valor: %d", bloque_inicial, proximo_bloque_a_agregar);
 
-static void actualizar_tabla_fat_ampliar(int posicion_bloque_agregado, int posicion_ultimo_bloque) {
-	
-	uint32_t eof = UINT32_MAX;
-	uint32_t valor_inicial = 0;
-	uint32_t tam_entrada = tamanio_fat / sizeof(uint32_t);
-	char* path_fat = config_valores_filesystem.path_fat;
+            // Si es el final del archivo
+            if (proximo_bloque_a_agregar == eof) {
+                break;
+            }
 
-
-	archivo_tabla_fat = levantar_tabla_FAT();
-	fseek(archivo_tabla_fat,posicion_bloque_agregado,SEEK_SET); //Revisar dsps
-
-	if((posicion_bloque_agregado + 1) == posicion_ultimo_bloque ) {
-
-		//escribimos el anteultimo bloque
-		fwrite(&valor_inicial, sizeof(uint32_t), 1, archivo_tabla_fat);
-
-		//escribimos en el ultimo bloque
-		fwrite(&eof, sizeof(uint32_t), 1, archivo_tabla_fat);
-		
-		log_info(filesystem_logger,"Actualizamos el ultimo bloque de archivo fat\n");
-	}
-	
-	//si el siguiente no es el ultimo bloque solo guardamos el valor del puntero
-	else
-	{
-		fwrite(&valor_inicial, sizeof(uint32_t), 1, archivo_tabla_fat);
-	}
-
-	fclose(archivo_tabla_fat);
-
-	int fd_tabla_FAT = open(path_fat, O_RDWR);
-    tabla_fat_en_memoria = mmap(NULL, tam_entrada, PROT_WRITE, MAP_SHARED, fd_tabla_FAT, 0);
-    close(fd_tabla_FAT);
-}
-
-void reducir_tamanio_archivo (int nuevo_tamanio_archivo, char* nombre_archivo, int tamanio_actual_archivo, int bloque_inicial)
-{
-	int bloques_a_quitar = nuevo_tamanio_archivo - tamanio_actual_archivo;
-	
-	int posicion_primer_bloque_a_quitar = bloque_inicial + bloques_a_quitar;
-
-	for (int posicion_bloque_agregado = 0; posicion_bloque_agregado < bloques_a_quitar; posicion_bloque_agregado++) {
-
-	actualizar_tabla_fat_reducir(posicion_bloque_agregado, bloques_a_quitar, posicion_primer_bloque_a_quitar);
-	
+            // Actualizar bloque_inicial para seguir buscando
+            bloque_inicial = proximo_bloque_a_agregar;
+        }
     }
 
-    log_info(filesystem_logger, "Se redujo el tamaño del archivo\n");
+    // Asignación
+    while (bloques_a_agregar > 0) {
+        
+		// Buscamos el primer bloque libre
+        while (1) {
+
+			//Voy copiando de a un bloque 
+			uint32_t offset = puntero_bloque_libre * sizeof(uint32_t);
+			memcpy(&proximo_bloque_a_agregar, tabla_fat_en_memoria + offset, sizeof(uint32_t));
+            log_info(filesystem_logger, "Acceso FAT - Entrada: %d - Valor: %d", puntero_bloque_libre, proximo_bloque_a_agregar);
+            usleep(1000 * config_valores_filesystem.retardo_acceso_fat);
+
+            // Salir si se encuentra un bloque libre
+            if (proximo_bloque_a_agregar == 0) {
+                break;
+            }
+
+            // Actualizamos puntero_bloque_libre para seguir buscando
+            puntero_bloque_libre++;
+        }
+
+        // Caso de EOF
+        if (bloque_inicial == 0) {
+            // Primer bloque del archivo
+            bloque_inicial = puntero_bloque_libre;
+			uint32_t offset = bloque_inicial * sizeof(uint32_t);
+            memcpy(tabla_fat_en_memoria + offset, &eof, sizeof(uint32_t));
+        } else {
+            // Bloque subsiguiente en la secuencia del archivo
+			uint32_t offset_bloque_subsiguiente = bloque_inicial * sizeof(uint32_t);
+            memcpy(tabla_fat_en_memoria + offset_bloque_subsiguiente, &puntero_bloque_libre, sizeof(uint32_t));
+
+			uint32_t offset_eof = puntero_bloque_libre * sizeof(uint32_t);
+            memcpy(tabla_fat_en_memoria + offset_eof, &eof, sizeof(uint32_t));
+            bloque_inicial = puntero_bloque_libre;
+        }
+
+        bloques_a_agregar--;
+    }
+
+    // Sincronizo los cambios
+    msync(tabla_fat_en_memoria, tamanio_fat, MS_INVALIDATE);
+}
+ 
+
+void reducir_tamanio_archivo(int tamanio_nuevo, int tamanio_actual_archivo, uint32_t bloque_inicial) {
+    
+    uint32_t bloques_a_sacar = ceil((tamanio_actual_archivo - tamanio_nuevo) / tam_bloque );
+
+    uint32_t cantidad_bloques = ceil(tamanio_actual_archivo/tam_bloque);
+    
+    uint32_t cantidad_a_reducir = cantidad_bloques * sizeof(uint32_t);
+
+    void *buffer = malloc(cantidad_a_reducir);
+
+    int eof = UINT32_MAX;
+    
+    int cantidad_correcta_de_bloques = cantidad_bloques - 1;
+    
+	int bloque_libre = 0;
+	    
+	punteros(buffer, bloque_inicial, tamanio_actual_archivo);
+
+	int bloque;
+    
+	//Mientras haya bloques que sacar
+    while (bloques_a_sacar > 0) {
+
+		//Copio el contenido que hay en el buffer en el bloque
+		uint32_t offset = cantidad_correcta_de_bloques * sizeof(uint32_t);
+        memcpy(&bloque, buffer + offset, sizeof(uint32_t));
+
+        // Marco el bloque como libre en la FAT
+        actualizarFAT(bloque, bloque_libre);
+
+        cantidad_correcta_de_bloques--;
+        bloques_a_sacar--;
+
+        // Si es el último bloque a eliminar, actualizo la FAT para marcar el final del archivo
+        if (bloques_a_sacar == 0) {
+            actualizarFAT(bloque, eof);
+            break;
+        }
+    }
+
+    msync(tabla_fat_en_memoria, tamanio_fat, MS_INVALIDATE);
+
+    free(buffer);
+    return;
+}
+
+static void actualizarFAT(uint32_t bloque, uint32_t nuevo_valor) {
+    memcpy(tabla_fat_en_memoria + bloque * sizeof(uint32_t), &nuevo_valor, sizeof(uint32_t));
+    usleep(1000 * config_valores_filesystem.retardo_acceso_fat);
+    log_info(filesystem_logger, "Acceso FAT - Entrada: %d - Valor: %d", bloque, nuevo_valor);
 
 }
 
-void actualizar_tabla_fat_reducir(int posicion_bloque_agregado, int bloques_a_quitar, int posicion_primer_bloque_a_quitar) {
 
-	uint32_t tam_entrada = tamanio_fat / sizeof(uint32_t);
-	char* path_fat = config_valores_filesystem.path_fat;
+static void punteros(void *punteros_archivo, uint32_t bloque_inicial, size_t tamanio_archivo) {
+    
+    uint32_t *puntero_actual = &(bloque_inicial); 
 
-	archivo_tabla_fat = levantar_tabla_FAT();
+    //Tamaño de todo el archivo
+    size_t bloques_necesarios = (tamanio_archivo + tam_bloque - 1) / tam_bloque;
 
-    if (posicion_bloque_agregado == bloques_a_quitar - 1)
-    {
-		// el último bloque que vamos a quitar
-		fseek(archivo_tabla_fat, posicion_primer_bloque_a_quitar * sizeof(uint32_t), SEEK_SET);
-		uint32_t bloque_siguiente = UINT32_MAX;
-		fwrite(&bloque_siguiente, sizeof(uint32_t), 1, archivo_tabla_fat);
+    // Asignamos el bloque inicial al primer elemento del array
+    for (size_t proximo_bloque = 0; proximo_bloque < bloques_necesarios; ++proximo_bloque) {
+
+        memcpy(punteros_archivo + proximo_bloque * sizeof(uint32_t), puntero_actual, sizeof(uint32_t));
+
+        // Actualizar puntero_actual utilizando la FAT
+        memcpy(puntero_actual, tabla_fat_en_memoria + *puntero_actual, sizeof(uint32_t));
     }
-    else
-    {
-		// no es el último bloque que vamos a quitar
-		fseek(archivo_tabla_fat, (posicion_primer_bloque_a_quitar + posicion_bloque_agregado) * sizeof(uint32_t), SEEK_SET);
-		uint32_t bloque_siguiente = posicion_primer_bloque_a_quitar + posicion_bloque_agregado + 1;
-		fwrite(&bloque_siguiente, sizeof(uint32_t), 1, archivo_tabla_fat);
-    }
-
-	fclose(archivo_tabla_fat);
-
-	int fd_tabla_FAT = open(path_fat, O_RDWR);
-    tabla_fat_en_memoria = mmap(NULL, tam_entrada, PROT_WRITE, MAP_SHARED, fd_tabla_FAT, 0);
-    close(fd_tabla_FAT);
-
 }

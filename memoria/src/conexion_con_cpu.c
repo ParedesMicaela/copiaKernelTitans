@@ -91,7 +91,6 @@ char* buscar_path_proceso(int pid)
 void enviar_respuesta_pedido_marco(int socket_cpu, uint32_t num_pagina, int pid) {
     int marco;
     
-    //log_info(memoria_logger, "Se buscara marco en las tablas de paginas");
     marco = buscar_marco(pid, num_pagina);
     t_paquete* paquete = crear_paquete(NUMERO_MARCO);
     // El -1 lo vemos desde la cpu (Page Fault)
@@ -109,6 +108,8 @@ void escribir(int* valor, uint32_t direccion_fisica, uint32_t direccion_logica, 
     int posicion_swap_temp = 0;
     bool ocupado_temp = false;
     int tiempo_temp = 0;
+
+	log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid, "ESCRIBIR", direccion_fisica);
 
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
@@ -136,15 +137,6 @@ void escribir(int* valor, uint32_t direccion_fisica, uint32_t direccion_logica, 
     //creo una nueva pagina para modificar
     t_pagina* pagina_modificada = malloc(sizeof(t_pagina));
 
-    /*si el valor al que apunta es -1, la pagina no esta en memoria. Necesito pf
-    if(*valor != 0) 
-    {
-        //si no es -1, modifico la pagina. SI es -1 la saco de la lista para que tire pf    
-    }else{
-        //si es -1, no cargo la pagina en la lista de paginas del proceso y desocupo el marco, porque no esta presente
-        desocupar_marco(marco_temp);
-    }*/
-
     pagina_modificada->bit_modificado = 1;
     pagina_modificada->tiempo_uso = obtener_tiempo(); 
 
@@ -166,6 +158,8 @@ void escribir(int* valor, uint32_t direccion_fisica, uint32_t direccion_logica, 
 
 uint32_t leer(uint32_t direccion_fisica, uint32_t direccion_logica, int pid) {
 
+    log_info(memoria_logger, "PID: %d - Acción: %s - Dirección física: %d ", pid, "LEER", direccion_fisica);
+
 	usleep(1000 * config_valores_memoria.retardo_respuesta); 
 
 	char* puntero_direccion_fisica = espacio_usuario + direccion_fisica; 
@@ -179,12 +173,8 @@ uint32_t leer(uint32_t direccion_fisica, uint32_t direccion_logica, int pid) {
 
     t_pagina* pagina = buscar_pagina(pid,nro_pagina);
     
-    //list_remove_element(proceso->paginas_en_memoria, (void*)pagina);
-
     pagina->tiempo_uso = obtener_tiempo();
     
-    //list_add(proceso->paginas_en_memoria, (void*)pagina);
-
 	return valor; 
 }
 
