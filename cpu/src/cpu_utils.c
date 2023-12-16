@@ -445,9 +445,9 @@ void atender_interrupt(void *socket_servidor_interrupt)
             interrupcion += 1;
             pthread_mutex_unlock(&mutex_interrupcion);
         } else {
-            printf("No recibi una interrupcion\n");
-            abort();
+        //Nada
         }
+        
         eliminar_paquete(paquete);
     }
 }
